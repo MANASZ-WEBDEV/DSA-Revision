@@ -10,6 +10,7 @@ interface Props {
   cards: FlashCard[];
   onUpdate: (id: string, updates: Partial<FlashCard>) => void;
   onRecordReview: (card: FlashCard, quality: ReviewQuality) => void;
+  onRecordSession: (session: SessionAnalytics) => void;
   onDone: () => void;
 }
 
@@ -23,7 +24,7 @@ const DEFAULT_SESSION_CONFIG: SessionConfig = {
   useSmartSession: true,
 };
 
-export function ReviewSession({ cards, onUpdate, onRecordReview, onDone }: Props) {
+export function ReviewSession({ cards, onUpdate, onRecordReview, onRecordSession, onDone }: Props) {
   // --- Flow Steps: "config" | "session" | "analytics" ---
   const [step, setStep] = useState<"config" | "session" | "analytics">("config");
 
@@ -202,6 +203,7 @@ export function ReviewSession({ cards, onUpdate, onRecordReview, onDone }: Props
         startedAt: sessionStartTimeRef.current,
         completedAt: new Date().toISOString(),
       };
+      onRecordSession(analytics);
       setAnalyticsData(analytics);
       setStep("analytics");
     } else {
