@@ -34,7 +34,7 @@ const AVAILABLE_DECKS: DeckInfo[] = [
   {
     id: "blind-75",
     name: "Blind 75",
-    description: "The essential 75 LeetCode problems curated for FAANG interviews (plus Trapping Rain Water as a bonus!). Covers arrays, strings, trees, graphs, DP, and more. The minimum viable prep for any SWE interview.",
+    description: "The essential 75 LeetCode problems curated for FAANG interviews. Covers arrays, strings, trees, graphs, DP, and more. The minimum viable prep for any SWE interview.",
     icon: "🎯",
     cardCount: blind75Data.length,
     categories: [

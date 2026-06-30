@@ -46,7 +46,7 @@ Cards are built around a custom pedagogical template tailored for SWE interview 
 ## 📦 Bundled Content
 
 DSA Recall ships with the **Blind 75 starter pack** built-in:
-* 75 essential problems spanning 14 patterns (plus *Trapping Rain Water* as a bonus card).
+* 75 essential problems spanning 14 patterns.
 * Fully pre-packaged as a static local JSON bundle.
 * **Zero API keys needed** to get started immediately.
 

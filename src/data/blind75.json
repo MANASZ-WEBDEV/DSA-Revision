@@ -1623,32 +1623,5 @@
     ],
     "edge_cases": ["Single cell grid", "Word longer than grid cells", "Word not in grid"],
     "similar_problems": ["Word Search II", "N-Queens"]
-  },
-  {
-    "title": "Trapping Rain Water",
-    "difficulty": "Hard",
-    "patterns": ["Two Pointers"],
-    "problem_summary": "Calculate how much water can be trapped between bars after rain.",
-    "recall_trigger": "Two pointers: water at position = min(max_left, max_right) - height. Process shorter side.",
-    "approaches": [
-      {
-        "label": "Brute Force",
-        "intuition": "For each bar, find the max height to its left and right. Water = min(maxL, maxR) - height.",
-        "key_observation": "O(n) per bar to find left/right max → O(n²) total.",
-        "complexity": { "time": "O(n²)", "space": "O(1)" },
-        "code_hint": "for i in range(n):\n  left_max = max(height[:i+1])\n  right_max = max(height[i:])\n  water += min(left_max, right_max) - height[i]",
-        "trade_off": "Recomputes max values redundantly."
-      },
-      {
-        "label": "Optimal",
-        "intuition": "Two pointers from both ends. The shorter side determines the water level.",
-        "key_observation": "If left_max < right_max, process left pointer (water bounded by left_max). Otherwise process right.",
-        "complexity": { "time": "O(n)", "space": "O(1)" },
-        "code_hint": "lo, hi = 0, n-1\nleft_max = right_max = 0\nwhile lo < hi:\n  if height[lo] < height[hi]:\n    left_max = max(left_max, height[lo])\n    water += left_max - height[lo]\n    lo += 1\n  else:\n    right_max = max(right_max, height[hi])\n    water += right_max - height[hi]\n    hi -= 1",
-        "trade_off": "O(n) time, O(1) space — optimal. Two-pointer elegantly handles both sides."
-      }
-    ],
-    "edge_cases": ["Monotonically increasing/decreasing", "All same height", "Single bar"],
-    "similar_problems": ["Container With Most Water", "Largest Rectangle in Histogram"]
   }
 ]
