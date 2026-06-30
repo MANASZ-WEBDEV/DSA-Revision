@@ -1,4 +1,4 @@
-import type { FlashCard, ReviewEvent, StreakData, PatternTag } from "../../types";
+import type { FlashCard, ReviewEvent, StreakData, PatternTag, SessionAnalytics } from "../../types";
 import { PATTERN_TAGS } from "../../types";
 import { PATTERN_COLORS, PATTERN_TEXT_COLORS } from "../../lib/llm";
 import { getDueCards, getStats } from "../../lib/sm2";
@@ -8,13 +8,14 @@ interface Props {
   cards: FlashCard[];
   events: ReviewEvent[];
   streak: StreakData;
+  sessionHistory: SessionAnalytics[];
   onStartReview: () => void;
   onGenerate: () => void;
   onGoLibrary: () => void;
   onGoStarterPacks: () => void;
 }
 
-export function Dashboard({ cards, events, streak, onStartReview, onGenerate, onGoLibrary, onGoStarterPacks }: Props) {
+export function Dashboard({ cards, events, streak, sessionHistory, onStartReview, onGenerate, onGoLibrary, onGoStarterPacks }: Props) {
   const stats = getStats(cards);
   const dueCount = getDueCards(cards).length;
 
@@ -154,8 +155,54 @@ export function Dashboard({ cards, events, streak, onStartReview, onGenerate, on
         )}
       </Section>
 
+      {/* Recent Sessions */}
+      <Section title="Recent sessions" sub="Recall performance and trends over time">
+        {sessionHistory.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {sessionHistory.slice(-5).reverse().map((session, sIdx) => {
+              const durationMs = new Date(session.completedAt).getTime() - new Date(session.startedAt).getTime();
+              const mins = Math.floor(durationMs / 60000);
+              const secs = Math.floor((durationMs % 60000) / 1000);
+              const passed = session.results.filter(r => r.quality >= 3).length;
+              const rate = session.totalCards > 0 ? Math.round((passed / session.totalCards) * 100) : 0;
+              const avgTime = session.totalCards > 0 ? Math.round((session.results.reduce((acc, c) => acc + c.timeMs, 0) / session.totalCards) / 1000) : 0;
+
+              return (
+                <div key={sIdx} style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  background: "var(--bg-raised)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "var(--radius)",
+                  padding: "12px 18px",
+                  boxShadow: "var(--shadow-sm)"
+                }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>
+                      {new Date(session.completedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                    <span className="numeral" style={{ fontSize: 11, color: "var(--caption)" }}>
+                      {session.totalCards} cards · {mins > 0 ? `${mins}m ` : ""}{secs}s · {avgTime}s avg/card
+                    </span>
+                  </div>
+                  <div className="bigstat" style={{
+                    fontSize: 16,
+                    color: rate >= 80 ? "var(--accent)" : rate >= 50 ? "var(--medium)" : "var(--urgent)"
+                  }}>
+                    {rate}% Recall
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <EmptyHint text="Your session summaries and recall accuracy history will appear here." />
+        )}
+      </Section>
+
       {/* Quick links */}
-      <div style={{ display: "flex", gap: 10, marginTop: 8, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: 10, marginTop: 24, flexWrap: "wrap" }}>
         <button onClick={onGoLibrary} style={s.linkBtn}>Browse library →</button>
         <button onClick={onGenerate} style={s.linkBtn}>Generate new card →</button>
         <button onClick={onGoStarterPacks} style={s.linkBtn}>Starter packs →</button>

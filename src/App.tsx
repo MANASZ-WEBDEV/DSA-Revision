@@ -8,7 +8,7 @@ import { ReviewSession }  from "./components/review/ReviewSession";
 import { ApiKeyModal }    from "./components/settings/ApiKeyModal";
 import { StarterPacks }   from "./components/library/StarterPacks";
 import { ThemeToggle }    from "./components/layout/ThemeToggle";
-import { useCardStore, useProviderStore, useReviewHistory } from "./hooks/useStore";
+import { useCardStore, useProviderStore, useReviewHistory, useSessionHistory } from "./hooks/useStore";
 import { useTheme }       from "./hooks/useTheme";
 import { getDueCards }    from "./lib/sm2";
 import { PROVIDERS }      from "./lib/llm";
@@ -18,6 +18,7 @@ export default function App() {
   const { cards, addCard, updateCard, deleteCard, importCards } = useCardStore();
   const { providerId, model, currentKey, keys, setProvider, setModel, setKey } = useProviderStore();
   const { events, streak, recordReview } = useReviewHistory();
+  const { sessionHistory, recordSession } = useSessionHistory();
   const { theme, toggleTheme } = useTheme();
 
   const navigate = useNavigate();
@@ -120,6 +121,7 @@ export default function App() {
                 cards={cards}
                 events={events}
                 streak={streak}
+                sessionHistory={sessionHistory}
                 onStartReview={() => navigate("/review")}
                 onGenerate={() => navigate("/generate")}
                 onGoLibrary={() => navigate("/library")}
@@ -167,6 +169,7 @@ export default function App() {
                 cards={cards}
                 onUpdate={updateCard}
                 onRecordReview={recordReview}
+                onRecordSession={recordSession}
                 onDone={() => navigate("/")}
               />
             }
