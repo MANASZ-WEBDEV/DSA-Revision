@@ -8,6 +8,8 @@ import { ReviewSession }  from "./components/review/ReviewSession";
 import { ApiKeyModal }    from "./components/settings/ApiKeyModal";
 import { StarterPacks }   from "./components/library/StarterPacks";
 import { ThemeToggle }    from "./components/layout/ThemeToggle";
+import { LandingPage }    from "./components/landing/LandingPage";
+import { Onboarding }     from "./components/landing/Onboarding";
 import { useCardStore, useProviderStore, useReviewHistory, useSessionHistory } from "./hooks/useStore";
 import { useTheme }       from "./hooks/useTheme";
 import { getDueCards }    from "./lib/sm2";
@@ -24,6 +26,9 @@ export default function App() {
   const navigate = useNavigate();
   const [showSettings, setShowSettings] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const hasOnboarded = localStorage.getItem("dsa_onboarded_v1") === "true";
+  const showLanding = cards.length === 0 && !hasOnboarded;
 
   const dueCount     = getDueCards(cards).length;
   const provider      = PROVIDERS.find((p) => p.id === providerId)!;
@@ -117,15 +122,34 @@ export default function App() {
           <Route
             path="/"
             element={
-              <Dashboard
-                cards={cards}
-                events={events}
-                streak={streak}
-                sessionHistory={sessionHistory}
-                onStartReview={() => navigate("/review")}
-                onGenerate={() => navigate("/generate")}
-                onGoLibrary={() => navigate("/library")}
-                onGoStarterPacks={() => navigate("/starter-packs")}
+              showLanding ? (
+                <LandingPage onStart={() => navigate("/onboarding")} />
+              ) : (
+                <Dashboard
+                  cards={cards}
+                  events={events}
+                  streak={streak}
+                  sessionHistory={sessionHistory}
+                  onStartReview={() => navigate("/review")}
+                  onGenerate={() => navigate("/generate")}
+                  onGoLibrary={() => navigate("/library")}
+                  onGoStarterPacks={() => navigate("/starter-packs")}
+                />
+              )
+            }
+          />
+          <Route
+            path="/welcome"
+            element={<LandingPage onStart={() => navigate("/onboarding")} />}
+          />
+          <Route
+            path="/onboarding"
+            element={
+              <Onboarding
+                onComplete={() => {
+                  localStorage.setItem("dsa_onboarded_v1", "true");
+                  navigate("/");
+                }}
               />
             }
           />
