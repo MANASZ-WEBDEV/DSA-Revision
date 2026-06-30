@@ -1,4 +1,4 @@
-import type { FlashCard, ReviewEvent, StreakData, SessionConfig } from "../types";
+import type { FlashCard, ReviewEvent, StreakData, SessionConfig, SessionAnalytics } from "../types";
 
 const CARDS_KEY = "dsa_flashcards_v1";
 const HISTORY_KEY = "dsa_review_history_v1";
@@ -88,6 +88,25 @@ export const Storage = {
       localStorage.setItem("dsa_session_config_v1", JSON.stringify(config));
     } catch (e) {
       console.error("Failed to save session config to storage", e);
+    }
+  },
+
+  getSessionHistory(): SessionAnalytics[] {
+    try {
+      const raw = localStorage.getItem("dsa_session_history_v1");
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  },
+
+  saveSessionHistory(history: SessionAnalytics[]): void {
+    try {
+      // Limit history to last 30 sessions to prevent storage bloat
+      const trimmed = history.slice(-30);
+      localStorage.setItem("dsa_session_history_v1", JSON.stringify(trimmed));
+    } catch (e) {
+      console.error("Failed to save session history to storage", e);
     }
   }
 };

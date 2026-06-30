@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import type { FlashCard, ReviewEvent, StreakData, ReviewQuality, SessionConfig } from "../types";
+import type { FlashCard, ReviewEvent, StreakData, ReviewQuality, SessionConfig, SessionAnalytics } from "../types";
 import type { ProviderId } from "../lib/llm";
 import { PROVIDERS } from "../lib/llm";
 import { Storage } from "../lib/storage";
@@ -171,5 +171,21 @@ export function useSessionConfig() {
   }, []);
 
   return { config, setConfig };
+}
+
+export function useSessionHistory() {
+  const [sessionHistory, setSessionHistoryState] = useState<SessionAnalytics[]>(() => {
+    return Storage.getSessionHistory();
+  });
+
+  const recordSession = useCallback((session: SessionAnalytics) => {
+    setSessionHistoryState((prev) => {
+      const updated = [...prev, session];
+      Storage.saveSessionHistory(updated);
+      return updated;
+    });
+  }, []);
+
+  return { sessionHistory, recordSession };
 }
 
