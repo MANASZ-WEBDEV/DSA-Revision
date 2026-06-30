@@ -52,11 +52,12 @@ export function Dashboard({ cards, events, streak, onStartReview, onGenerate, on
           <h1 style={s.h1}>Your progress</h1>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          {dueCount > 0 ? (
+          {cards.length > 0 && (
             <button onClick={onStartReview} style={s.primaryBtn} className="btn-press">
-              Review {dueCount} due →
+              Review {dueCount > 0 ? `${dueCount} due ` : ""}→
             </button>
-          ) : (
+          )}
+          {dueCount === 0 && (
             <button onClick={onGenerate} style={s.secondaryBtn} className="btn-press">✦ Generate a card</button>
           )}
         </div>

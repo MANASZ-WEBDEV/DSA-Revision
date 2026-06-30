@@ -80,18 +80,18 @@ export default function App() {
             </NavLink>
           ))}
 
-          {dueCount > 0 && (
+          {cards.length > 0 && (
             <NavLink
               to="/review"
               onClick={closeMobileMenu}
               style={({ isActive }) => ({
                 ...s.navBtn,
                 ...(isActive ? s.navActive : {}),
-                color: "var(--urgent)",
+                color: dueCount > 0 ? "var(--urgent)" : "var(--ink-soft)",
                 fontWeight: 600,
               })}
             >
-              Review {dueCount} →
+              Review {dueCount > 0 ? `(${dueCount})` : ""}
             </NavLink>
           )}
         </div>
