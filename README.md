@@ -1,93 +1,125 @@
-# DSA Flashcards
+# 🧠 DSA Recall
 
-AI-powered DSA interview prep flashcards with spaced repetition. Paste a problem → Claude extracts pattern tags, multiple approaches (brute → optimal), and recall triggers. SM-2 algorithm schedules reviews.
+> **Active Recall + Spaced Repetition designed specifically for technical coding interview prep.**
+> *“The template-driven flashcard system Anki can't replicate.”*
 
-## Quick start
+---
 
-```bash
-git clone https://github.com/YOUR_USERNAME/dsa-flashcards
-cd dsa-flashcards
-npm install
-npm run dev
+[![Vite](https://img.shields.io/badge/Vite-6.x-646CFF?logo=vite)](https://vite.dev/)
+[![React](https://img.shields.io/badge/React-19.x-61DAFB?logo=react)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+[![Local First](https://img.shields.io/badge/Data-Local--First-3B6E5E)](#)
+[![License](https://img.shields.io/badge/License-MIT-black)](#)
+
+Most software engineering candidates study for interviews by solving hundreds of LeetCode problems, only to forget the exact patterns, intuitions, and trade-offs a few weeks later. 
+
+**DSA Recall** is a professional, local-first web application that helps you retain coding patterns permanently. Instead of re-solving complex problems from scratch, you review structured active recall cards at mathematically optimal intervals computed by a custom spaced-repetition algorithm.
+
+---
+
+## ✨ Key Features
+
+### 1. Smart Daily Revision Plan
+Layers a three-step coverage guarantee on top of raw SM-2 scheduling to prevent forgetting entire categories:
+* **Due Cards First**: Standard SM-2 scheduled reviews sorted by most overdue first, capped at 25/day.
+* **Pattern-Staleness Protection**: If a pattern tag (e.g. *DP*, *Sliding Window*) hasn't been touched in 14 days, the system pulls in its most overdue card even if not strictly scheduled yet.
+* **New Card Drip-Feed**: Gradually introduces up to 5 unseen cards a day in leftover session slots to avoid backlog overwhelm.
+
+### 2. Structured Pedagogical Cards
+Cards are built around a custom pedagogical template tailored for SWE interview prep rather than simple Q&A:
+* **Recall Trigger**: The key visual/textual cue that fires when you see the problem.
+* **Brute → Optimal Approaches**: Tabbed approaches documenting complexity, key insights, code hints, and trade-offs.
+* **O(N) Complexity Watermark**: Ghosted optimal complexities layered behind difficulty badges.
+
+### 3. High-Friction Active Recall Helpers
+* **Self-Explanation Prompt**: Draft your key intuition in your own words before revealing the approaches (shown to boost retention by ~40%).
+* **Approach Recall Checklist**: Grade yourself on which complexity tiers (Brute Force vs Optimal Hashing) you successfully remembered.
+* **Visual Countdown Timer**: Circular countdown display simulating high-pressure mock interviews.
+
+### 4. Interactive Analytics & Streaks
+* Heatmap tracker mapping reviews over time.
+* Streak counter to enforce daily discipline.
+* **Recent Sessions Summary**: View recall rates, durations, and average response times across your last 30 sessions.
+
+---
+
+## 📦 Bundled Content
+
+DSA Recall ships with the **Blind 75 starter pack** built-in:
+* 75 essential problems spanning 14 patterns (plus *Trapping Rain Water* as a bonus card).
+* Fully pre-packaged as a static local JSON bundle.
+* **Zero API keys needed** to get started immediately.
+
+---
+
+## 🛠️ Tech Stack & Architecture
+
+* **Frontend**: React 19 + TypeScript
+* **Build System**: Vite 6
+* **Router**: React Router 6
+* **Styling**: Vanilla CSS (Harmonious custom pine/terracotta palette, fully dark-mode responsive, premium animations).
+* **Storage**: Local-First via abstracted `Storage` layer wrapping `localStorage`.
+
+### Folder Structure (Feature-Wise)
+
+```
+dsa-flashcards/
+├── src/
+│   ├── components/          # Categorized by feature area
+│   │   ├── layout/          # ThemeToggle, Nav
+│   │   ├── cards/           # CardDetail
+│   │   ├── review/          # ReviewSession, ReviewConfig, ReviewAnalytics
+│   │   ├── dashboard/       # Dashboard, Heatmap
+│   │   ├── library/         # Library, StarterPacks
+│   │   ├── generate/        # GenerateCard (BYOK parser)
+│   │   └── settings/        # ApiKeyModal
+│   ├── hooks/               # useStore (useCardStore, useSessionHistory)
+│   ├── lib/                 # sm2 (daily session builder), llm (Claude/Gemini integration)
+│   ├── data/                # blind75.json (starter deck)
+│   ├── types/               # index.ts (strongly typed interfaces)
+│   ├── styles/              # global.css, animations.css
+│   ├── App.tsx
+│   └── main.tsx
 ```
 
-Open `http://localhost:5173`, set your Anthropic API key (Settings icon), and paste your first problem.
+---
 
-## Your own API key
+## 🚀 Local Setup
 
-This app uses a **Bring Your Own Key** model. Your key is stored in browser localStorage only — it never touches any server.
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/MANASZ-WEBDEV/DSA-Revision.git
+   cd dsa-flashcards
+   ```
 
-Get a key: https://console.anthropic.com  
-Cost: ~₹0.60 per card (under $0.01). $5 credit lasts months for personal use.
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
 
-## Architecture
+3. **Start the local development server**:
+   ```bash
+   npm run dev
+   ```
 
-```
-src/
-├── types/index.ts          # FlashCard, Approach, SM-2 fields, PatternTag
-├── lib/
-│   ├── claude.ts           # System prompt + API call + pattern color map
-│   └── sm2.ts              # SM-2 algorithm, isDue(), nextReviewLabel()
-├── hooks/
-│   └── useStore.ts         # localStorage persistence (cards + API key)
-└── components/
-    ├── App.tsx             # Router + nav
-    ├── Library.tsx         # Card grid with pattern/difficulty filters
-    ├── GenerateCard.tsx    # Problem input + API call
-    ├── CardDetail.tsx      # Full card with tabbed approaches
-    ├── ReviewSession.tsx   # SM-2 review flow
-    └── ApiKeyModal.tsx     # Key input modal
-```
+4. **Verify types and build**:
+   ```bash
+   npx tsc --noEmit
+   npm run build
+   ```
 
-## SM-2 algorithm
+---
 
-Standard SuperMemo 2 implementation in `src/lib/sm2.ts`:
+## 🌐 Deployment to Vercel
 
-- **Quality 5** (Easy): Instant recall → interval multiplies by ease factor
-- **Quality 4** (Good): Correct with hesitation → interval grows normally  
-- **Quality 3** (Hard): Barely got it → interval grows slowly, EF decreases
-- **Quality 0** (Forgot): Reset to interval=1, relearn from scratch
+This app is configured as a single-page application (SPA). To prevent `404` errors when reloading routes like `/review` or `/welcome` in production, a `vercel.json` rewrite configuration is included:
 
-Initial EF = 2.5. Minimum EF = 1.3. Cards due when `next_review <= now`.
-
-## Multiple approaches per card
-
-Each card stores 2–3 `Approach` objects:
-```typescript
+```json
 {
-  label: "Brute Force" | "Better" | "Optimal"
-  intuition: string         // Why does this work?
-  key_observation: string   // The aha insight
-  complexity: { time, space }
-  code_hint: string         // Pseudocode only — forces active recall
-  trade_off: string         // Why reject / why this is the ceiling
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
 ```
 
-The `code_hint` is hidden by default in review mode — you must recall the approach before revealing it.
-
-## Canonical pattern tags
-
-Cards use only these tags (ensures filterability):
-Two Pointers, Sliding Window, Binary Search, BFS, DFS, Backtracking,
-DP: Linear, DP: Knapsack, DP: Interval, DP: Grid,
-Monotonic Stack, Heap / Priority Queue, Union Find, Trie,
-Greedy, Topological Sort, Divide and Conquer, Prefix Sum,
-Bit Manipulation, Hashing
-
-## Deploying to Vercel
-
-```bash
-npm run build
-# Push to GitHub, connect repo in Vercel — zero config needed
-```
-
-No environment variables required (users bring their own key).
-
-## Roadmap
-
-- [ ] Export cards to CSV / Anki format
-- [ ] Import from LeetCode list URL (via backend scraper)
-- [ ] Tag-specific review sessions ("Only Sliding Window today")
-- [ ] Streak tracking
-- [ ] PWA support (offline review)
+Simply connect this repository to your Vercel account, and it will deploy automatically with continuous integration.
