@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <title>DSA Recall — Spaced repetition that actually works for interviews</title>
+    <meta name="description" content="AI-generated DSA flashcards that teach the brute-force-to-optimal thinking progression, scheduled with SM-2 spaced repetition. Free Blind 75 deck included. Bring your own API key — free forever." />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="DSA Recall — Stop re-solving. Start remembering." />
+    <meta property="og:description" content="Paste a problem, get a structured flashcard with multiple solution tiers, reviewed on a science-backed schedule. Includes free Blind 75 starter deck." />
+    <meta property="og:type" content="website" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="DSA Recall — Spaced repetition for FAANG prep" />
+    <meta name="twitter:description" content="The card format Anki can't replicate. AI-generated DSA flashcards with brute→optimal thinking chains." />
+
+    <!-- Favicon: inline SVG, monospace { } bracket motif matching the wordmark -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%233B6E5E'/%3E%3Ctext x='50' y='68' font-size='56' font-family='monospace' font-weight='700' fill='%23FAF8F3' text-anchor='middle'%3E%7B%7D%3C/text%3E%3C/svg%3E" />
+
+    <!-- Theme: no-flash script -->
+    <script>
+      (function () {
+        var stored = localStorage.getItem("dsa_theme_override");
+        var theme = stored || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        document.documentElement.setAttribute("data-theme", theme);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

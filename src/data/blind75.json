@@ -1,0 +1,1654 @@
+[
+  {
+    "title": "Two Sum",
+    "difficulty": "Easy",
+    "patterns": ["Hashing"],
+    "problem_summary": "Find two indices in an array whose values sum to a target.",
+    "recall_trigger": "Need a pair summing to target → store complements in a hashmap as you go.",
+    "approaches": [
+      {
+        "label": "Brute Force",
+        "intuition": "Check every pair of elements.",
+        "key_observation": "Nested loops cover all pairs but waste time re-scanning.",
+        "complexity": { "time": "O(n²)", "space": "O(1)" },
+        "code_hint": "for i in range(n):\n  for j in range(i+1, n):\n    if nums[i]+nums[j]==target: return [i,j]",
+        "trade_off": "O(n²) is too slow for large inputs."
+      },
+      {
+        "label": "Optimal",
+        "intuition": "A hashmap lets you check 'have I seen the complement?' in O(1).",
+        "key_observation": "For each num, target - num is the complement. Store seen values in a map.",
+        "complexity": { "time": "O(n)", "space": "O(n)" },
+        "code_hint": "seen = {}\nfor i, num in enumerate(nums):\n  comp = target - num\n  if comp in seen: return [seen[comp], i]\n  seen[num] = i",
+        "trade_off": "You must see every element at least once, so O(n) is optimal."
+      }
+    ],
+    "edge_cases": ["Duplicate values", "Negative numbers", "Exactly two elements"],
+    "similar_problems": ["3Sum", "4Sum", "Two Sum II (sorted)"]
+  },
+  {
+    "title": "Best Time to Buy and Sell Stock",
+    "difficulty": "Easy",
+    "patterns": ["Sliding Window"],
+    "problem_summary": "Find the maximum profit from buying and selling a stock once.",
+    "recall_trigger": "Track running minimum price → max profit is current - min so far.",
+    "approaches": [
+      {
+        "label": "Brute Force",
+        "intuition": "Try every buy-sell pair.",
+        "key_observation": "Check all i < j pairs for max prices[j] - prices[i].",
+        "complexity": { "time": "O(n²)", "space": "O(1)" },
+        "code_hint": "for i in range(n):\n  for j in range(i+1, n):\n    profit = max(profit, prices[j]-prices[i])",
+        "trade_off": "Quadratic — redundant comparisons."
+      },
+      {
+        "label": "Optimal",
+        "intuition": "Track the minimum price seen so far; at each step, the best sell is current price - min.",
+        "key_observation": "One pass: maintain min_price and max_profit simultaneously.",
+        "complexity": { "time": "O(n)", "space": "O(1)" },
+        "code_hint": "min_price = inf\nfor price in prices:\n  min_price = min(min_price, price)\n  profit = max(profit, price - min_price)",
+        "trade_off": "Can't do better than O(n) since every price must be examined."
+      }
+    ],
+    "edge_cases": ["Prices only decrease (profit = 0)", "Single day", "All same prices"],
+    "similar_problems": ["Best Time to Buy and Sell Stock II", "Maximum Subarray"]
+  },
+  {
+    "title": "Contains Duplicate",
+    "difficulty": "Easy",
+    "patterns": ["Hashing"],
+    "problem_summary": "Determine if any value appears at least twice in an array.",
+    "recall_trigger": "Seen set → if already in set, duplicate found.",
+    "approaches": [
+      {
+        "label": "Brute Force",
+        "intuition": "Compare every pair.",
+        "key_observation": "Nested loop checks all pairs for equality.",
+        "complexity": { "time": "O(n²)", "space": "O(1)" },
+        "code_hint": "for i in range(n):\n  for j in range(i+1,n):\n    if nums[i]==nums[j]: return true",
+        "trade_off": "Too slow for large arrays."
+      },
+      {
+        "label": "Optimal",
+        "intuition": "A set tracks seen values — duplicate means the value is already in the set.",
+        "key_observation": "Set lookup is O(1). If len(set(nums)) < len(nums), duplicates exist.",
+        "complexity": { "time": "O(n)", "space": "O(n)" },
+        "code_hint": "return len(nums) != len(set(nums))",
+        "trade_off": "O(n) time is optimal; space trade-off is unavoidable without sorting."
+      }
+    ],
+    "edge_cases": ["Empty array", "Single element", "All identical elements"],
+    "similar_problems": ["Contains Duplicate II", "Contains Duplicate III"]
+  },
+  {
+    "title": "Product of Array Except Self",
+    "difficulty": "Medium",
+    "patterns": ["Prefix Sum"],
+    "problem_summary": "Return an array where each element is the product of all other elements, without division.",
+    "recall_trigger": "Prefix product left-to-right, then suffix product right-to-left.",
+    "approaches": [
+      {
+        "label": "Brute Force",
+        "intuition": "For each index, multiply all other elements.",
+        "key_observation": "Nested loop computes product skipping current index.",
+        "complexity": { "time": "O(n²)", "space": "O(1)" },
+        "code_hint": "for i in range(n):\n  prod = 1\n  for j in range(n):\n    if i != j: prod *= nums[j]\n  result[i] = prod",
+        "trade_off": "Quadratic — recomputes overlapping products."
+      },
+      {
+        "label": "Optimal",
+        "intuition": "Product except self = (product of everything to the left) × (product of everything to the right).",
+        "key_observation": "Two passes: build prefix products L→R, then multiply suffix products R→L into the result.",
+        "complexity": { "time": "O(n)", "space": "O(1)" },
+        "code_hint": "result = [1]*n\nprefix = 1\nfor i in range(n):\n  result[i] = prefix\n  prefix *= nums[i]\nsuffix = 1\nfor i in range(n-1,-1,-1):\n  result[i] *= suffix\n  suffix *= nums[i]",
+        "trade_off": "O(n) time and O(1) extra space (output array doesn't count). Can't improve further."
+      }
+    ],
+    "edge_cases": ["Array contains zero", "Array contains multiple zeros", "Negative numbers"],
+    "similar_problems": ["Trapping Rain Water", "Maximum Product Subarray"]
+  },
+  {
+    "title": "Maximum Subarray",
+    "difficulty": "Medium",
+    "patterns": ["DP: Linear"],
+    "problem_summary": "Find the contiguous subarray with the largest sum.",
+    "recall_trigger": "Kadane's: extend current subarray or start fresh — max(num, current_sum + num).",
+    "approaches": [
+      {
+        "label": "Brute Force",
+        "intuition": "Try all subarrays, track the maximum sum.",
+        "key_observation": "Two nested loops enumerate all start/end pairs.",
+        "complexity": { "time": "O(n²)", "space": "O(1)" },
+        "code_hint": "for i in range(n):\n  curr = 0\n  for j in range(i, n):\n    curr += nums[j]\n    best = max(best, curr)",
+        "trade_off": "Doesn't exploit the observation that negative prefixes should be discarded."
+      },
+      {
+        "label": "Optimal",
+        "intuition": "At each position, either extend the previous subarray or start a new one.",
+        "key_observation": "Kadane's algorithm: if current_sum < 0, reset to 0 (start fresh).",
+        "complexity": { "time": "O(n)", "space": "O(1)" },
+        "code_hint": "curr = best = nums[0]\nfor num in nums[1:]:\n  curr = max(num, curr + num)\n  best = max(best, curr)",
+        "trade_off": "Linear scan is optimal — every element must be examined."
+      }
+    ],
+    "edge_cases": ["All negative numbers", "Single element", "All positive numbers"],
+    "similar_problems": ["Maximum Product Subarray", "Circular Subarray Sum"]
+  },
+  {
+    "title": "Maximum Product Subarray",
+    "difficulty": "Medium",
+    "patterns": ["DP: Linear"],
+    "problem_summary": "Find the contiguous subarray with the largest product.",
+    "recall_trigger": "Track both max AND min product — a negative × negative flips to max.",
+    "approaches": [
+      {
+        "label": "Brute Force",
+        "intuition": "Compute product of every subarray.",
+        "key_observation": "Nested loops with running product.",
+        "complexity": { "time": "O(n²)", "space": "O(1)" },
+        "code_hint": "for i in range(n):\n  prod = 1\n  for j in range(i, n):\n    prod *= nums[j]\n    best = max(best, prod)",
+        "trade_off": "Doesn't exploit that we only need running max and min."
+      },
+      {
+        "label": "Optimal",
+        "intuition": "A negative number can turn a minimum product into the maximum. Track both.",
+        "key_observation": "At each step: new_max = max(num, max_so_far*num, min_so_far*num). Swap when num is negative.",
+        "complexity": { "time": "O(n)", "space": "O(1)" },
+        "code_hint": "cur_max = cur_min = result = nums[0]\nfor num in nums[1:]:\n  if num < 0: swap(cur_max, cur_min)\n  cur_max = max(num, cur_max * num)\n  cur_min = min(num, cur_min * num)\n  result = max(result, cur_max)",
+        "trade_off": "O(n) is optimal. The min/max tracking handles all sign-flip cases."
+      }
+    ],
+    "edge_cases": ["Contains zero", "All negatives", "Single element zero"],
+    "similar_problems": ["Maximum Subarray", "Product of Array Except Self"]
+  },
+  {
+    "title": "Find Minimum in Rotated Sorted Array",
+    "difficulty": "Medium",
+    "patterns": ["Binary Search"],
+    "problem_summary": "Find the minimum element in a sorted array that has been rotated.",
+    "recall_trigger": "Binary search — if mid > right, min is in right half; else left half.",
+    "approaches": [
+      {
+        "label": "Brute Force",
+        "intuition": "Scan the entire array for the minimum.",
+        "key_observation": "Linear scan always works but ignores the sorted structure.",
+        "complexity": { "time": "O(n)", "space": "O(1)" },
+        "code_hint": "return min(nums)",
+        "trade_off": "Doesn't exploit the sorted + rotated property."
+      },
+      {
+        "label": "Optimal",
+        "intuition": "The rotation creates two sorted halves. Binary search finds the pivot.",
+        "key_observation": "If nums[mid] > nums[right], the min must be in the right half (the rotation point is there).",
+        "complexity": { "time": "O(log n)", "space": "O(1)" },
+        "code_hint": "lo, hi = 0, len(nums)-1\nwhile lo < hi:\n  mid = (lo+hi)//2\n  if nums[mid] > nums[hi]: lo = mid+1\n  else: hi = mid\nreturn nums[lo]",
+        "trade_off": "O(log n) is optimal for a search problem with sorted structure."
+      }
+    ],
+    "edge_cases": ["Not rotated (already sorted)", "Single element", "Two elements"],
+    "similar_problems": ["Search in Rotated Sorted Array", "Find Peak Element"]
+  },
+  {
+    "title": "Search in Rotated Sorted Array",
+    "difficulty": "Medium",
+    "patterns": ["Binary Search"],
+    "problem_summary": "Search for a target in a rotated sorted array. Return index or -1.",
+    "recall_trigger": "Determine which half is sorted → check if target is in that half.",
+    "approaches": [
+      {
+        "label": "Brute Force",
+        "intuition": "Linear scan.",
+        "key_observation": "Check every element.",
+        "complexity": { "time": "O(n)", "space": "O(1)" },
+        "code_hint": "for i,v in enumerate(nums):\n  if v == target: return i\nreturn -1",
+        "trade_off": "Ignores sorted structure."
+      },
+      {
+        "label": "Optimal",
+        "intuition": "At least one half of the array is always sorted. Determine which, then check if target falls in that range.",
+        "key_observation": "If left half sorted (nums[lo] <= nums[mid]), check if target is in [lo, mid]. Otherwise search right half.",
+        "complexity": { "time": "O(log n)", "space": "O(1)" },
+        "code_hint": "lo, hi = 0, len(nums)-1\nwhile lo <= hi:\n  mid = (lo+hi)//2\n  if nums[mid] == target: return mid\n  if nums[lo] <= nums[mid]:  # left sorted\n    if nums[lo] <= target < nums[mid]: hi = mid-1\n    else: lo = mid+1\n  else:  # right sorted\n    if nums[mid] < target <= nums[hi]: lo = mid+1\n    else: hi = mid-1",
+        "trade_off": "O(log n) is optimal; leverages the partial sorted structure fully."
+      }
+    ],
+    "edge_cases": ["Target not present", "Single element", "Array not rotated"],
+    "similar_problems": ["Find Minimum in Rotated Sorted Array", "Search in Rotated Sorted Array II"]
+  },
+  {
+    "title": "3Sum",
+    "difficulty": "Medium",
+    "patterns": ["Two Pointers"],
+    "problem_summary": "Find all unique triplets in an array that sum to zero.",
+    "recall_trigger": "Sort → fix one number → two-pointer the rest. Skip duplicates.",
+    "approaches": [
+      {
+        "label": "Brute Force",
+        "intuition": "Check all triplets.",
+        "key_observation": "Three nested loops, use a set to avoid duplicates.",
+        "complexity": { "time": "O(n³)", "space": "O(n)" },
+        "code_hint": "for i in range(n):\n  for j in range(i+1,n):\n    for k in range(j+1,n):\n      if nums[i]+nums[j]+nums[k]==0: add to result",
+        "trade_off": "Cubic — far too slow for n > 1000."
+      },
+      {
+        "label": "Optimal",
+        "intuition": "Sort the array. Fix one element, then use two pointers for the remaining two.",
+        "key_observation": "Sorting enables two-pointer approach and easy duplicate skipping.",
+        "complexity": { "time": "O(n²)", "space": "O(1)" },
+        "code_hint": "sort(nums)\nfor i in range(n):\n  if i>0 and nums[i]==nums[i-1]: continue\n  lo, hi = i+1, n-1\n  while lo < hi:\n    s = nums[i]+nums[lo]+nums[hi]\n    if s < 0: lo++\n    elif s > 0: hi--\n    else: add, skip dupes",
+        "trade_off": "O(n²) is optimal — can't avoid fixing one element and scanning the rest."
+      }
+    ],
+    "edge_cases": ["All zeros", "No valid triplets", "Duplicate elements"],
+    "similar_problems": ["Two Sum", "4Sum", "3Sum Closest"]
+  },
+  {
+    "title": "Container With Most Water",
+    "difficulty": "Medium",
+    "patterns": ["Two Pointers"],
+    "problem_summary": "Find two lines that together with the x-axis form a container holding the most water.",
+    "recall_trigger": "Two pointers at edges → move the shorter line inward (can only improve).",
+    "approaches": [
+      {
+        "label": "Brute Force",
+        "intuition": "Check all pairs of lines.",
+        "key_observation": "Area = min(h[i], h[j]) × (j - i). Try all pairs.",
+        "complexity": { "time": "O(n²)", "space": "O(1)" },
+        "code_hint": "for i in range(n):\n  for j in range(i+1,n):\n    area = min(h[i],h[j])*(j-i)\n    best = max(best, area)",
+        "trade_off": "Doesn't exploit that moving the shorter line is the only way to potentially increase area."
+      },
+      {
+        "label": "Optimal",
+        "intuition": "Start with widest container. Moving the shorter pointer inward may find a taller line.",
+        "key_observation": "Moving the taller pointer can only decrease width without guaranteed height increase. Always move the shorter one.",
+        "complexity": { "time": "O(n)", "space": "O(1)" },
+        "code_hint": "lo, hi = 0, n-1\nwhile lo < hi:\n  area = min(h[lo],h[hi])*(hi-lo)\n  best = max(best, area)\n  if h[lo] < h[hi]: lo++\n  else: hi--",
+        "trade_off": "O(n) is optimal. The greedy pointer movement covers all meaningful pairs."
+      }
+    ],
+    "edge_cases": ["All same height", "Two elements", "Monotonically increasing/decreasing"],
+    "similar_problems": ["Trapping Rain Water", "Largest Rectangle in Histogram"]
+  },
+  {
+    "title": "Valid Anagram",
+    "difficulty": "Easy",
+    "patterns": ["Hashing"],
+    "problem_summary": "Determine if two strings are anagrams (same characters, same frequency).",
+    "recall_trigger": "Character frequency count → both strings must have identical counts.",
+    "approaches": [
+      {
+        "label": "Brute Force",
+        "intuition": "Sort both strings and compare.",
+        "key_observation": "Anagrams, when sorted, produce identical strings.",
+        "complexity": { "time": "O(n log n)", "space": "O(n)" },
+        "code_hint": "return sorted(s) == sorted(t)",
+        "trade_off": "Sorting is unnecessary overhead."
+      },
+      {
+        "label": "Optimal",
+        "intuition": "Count character frequencies. Anagrams have identical frequency maps.",
+        "key_observation": "Use a single counter array of size 26. Increment for s, decrement for t.",
+        "complexity": { "time": "O(n)", "space": "O(1)" },
+        "code_hint": "count = [0]*26\nfor c in s: count[ord(c)-ord('a')] += 1\nfor c in t: count[ord(c)-ord('a')] -= 1\nreturn all(x==0 for x in count)",
+        "trade_off": "O(n) is optimal. Fixed 26-char space is effectively O(1)."
+      }
+    ],
+    "edge_cases": ["Different lengths", "Empty strings", "Unicode characters"],
+    "similar_problems": ["Group Anagrams", "Valid Palindrome"]
+  },
+  {
+    "title": "Group Anagrams",
+    "difficulty": "Medium",
+    "patterns": ["Hashing"],
+    "problem_summary": "Group strings that are anagrams of each other.",
+    "recall_trigger": "Sorted string as hashmap key → all anagrams map to the same key.",
+    "approaches": [
+      {
+        "label": "Brute Force",
+        "intuition": "Compare every pair of strings to check if they're anagrams.",
+        "key_observation": "O(n²) pair comparisons, each taking O(k) for string length k.",
+        "complexity": { "time": "O(n²k)", "space": "O(nk)" },
+        "code_hint": "for each pair, check if sorted versions match",
+        "trade_off": "Quadratic in number of strings."
+      },
+      {
+        "label": "Optimal",
+        "intuition": "All anagrams produce the same sorted string. Use it as a hash key.",
+        "key_observation": "sorted(str) or tuple(char_count) as dictionary key groups anagrams automatically.",
+        "complexity": { "time": "O(nk log k)", "space": "O(nk)" },
+        "code_hint": "groups = defaultdict(list)\nfor s in strs:\n  key = tuple(sorted(s))\n  groups[key].append(s)\nreturn list(groups.values())",
+        "trade_off": "O(nk log k) from sorting each string. Could use counting sort for O(nk) but rarely needed."
+      }
+    ],
+    "edge_cases": ["Empty strings", "Single character strings", "All identical strings"],
+    "similar_problems": ["Valid Anagram", "Find All Anagrams in a String"]
+  },
+  {
+    "title": "Top K Frequent Elements",
+    "difficulty": "Medium",
+    "patterns": ["Hashing", "Heap / Priority Queue"],
+    "problem_summary": "Return the k most frequent elements in an array.",
+    "recall_trigger": "Count frequencies → bucket sort by frequency (or min-heap of size k).",
+    "approaches": [
+      {
+        "label": "Brute Force",
+        "intuition": "Count frequencies, sort by frequency, take top k.",
+        "key_observation": "Sorting all n elements by frequency and slicing.",
+        "complexity": { "time": "O(n log n)", "space": "O(n)" },
+        "code_hint": "count = Counter(nums)\nreturn [x for x,_ in count.most_common(k)]",
+        "trade_off": "Sorting is O(n log n) — overkill when we only need top k."
+      },
+      {
+        "label": "Optimal",
+        "intuition": "Bucket sort: index = frequency, value = list of elements with that frequency.",
+        "key_observation": "Max frequency is n, so create n+1 buckets. Scan from highest bucket to get top k.",
+        "complexity": { "time": "O(n)", "space": "O(n)" },
+        "code_hint": "count = Counter(nums)\nbuckets = [[] for _ in range(len(nums)+1)]\nfor num, freq in count.items():\n  buckets[freq].append(num)\nresult = []\nfor i in range(len(buckets)-1, 0, -1):\n  for num in buckets[i]:\n    result.append(num)\n    if len(result)==k: return result",
+        "trade_off": "O(n) time. Bucket sort avoids comparison-based sorting entirely."
+      }
+    ],
+    "edge_cases": ["k equals number of unique elements", "All same elements", "k = 1"],
+    "similar_problems": ["Kth Largest Element", "Sort Characters By Frequency"]
+  },
+  {
+    "title": "Encode and Decode Strings",
+    "difficulty": "Medium",
+    "patterns": ["Hashing"],
+    "problem_summary": "Design an algorithm to encode a list of strings into a single string, and decode it back.",
+    "recall_trigger": "Length-prefix encoding: '4#word' format → unambiguous delimiter.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "Prefix each string with its length and a delimiter. No ambiguity possible.",
+        "key_observation": "Format: len(s) + '#' + s. The length tells the decoder exactly how many chars to read.",
+        "complexity": { "time": "O(n)", "space": "O(n)" },
+        "code_hint": "encode: return ''.join(f'{len(s)}#{s}' for s in strs)\ndecode:\n  i = 0; result = []\n  while i < len(s):\n    j = s.index('#', i)\n    length = int(s[i:j])\n    result.append(s[j+1:j+1+length])\n    i = j+1+length",
+        "trade_off": "O(n) is optimal — must read every character at least once."
+      }
+    ],
+    "edge_cases": ["Empty strings in list", "Strings containing '#'", "Empty list"],
+    "similar_problems": ["Serialize and Deserialize Binary Tree", "String Compression"]
+  },
+  {
+    "title": "Longest Consecutive Sequence",
+    "difficulty": "Medium",
+    "patterns": ["Hashing"],
+    "problem_summary": "Find the length of the longest consecutive elements sequence in an unsorted array.",
+    "recall_trigger": "HashSet → only start counting from sequence starts (num-1 not in set).",
+    "approaches": [
+      {
+        "label": "Brute Force",
+        "intuition": "Sort the array, then scan for consecutive runs.",
+        "key_observation": "After sorting, consecutive elements are adjacent.",
+        "complexity": { "time": "O(n log n)", "space": "O(1)" },
+        "code_hint": "sort(nums)\nlongest = curr = 1\nfor i in range(1, n):\n  if nums[i]==nums[i-1]+1: curr++\n  elif nums[i]!=nums[i-1]: curr=1\n  longest = max(longest, curr)",
+        "trade_off": "Sorting takes O(n log n). Can we do O(n)?"
+      },
+      {
+        "label": "Optimal",
+        "intuition": "Put all numbers in a set. For each number that starts a sequence (num-1 not in set), count how far it extends.",
+        "key_observation": "Only start counting from the beginning of a sequence. This ensures each element is visited at most twice.",
+        "complexity": { "time": "O(n)", "space": "O(n)" },
+        "code_hint": "num_set = set(nums)\nfor num in num_set:\n  if num-1 not in num_set:  # start of sequence\n    length = 1\n    while num+length in num_set: length++\n    longest = max(longest, length)",
+        "trade_off": "O(n) amortized — each element is part of exactly one sequence traversal."
+      }
+    ],
+    "edge_cases": ["Empty array", "All duplicates", "Single element"],
+    "similar_problems": ["Longest Increasing Subsequence", "Array Nesting"]
+  },
+  {
+    "title": "Valid Palindrome",
+    "difficulty": "Easy",
+    "patterns": ["Two Pointers"],
+    "problem_summary": "Check if a string is a palindrome, considering only alphanumeric characters and ignoring case.",
+    "recall_trigger": "Two pointers from edges → skip non-alphanumeric → compare lowercase.",
+    "approaches": [
+      {
+        "label": "Brute Force",
+        "intuition": "Filter the string, then compare with its reverse.",
+        "key_observation": "Clean string then check s == s[::-1].",
+        "complexity": { "time": "O(n)", "space": "O(n)" },
+        "code_hint": "cleaned = ''.join(c.lower() for c in s if c.isalnum())\nreturn cleaned == cleaned[::-1]",
+        "trade_off": "Creates a new string — O(n) extra space."
+      },
+      {
+        "label": "Optimal",
+        "intuition": "Two pointers compare characters in-place, skipping non-alphanumeric.",
+        "key_observation": "No extra string needed. Move pointers inward, skip invalid chars, compare.",
+        "complexity": { "time": "O(n)", "space": "O(1)" },
+        "code_hint": "lo, hi = 0, len(s)-1\nwhile lo < hi:\n  while lo<hi and not s[lo].isalnum(): lo++\n  while lo<hi and not s[hi].isalnum(): hi--\n  if s[lo].lower() != s[hi].lower(): return False\n  lo++; hi--",
+        "trade_off": "O(1) space, O(n) time — optimal on both."
+      }
+    ],
+    "edge_cases": ["Empty string (true)", "Only non-alphanumeric chars", "Single character"],
+    "similar_problems": ["Valid Palindrome II", "Palindromic Substrings"]
+  },
+  {
+    "title": "Longest Substring Without Repeating Characters",
+    "difficulty": "Medium",
+    "patterns": ["Sliding Window"],
+    "problem_summary": "Find the length of the longest substring without repeating characters.",
+    "recall_trigger": "Sliding window with a set → expand right, shrink left when duplicate found.",
+    "approaches": [
+      {
+        "label": "Brute Force",
+        "intuition": "Check every substring for uniqueness.",
+        "key_observation": "Enumerate all substrings and check each for duplicates.",
+        "complexity": { "time": "O(n³)", "space": "O(n)" },
+        "code_hint": "for i in range(n):\n  for j in range(i,n):\n    if all_unique(s[i:j+1]): best = max(best, j-i+1)",
+        "trade_off": "Cubic — recomputes uniqueness from scratch each time."
+      },
+      {
+        "label": "Optimal",
+        "intuition": "Sliding window: maintain a set of characters in the current window. Expand right, shrink left on duplicates.",
+        "key_observation": "Use a hashmap to store the last index of each char. Jump the left pointer past the duplicate.",
+        "complexity": { "time": "O(n)", "space": "O(min(n, m))" },
+        "code_hint": "seen = {}\nleft = 0\nfor right, char in enumerate(s):\n  if char in seen and seen[char] >= left:\n    left = seen[char] + 1\n  seen[char] = right\n  best = max(best, right - left + 1)",
+        "trade_off": "O(n) — each character is processed at most twice (once by each pointer)."
+      }
+    ],
+    "edge_cases": ["Empty string", "All same characters", "All unique characters"],
+    "similar_problems": ["Longest Repeating Character Replacement", "Minimum Window Substring"]
+  },
+  {
+    "title": "Longest Repeating Character Replacement",
+    "difficulty": "Medium",
+    "patterns": ["Sliding Window"],
+    "problem_summary": "Find the longest substring where you can replace at most k characters to make all chars the same.",
+    "recall_trigger": "Window size - max frequency ≤ k → valid window. Expand right, shrink left.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "In a valid window, the number of chars to replace = window_size - count_of_most_frequent_char.",
+        "key_observation": "If (window_length - max_freq) > k, the window is invalid — shrink from left.",
+        "complexity": { "time": "O(n)", "space": "O(1)" },
+        "code_hint": "count = {}\nmax_freq = left = 0\nfor right in range(n):\n  count[s[right]] = count.get(s[right],0)+1\n  max_freq = max(max_freq, count[s[right]])\n  if (right-left+1) - max_freq > k:\n    count[s[left]] -= 1\n    left += 1\n  best = max(best, right-left+1)",
+        "trade_off": "O(n) with O(26) space. max_freq never decreases — a key optimization."
+      }
+    ],
+    "edge_cases": ["k = 0", "k >= string length", "All same characters"],
+    "similar_problems": ["Longest Substring Without Repeating Characters", "Max Consecutive Ones III"]
+  },
+  {
+    "title": "Minimum Window Substring",
+    "difficulty": "Hard",
+    "patterns": ["Sliding Window"],
+    "problem_summary": "Find the smallest window in s that contains all characters of t (including duplicates).",
+    "recall_trigger": "Two pointers: expand right until valid, then shrink left to minimize.",
+    "approaches": [
+      {
+        "label": "Brute Force",
+        "intuition": "Check every substring of s for containing all of t.",
+        "key_observation": "Enumerate all substrings, check if each contains all chars of t.",
+        "complexity": { "time": "O(n²m)", "space": "O(m)" },
+        "code_hint": "for all substrings of s:\n  if contains_all(sub, t): update minimum",
+        "trade_off": "Polynomial — doesn't reuse work from previous substrings."
+      },
+      {
+        "label": "Optimal",
+        "intuition": "Sliding window: expand right to include all of t, then contract left to find the minimum valid window.",
+        "key_observation": "Track a 'formed' counter — how many unique chars in t have their required frequency met. When formed == required, try shrinking.",
+        "complexity": { "time": "O(n + m)", "space": "O(m)" },
+        "code_hint": "need = Counter(t)\nhave = formed = 0\nfor r in range(n):\n  if s[r] in need:\n    window[s[r]] += 1\n    if window[s[r]] == need[s[r]]: formed += 1\n  while formed == len(need):\n    update min window\n    window[s[l]] -= 1\n    if s[l] in need and window[s[l]] < need[s[l]]: formed -= 1\n    l += 1",
+        "trade_off": "O(n+m) is optimal — each char enters and leaves the window at most once."
+      }
+    ],
+    "edge_cases": ["t longer than s", "t not in s", "s equals t", "Duplicate chars in t"],
+    "similar_problems": ["Substring with Concatenation of All Words", "Find All Anagrams in a String"]
+  },
+  {
+    "title": "Valid Parentheses",
+    "difficulty": "Easy",
+    "patterns": ["Monotonic Stack"],
+    "problem_summary": "Determine if a string of brackets is validly matched and nested.",
+    "recall_trigger": "Stack → push opens, pop on closes, check match. Stack must be empty at end.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "Each closing bracket must match the most recent unmatched opening bracket — a stack naturally tracks this.",
+        "key_observation": "Push opening brackets. On closing, pop and check if it matches. If stack is empty or mismatch, invalid.",
+        "complexity": { "time": "O(n)", "space": "O(n)" },
+        "code_hint": "match = {')':'(', ']':'[', '}':'{'}\nstack = []\nfor c in s:\n  if c in match:\n    if not stack or stack[-1] != match[c]: return False\n    stack.pop()\n  else: stack.append(c)\nreturn len(stack) == 0",
+        "trade_off": "O(n) time and space. Can't do better — must examine every character."
+      }
+    ],
+    "edge_cases": ["Odd length (always invalid)", "Only opening brackets", "Empty string (valid)"],
+    "similar_problems": ["Generate Parentheses", "Longest Valid Parentheses"]
+  },
+  {
+    "title": "Merge Two Sorted Lists",
+    "difficulty": "Easy",
+    "patterns": ["Two Pointers"],
+    "problem_summary": "Merge two sorted linked lists into one sorted linked list.",
+    "recall_trigger": "Dummy head → compare current nodes → advance the smaller one.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "Compare heads of both lists, append the smaller to result, advance that pointer.",
+        "key_observation": "Use a dummy node to simplify edge cases. Two pointers walk through both lists.",
+        "complexity": { "time": "O(n + m)", "space": "O(1)" },
+        "code_hint": "dummy = ListNode()\ncurr = dummy\nwhile l1 and l2:\n  if l1.val <= l2.val:\n    curr.next = l1; l1 = l1.next\n  else:\n    curr.next = l2; l2 = l2.next\n  curr = curr.next\ncurr.next = l1 or l2\nreturn dummy.next",
+        "trade_off": "O(n+m) is optimal — must examine every node."
+      }
+    ],
+    "edge_cases": ["One list empty", "Both empty", "Lists of different lengths"],
+    "similar_problems": ["Merge K Sorted Lists", "Sort List"]
+  },
+  {
+    "title": "Linked List Cycle",
+    "difficulty": "Easy",
+    "patterns": ["Two Pointers"],
+    "problem_summary": "Determine if a linked list has a cycle.",
+    "recall_trigger": "Floyd's: slow moves 1 step, fast moves 2 — if they meet, cycle exists.",
+    "approaches": [
+      {
+        "label": "Brute Force",
+        "intuition": "Use a set to track visited nodes.",
+        "key_observation": "If a node is seen twice, there's a cycle.",
+        "complexity": { "time": "O(n)", "space": "O(n)" },
+        "code_hint": "seen = set()\nwhile head:\n  if head in seen: return True\n  seen.add(head)\n  head = head.next",
+        "trade_off": "O(n) space for the set."
+      },
+      {
+        "label": "Optimal",
+        "intuition": "Two pointers at different speeds. If there's a cycle, the fast one will lap the slow one.",
+        "key_observation": "Floyd's tortoise and hare. Slow moves 1, fast moves 2. They meet inside the cycle.",
+        "complexity": { "time": "O(n)", "space": "O(1)" },
+        "code_hint": "slow = fast = head\nwhile fast and fast.next:\n  slow = slow.next\n  fast = fast.next.next\n  if slow == fast: return True\nreturn False",
+        "trade_off": "O(1) space — no extra data structure needed."
+      }
+    ],
+    "edge_cases": ["Empty list", "Single node no cycle", "Single node with self-loop"],
+    "similar_problems": ["Linked List Cycle II", "Happy Number", "Find the Duplicate Number"]
+  },
+  {
+    "title": "Reverse Linked List",
+    "difficulty": "Easy",
+    "patterns": ["Two Pointers"],
+    "problem_summary": "Reverse a singly linked list.",
+    "recall_trigger": "Three pointers: prev, curr, next_temp. Reverse each link iteratively.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "Walk through the list, reversing each pointer as you go.",
+        "key_observation": "Need three pointers: prev (initially null), curr, and next_temp to save the next node before overwriting.",
+        "complexity": { "time": "O(n)", "space": "O(1)" },
+        "code_hint": "prev = None\nwhile curr:\n  next_temp = curr.next\n  curr.next = prev\n  prev = curr\n  curr = next_temp\nreturn prev",
+        "trade_off": "O(n) time, O(1) space — optimal for any linked list traversal."
+      }
+    ],
+    "edge_cases": ["Empty list", "Single node", "Two nodes"],
+    "similar_problems": ["Reverse Linked List II", "Palindrome Linked List"]
+  },
+  {
+    "title": "Remove Nth Node From End of List",
+    "difficulty": "Medium",
+    "patterns": ["Two Pointers"],
+    "problem_summary": "Remove the nth node from the end of a linked list in one pass.",
+    "recall_trigger": "Two pointers n apart → when fast hits end, slow is at the node to remove.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "Advance fast pointer n steps ahead. Then move both until fast reaches the end. Slow is at the target.",
+        "key_observation": "The gap of n between pointers means when fast reaches null, slow.next is the node to remove.",
+        "complexity": { "time": "O(n)", "space": "O(1)" },
+        "code_hint": "dummy = ListNode(0, head)\nfast = slow = dummy\nfor _ in range(n+1): fast = fast.next\nwhile fast:\n  fast = fast.next\n  slow = slow.next\nslow.next = slow.next.next\nreturn dummy.next",
+        "trade_off": "Single pass, O(1) space. Optimal."
+      }
+    ],
+    "edge_cases": ["Remove head node", "Single node list", "n equals list length"],
+    "similar_problems": ["Delete Node in a Linked List", "Remove Linked List Elements"]
+  },
+  {
+    "title": "Merge K Sorted Lists",
+    "difficulty": "Hard",
+    "patterns": ["Heap / Priority Queue"],
+    "problem_summary": "Merge k sorted linked lists into one sorted linked list.",
+    "recall_trigger": "Min-heap of k list heads → always pop smallest, push its next.",
+    "approaches": [
+      {
+        "label": "Brute Force",
+        "intuition": "Collect all values, sort them, build a new list.",
+        "key_observation": "Flatten all lists into array, sort, reconstruct.",
+        "complexity": { "time": "O(N log N)", "space": "O(N)" },
+        "code_hint": "vals = []\nfor l in lists:\n  while l: vals.append(l.val); l = l.next\nvals.sort()\nbuild linked list from vals",
+        "trade_off": "Ignores the fact that lists are already sorted."
+      },
+      {
+        "label": "Optimal",
+        "intuition": "Use a min-heap to always pick the smallest among the k current heads.",
+        "key_observation": "Heap maintains k elements. Pop min, push its successor. Each of N elements enters/exits heap once.",
+        "complexity": { "time": "O(N log k)", "space": "O(k)" },
+        "code_hint": "heap = [(l.val, i, l) for i,l in enumerate(lists) if l]\nheapify(heap)\ndummy = curr = ListNode()\nwhile heap:\n  val, i, node = heappop(heap)\n  curr.next = node; curr = curr.next\n  if node.next: heappush(heap, (node.next.val, i, node.next))",
+        "trade_off": "O(N log k) — heap operations are O(log k), done N times. Optimal."
+      }
+    ],
+    "edge_cases": ["Empty list in input", "All lists empty", "k = 1"],
+    "similar_problems": ["Merge Two Sorted Lists", "Ugly Number II"]
+  },
+  {
+    "title": "Reorder List",
+    "difficulty": "Medium",
+    "patterns": ["Two Pointers"],
+    "problem_summary": "Reorder a linked list from L0→L1→...→Ln to L0→Ln→L1→Ln-1→...",
+    "recall_trigger": "Find middle → reverse second half → merge alternately.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "Split the list in half, reverse the second half, then interleave.",
+        "key_observation": "Three steps: (1) find middle with slow/fast, (2) reverse second half, (3) merge two halves alternately.",
+        "complexity": { "time": "O(n)", "space": "O(1)" },
+        "code_hint": "# 1. Find middle\nslow, fast = head, head.next\nwhile fast and fast.next:\n  slow = slow.next; fast = fast.next.next\n# 2. Reverse second half\nsecond = slow.next; slow.next = None\nprev = None\nwhile second: ...\n# 3. Merge alternately",
+        "trade_off": "O(n) time, O(1) space — optimal. Combines three classic linked list techniques."
+      }
+    ],
+    "edge_cases": ["List of length 1 or 2", "Odd vs even length"],
+    "similar_problems": ["Palindrome Linked List", "Reverse Linked List"]
+  },
+  {
+    "title": "Invert Binary Tree",
+    "difficulty": "Easy",
+    "patterns": ["DFS"],
+    "problem_summary": "Invert a binary tree (mirror it).",
+    "recall_trigger": "Swap left and right children recursively at every node.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "At every node, swap its left and right subtrees, then recurse.",
+        "key_observation": "Base case: null node. Recursive: swap children, then invert each subtree.",
+        "complexity": { "time": "O(n)", "space": "O(h)" },
+        "code_hint": "def invert(root):\n  if not root: return None\n  root.left, root.right = root.right, root.left\n  invert(root.left)\n  invert(root.right)\n  return root",
+        "trade_off": "O(n) visits every node exactly once. O(h) space from recursion stack."
+      }
+    ],
+    "edge_cases": ["Empty tree", "Single node", "Already symmetric"],
+    "similar_problems": ["Symmetric Tree", "Same Tree"]
+  },
+  {
+    "title": "Maximum Depth of Binary Tree",
+    "difficulty": "Easy",
+    "patterns": ["DFS"],
+    "problem_summary": "Find the maximum depth (height) of a binary tree.",
+    "recall_trigger": "Depth = 1 + max(depth(left), depth(right)). Base case: null → 0.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "The depth of a tree is 1 plus the maximum depth of its subtrees.",
+        "key_observation": "Recursive: return 1 + max(left_depth, right_depth). Base: null returns 0.",
+        "complexity": { "time": "O(n)", "space": "O(h)" },
+        "code_hint": "def maxDepth(root):\n  if not root: return 0\n  return 1 + max(maxDepth(root.left), maxDepth(root.right))",
+        "trade_off": "O(n) time, O(h) space. Must visit every node."
+      }
+    ],
+    "edge_cases": ["Empty tree (depth 0)", "Single node (depth 1)", "Completely skewed tree"],
+    "similar_problems": ["Minimum Depth of Binary Tree", "Balanced Binary Tree"]
+  },
+  {
+    "title": "Same Tree",
+    "difficulty": "Easy",
+    "patterns": ["DFS"],
+    "problem_summary": "Check if two binary trees are structurally identical with same values.",
+    "recall_trigger": "Both null → true. One null → false. Same value → recurse left and right.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "Recursively compare corresponding nodes of both trees.",
+        "key_observation": "Base cases: both null (true), one null (false). Recursive: values match AND both subtrees match.",
+        "complexity": { "time": "O(n)", "space": "O(h)" },
+        "code_hint": "def isSame(p, q):\n  if not p and not q: return True\n  if not p or not q: return False\n  return p.val==q.val and isSame(p.left,q.left) and isSame(p.right,q.right)",
+        "trade_off": "O(n) time — must compare every node. O(h) space for recursion."
+      }
+    ],
+    "edge_cases": ["Both empty", "Different structures", "Same structure different values"],
+    "similar_problems": ["Symmetric Tree", "Subtree of Another Tree"]
+  },
+  {
+    "title": "Subtree of Another Tree",
+    "difficulty": "Easy",
+    "patterns": ["DFS"],
+    "problem_summary": "Check if a tree is a subtree of another tree.",
+    "recall_trigger": "At each node, check isSameTree. If not, recurse left and right.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "For each node in the main tree, check if the subtree rooted there matches the target tree.",
+        "key_observation": "Combine 'same tree' check with DFS traversal of the main tree.",
+        "complexity": { "time": "O(n × m)", "space": "O(h)" },
+        "code_hint": "def isSubtree(root, sub):\n  if not root: return False\n  if isSameTree(root, sub): return True\n  return isSubtree(root.left, sub) or isSubtree(root.right, sub)",
+        "trade_off": "O(nm) worst case. Can optimize with hashing but rarely needed in interviews."
+      }
+    ],
+    "edge_cases": ["Subtree is null", "Both trees identical", "Subtree larger than main tree"],
+    "similar_problems": ["Same Tree", "Count Univalue Subtrees"]
+  },
+  {
+    "title": "Lowest Common Ancestor of a BST",
+    "difficulty": "Medium",
+    "patterns": ["DFS"],
+    "problem_summary": "Find the lowest common ancestor of two nodes in a BST.",
+    "recall_trigger": "If both nodes < current → go left. Both > → go right. Else current is LCA.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "BST property: if both targets are smaller, LCA is in left subtree. If both larger, right. Otherwise, current node is the LCA.",
+        "key_observation": "The first node where p and q diverge to different subtrees is the LCA.",
+        "complexity": { "time": "O(h)", "space": "O(1)" },
+        "code_hint": "while root:\n  if p.val < root.val and q.val < root.val: root = root.left\n  elif p.val > root.val and q.val > root.val: root = root.right\n  else: return root",
+        "trade_off": "O(h) time — follows a single root-to-node path. O(1) space iterative."
+      }
+    ],
+    "edge_cases": ["One node is ancestor of the other", "Root is the LCA", "Nodes are leaves"],
+    "similar_problems": ["LCA of a Binary Tree", "Validate BST"]
+  },
+  {
+    "title": "Binary Tree Level Order Traversal",
+    "difficulty": "Medium",
+    "patterns": ["BFS"],
+    "problem_summary": "Return the level-order traversal of a binary tree (values grouped by level).",
+    "recall_trigger": "BFS with queue → process level-by-level using queue size.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "BFS naturally processes nodes level by level. Track the level boundary using the queue size.",
+        "key_observation": "At each level, process exactly len(queue) nodes (the current level's count), then their children form the next level.",
+        "complexity": { "time": "O(n)", "space": "O(n)" },
+        "code_hint": "result = []\nqueue = deque([root])\nwhile queue:\n  level = []\n  for _ in range(len(queue)):\n    node = queue.popleft()\n    level.append(node.val)\n    if node.left: queue.append(node.left)\n    if node.right: queue.append(node.right)\n  result.append(level)",
+        "trade_off": "O(n) time and space — every node is visited exactly once."
+      }
+    ],
+    "edge_cases": ["Empty tree", "Single node", "Complete vs skewed tree"],
+    "similar_problems": ["Binary Tree Zigzag Level Order Traversal", "Average of Levels"]
+  },
+  {
+    "title": "Validate Binary Search Tree",
+    "difficulty": "Medium",
+    "patterns": ["DFS"],
+    "problem_summary": "Determine if a binary tree is a valid BST.",
+    "recall_trigger": "Pass valid range (min, max) down → each node must be within its ancestor's bounds.",
+    "approaches": [
+      {
+        "label": "Brute Force",
+        "intuition": "Inorder traversal of a BST produces a sorted sequence. Check if it's sorted.",
+        "key_observation": "Collect inorder values, verify strictly increasing.",
+        "complexity": { "time": "O(n)", "space": "O(n)" },
+        "code_hint": "inorder = []\ndef traverse(node):\n  if node: traverse(node.left); inorder.append(node.val); traverse(node.right)\nreturn all(inorder[i] < inorder[i+1] for i in range(len(inorder)-1))",
+        "trade_off": "Stores all values — O(n) extra space."
+      },
+      {
+        "label": "Optimal",
+        "intuition": "Each node has a valid range. Left child must be in (-∞, parent.val), right child in (parent.val, +∞).",
+        "key_observation": "Recursive: validate(node, min_val, max_val). Update bounds as you recurse.",
+        "complexity": { "time": "O(n)", "space": "O(h)" },
+        "code_hint": "def isValid(node, lo=-inf, hi=inf):\n  if not node: return True\n  if node.val <= lo or node.val >= hi: return False\n  return isValid(node.left, lo, node.val) and isValid(node.right, node.val, hi)",
+        "trade_off": "O(h) space from recursion — better than storing all values."
+      }
+    ],
+    "edge_cases": ["Single node (valid)", "Equal values (invalid for strict BST)", "Integer overflow bounds"],
+    "similar_problems": ["Inorder Successor in BST", "Recover BST"]
+  },
+  {
+    "title": "Kth Smallest Element in a BST",
+    "difficulty": "Medium",
+    "patterns": ["DFS"],
+    "problem_summary": "Find the kth smallest element in a BST.",
+    "recall_trigger": "Inorder traversal of BST gives sorted order → the kth element in inorder is the answer.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "BST inorder traversal yields elements in sorted order. Stop at the kth element.",
+        "key_observation": "Iterative inorder with a counter. When counter reaches k, return current value.",
+        "complexity": { "time": "O(h + k)", "space": "O(h)" },
+        "code_hint": "stack = []\nwhile True:\n  while root:\n    stack.append(root)\n    root = root.left\n  root = stack.pop()\n  k -= 1\n  if k == 0: return root.val\n  root = root.right",
+        "trade_off": "O(h + k) — only traverses as far as needed. Optimal for single query."
+      }
+    ],
+    "edge_cases": ["k = 1 (leftmost node)", "k = n (rightmost node)", "Tree is a line"],
+    "similar_problems": ["Kth Largest Element in an Array", "Inorder Successor in BST"]
+  },
+  {
+    "title": "Construct Binary Tree from Preorder and Inorder Traversal",
+    "difficulty": "Medium",
+    "patterns": ["DFS"],
+    "problem_summary": "Build a binary tree given its preorder and inorder traversals.",
+    "recall_trigger": "Preorder first = root. Find root in inorder to split left/right subtrees. Recurse.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "Preorder's first element is the root. Its position in inorder divides left and right subtrees.",
+        "key_observation": "Use a hashmap for O(1) root lookups in inorder. Recurse with subarray bounds.",
+        "complexity": { "time": "O(n)", "space": "O(n)" },
+        "code_hint": "idx_map = {val:i for i,val in enumerate(inorder)}\ndef build(pre_start, in_start, in_end):\n  if in_start > in_end: return None\n  root = TreeNode(preorder[pre_start])\n  mid = idx_map[root.val]\n  left_size = mid - in_start\n  root.left = build(pre_start+1, in_start, mid-1)\n  root.right = build(pre_start+1+left_size, mid+1, in_end)",
+        "trade_off": "O(n) time and space. Hashmap avoids O(n) linear search in inorder."
+      }
+    ],
+    "edge_cases": ["Single node", "Left-only or right-only tree", "Duplicate values (not standard)"],
+    "similar_problems": ["Construct from Inorder and Postorder", "Serialize/Deserialize Binary Tree"]
+  },
+  {
+    "title": "Binary Tree Maximum Path Sum",
+    "difficulty": "Hard",
+    "patterns": ["DFS"],
+    "problem_summary": "Find the maximum sum path in a binary tree (path can start and end at any node).",
+    "recall_trigger": "At each node: max_gain = max(left, right, 0) + node.val. Update global max with left + right + node.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "At each node, the path either goes through it (left + node + right) or extends upward (node + max(left, right)).",
+        "key_observation": "Return the max single-branch gain upward. Update global max with the full through-path.",
+        "complexity": { "time": "O(n)", "space": "O(h)" },
+        "code_hint": "max_sum = -inf\ndef gain(node):\n  if not node: return 0\n  left = max(gain(node.left), 0)\n  right = max(gain(node.right), 0)\n  max_sum = max(max_sum, left + right + node.val)\n  return node.val + max(left, right)",
+        "trade_off": "O(n) — single DFS pass. Must visit every node."
+      }
+    ],
+    "edge_cases": ["All negative values", "Single node", "Path doesn't go through root"],
+    "similar_problems": ["Path Sum", "Diameter of Binary Tree", "Longest Univalue Path"]
+  },
+  {
+    "title": "Serialize and Deserialize Binary Tree",
+    "difficulty": "Hard",
+    "patterns": ["DFS"],
+    "problem_summary": "Design an algorithm to serialize a binary tree to a string and deserialize it back.",
+    "recall_trigger": "Preorder with null markers → serialize as 'val,val,#,#,...'. Deserialize with queue/index.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "Preorder traversal with explicit null markers captures the exact tree structure.",
+        "key_observation": "Use '#' for null nodes. Deserialize by consuming tokens in preorder — first token is root, then recursively build left then right.",
+        "complexity": { "time": "O(n)", "space": "O(n)" },
+        "code_hint": "def serialize(root):\n  if not root: return '#'\n  return f'{root.val},{serialize(root.left)},{serialize(root.right)}'\n\ndef deserialize(data):\n  tokens = iter(data.split(','))\n  def build():\n    val = next(tokens)\n    if val == '#': return None\n    node = TreeNode(int(val))\n    node.left = build()\n    node.right = build()\n    return node\n  return build()",
+        "trade_off": "O(n) time and space. Preorder + nulls uniquely define the tree."
+      }
+    ],
+    "edge_cases": ["Empty tree", "Single node", "Skewed tree (all left or all right)"],
+    "similar_problems": ["Construct Binary Tree from Preorder and Inorder", "Encode and Decode Strings"]
+  },
+  {
+    "title": "Implement Trie (Prefix Tree)",
+    "difficulty": "Medium",
+    "patterns": ["Trie"],
+    "problem_summary": "Implement a trie with insert, search, and startsWith operations.",
+    "recall_trigger": "Trie node = children dict + is_end flag. Walk char by char.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "Each node stores a map of children (char → node) and an end-of-word flag.",
+        "key_observation": "Insert: walk/create nodes for each char, mark last as end. Search: walk nodes, check end. StartsWith: walk nodes, check existence.",
+        "complexity": { "time": "O(m)", "space": "O(m)" },
+        "code_hint": "class TrieNode:\n  children = {}\n  is_end = False\n\ndef insert(word):\n  node = root\n  for c in word:\n    if c not in node.children: node.children[c] = TrieNode()\n    node = node.children[c]\n  node.is_end = True\n\ndef search(word): walk + check is_end\ndef startsWith(prefix): walk + return True if all chars found",
+        "trade_off": "O(m) per operation where m is word length. Space proportional to total chars inserted."
+      }
+    ],
+    "edge_cases": ["Empty string", "Word is prefix of another", "Search for non-existent word"],
+    "similar_problems": ["Word Search II", "Design Add and Search Words"]
+  },
+  {
+    "title": "Design Add and Search Words Data Structure",
+    "difficulty": "Medium",
+    "patterns": ["Trie", "DFS"],
+    "problem_summary": "Design a data structure that supports adding words and searching with '.' wildcard.",
+    "recall_trigger": "Trie + DFS on '.' wildcard — try all children when encountering '.'.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "Trie for storage. On '.', branch into all children recursively.",
+        "key_observation": "Add is standard trie insert. Search uses DFS: for '.', try every child; for letters, follow the specific child.",
+        "complexity": { "time": "O(m) add, O(26^m) worst search", "space": "O(total chars)" },
+        "code_hint": "def search(word, node=root, i=0):\n  if i == len(word): return node.is_end\n  if word[i] == '.':\n    return any(search(word, child, i+1) for child in node.children.values())\n  if word[i] not in node.children: return False\n  return search(word, node.children[word[i]], i+1)",
+        "trade_off": "Worst case exponential for all-dot queries, but practical queries are fast."
+      }
+    ],
+    "edge_cases": ["Search with only dots", "Empty word", "Word not added"],
+    "similar_problems": ["Implement Trie", "Word Search II"]
+  },
+  {
+    "title": "Word Search II",
+    "difficulty": "Hard",
+    "patterns": ["Trie", "Backtracking"],
+    "problem_summary": "Find all words from a dictionary that can be formed by adjacent cells in a grid.",
+    "recall_trigger": "Build trie from words → DFS on grid with trie pruning → remove found words.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "Build a trie from the word list. DFS from each cell, following trie branches to prune impossible paths.",
+        "key_observation": "Trie prunes the search space: if no trie child matches the current cell, stop exploring. Remove found words to avoid duplicates.",
+        "complexity": { "time": "O(m × n × 4^L)", "space": "O(W × L)" },
+        "code_hint": "build trie from words\nfor each cell (i,j):\n  dfs(i, j, trie_root)\n\ndef dfs(i, j, node):\n  char = board[i][j]\n  if char not in node.children: return\n  next_node = node.children[char]\n  if next_node.word: result.add(next_node.word)\n  board[i][j] = '#'  # mark visited\n  for di,dj in dirs: dfs(i+di, j+dj, next_node)\n  board[i][j] = char  # restore",
+        "trade_off": "Trie + DFS is optimal for multi-word search. Pruning makes it practical."
+      }
+    ],
+    "edge_cases": ["No words found", "Single cell grid", "Overlapping words"],
+    "similar_problems": ["Word Search", "Implement Trie"]
+  },
+  {
+    "title": "Find Median from Data Stream",
+    "difficulty": "Hard",
+    "patterns": ["Heap / Priority Queue"],
+    "problem_summary": "Design a data structure that supports adding numbers and finding the median efficiently.",
+    "recall_trigger": "Two heaps: max-heap for lower half, min-heap for upper half. Median from tops.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "Split the stream into two halves. A max-heap holds the smaller half, a min-heap holds the larger half.",
+        "key_observation": "Keep heaps balanced (size difference ≤ 1). Median is top of larger heap, or average of both tops.",
+        "complexity": { "time": "O(log n) add, O(1) median", "space": "O(n)" },
+        "code_hint": "small = []  # max-heap (negate values)\nlarge = []  # min-heap\n\ndef addNum(num):\n  heappush(small, -num)\n  heappush(large, -heappop(small))\n  if len(large) > len(small):\n    heappush(small, -heappop(large))\n\ndef findMedian():\n  if len(small) > len(large): return -small[0]\n  return (-small[0] + large[0]) / 2",
+        "trade_off": "O(log n) insert is optimal for a streaming problem. O(1) median lookup."
+      }
+    ],
+    "edge_cases": ["Single element", "Two elements", "All same values"],
+    "similar_problems": ["Sliding Window Median", "Kth Largest Element in a Stream"]
+  },
+  {
+    "title": "Combination Sum",
+    "difficulty": "Medium",
+    "patterns": ["Backtracking"],
+    "problem_summary": "Find all unique combinations of candidates that sum to a target (elements can be reused).",
+    "recall_trigger": "Backtrack: include current candidate (stay at same index) or skip it.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "Explore all combinations recursively. At each step, either include the current number (can reuse) or move to next.",
+        "key_observation": "Start index parameter prevents generating permutations (only combinations). Include same element multiple times by not advancing index.",
+        "complexity": { "time": "O(2^(T/M))", "space": "O(T/M)" },
+        "code_hint": "def backtrack(start, target, path):\n  if target == 0: result.append(path[:]); return\n  for i in range(start, len(candidates)):\n    if candidates[i] > target: break\n    path.append(candidates[i])\n    backtrack(i, target - candidates[i], path)  # i, not i+1\n    path.pop()",
+        "trade_off": "Exponential but unavoidable — must explore all valid combinations."
+      }
+    ],
+    "edge_cases": ["No valid combinations", "Target equals a candidate", "Large target with small candidates"],
+    "similar_problems": ["Combination Sum II", "Permutations", "Subsets"]
+  },
+  {
+    "title": "Number of Islands",
+    "difficulty": "Medium",
+    "patterns": ["BFS", "DFS"],
+    "problem_summary": "Count the number of islands in a 2D grid (connected groups of '1's).",
+    "recall_trigger": "Scan grid → on '1', DFS/BFS to mark entire island as visited, increment count.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "Each new '1' that hasn't been visited starts a new island. Flood-fill to mark all connected '1's.",
+        "key_observation": "DFS or BFS from each unvisited '1', marking cells as '0' (visited). Each trigger = one island.",
+        "complexity": { "time": "O(m × n)", "space": "O(m × n)" },
+        "code_hint": "count = 0\nfor i in range(m):\n  for j in range(n):\n    if grid[i][j] == '1':\n      count += 1\n      dfs(i, j)  # marks all connected 1s as 0\n\ndef dfs(i, j):\n  if out of bounds or grid[i][j] == '0': return\n  grid[i][j] = '0'\n  dfs(i+1,j); dfs(i-1,j); dfs(i,j+1); dfs(i,j-1)",
+        "trade_off": "O(mn) — every cell visited at most twice. Optimal."
+      }
+    ],
+    "edge_cases": ["All water", "All land (one island)", "Single cell"],
+    "similar_problems": ["Max Area of Island", "Surrounded Regions", "Pacific Atlantic Water Flow"]
+  },
+  {
+    "title": "Clone Graph",
+    "difficulty": "Medium",
+    "patterns": ["BFS", "DFS"],
+    "problem_summary": "Create a deep copy of a connected undirected graph.",
+    "recall_trigger": "HashMap old→new node. DFS/BFS: clone node, then clone neighbors recursively.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "Use a hashmap to track cloned nodes. For each node, create a clone and recursively clone its neighbors.",
+        "key_observation": "The hashmap prevents re-cloning already-visited nodes (handles cycles).",
+        "complexity": { "time": "O(V + E)", "space": "O(V)" },
+        "code_hint": "clones = {}\ndef clone(node):\n  if not node: return None\n  if node in clones: return clones[node]\n  copy = Node(node.val)\n  clones[node] = copy\n  for n in node.neighbors:\n    copy.neighbors.append(clone(n))\n  return copy",
+        "trade_off": "O(V+E) — must traverse entire graph. Hashmap handles cycles."
+      }
+    ],
+    "edge_cases": ["Single node no neighbors", "Cycle in graph", "Null input"],
+    "similar_problems": ["Copy List with Random Pointer", "Number of Islands"]
+  },
+  {
+    "title": "Pacific Atlantic Water Flow",
+    "difficulty": "Medium",
+    "patterns": ["BFS", "DFS"],
+    "problem_summary": "Find cells where water can flow to both Pacific and Atlantic oceans.",
+    "recall_trigger": "Reverse thinking: BFS/DFS from ocean edges inward. Intersection of both sets = answer.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "Instead of checking each cell, start from ocean edges and flow inward (uphill). A cell reachable from both oceans is in the answer.",
+        "key_observation": "Two separate DFS/BFS: one from Pacific edges, one from Atlantic edges. Answer = intersection.",
+        "complexity": { "time": "O(m × n)", "space": "O(m × n)" },
+        "code_hint": "pacific = set(); atlantic = set()\nfor i in range(m):\n  dfs(i, 0, pacific)  # left edge (Pacific)\n  dfs(i, n-1, atlantic)  # right edge (Atlantic)\nfor j in range(n):\n  dfs(0, j, pacific)  # top edge (Pacific)\n  dfs(m-1, j, atlantic)  # bottom edge (Atlantic)\nreturn pacific & atlantic",
+        "trade_off": "O(mn) — each cell visited at most twice. Reverse flow avoids redundant work."
+      }
+    ],
+    "edge_cases": ["Single row or column", "All same heights", "1x1 grid"],
+    "similar_problems": ["Number of Islands", "Trapping Rain Water II"]
+  },
+  {
+    "title": "Course Schedule",
+    "difficulty": "Medium",
+    "patterns": ["Topological Sort", "BFS"],
+    "problem_summary": "Determine if all courses can be finished given prerequisite pairs (detect cycle in DAG).",
+    "recall_trigger": "Topological sort (Kahn's BFS) — if all nodes processed, no cycle → possible.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "Model as a directed graph. If there's a cycle, it's impossible. Topological sort detects cycles.",
+        "key_observation": "Kahn's algorithm: start with nodes having in-degree 0. Process them, reduce neighbors' in-degrees. If processed count < total, cycle exists.",
+        "complexity": { "time": "O(V + E)", "space": "O(V + E)" },
+        "code_hint": "build adjacency list and in-degree array\nqueue = [nodes with in_degree == 0]\nprocessed = 0\nwhile queue:\n  node = queue.popleft()\n  processed += 1\n  for neighbor in adj[node]:\n    in_degree[neighbor] -= 1\n    if in_degree[neighbor] == 0: queue.append(neighbor)\nreturn processed == numCourses",
+        "trade_off": "O(V+E) — standard graph traversal. Optimal."
+      }
+    ],
+    "edge_cases": ["No prerequisites", "Self-loop", "Multiple connected components"],
+    "similar_problems": ["Course Schedule II", "Alien Dictionary"]
+  },
+  {
+    "title": "Graph Valid Tree",
+    "difficulty": "Medium",
+    "patterns": ["Union Find", "BFS"],
+    "problem_summary": "Determine if an undirected graph is a valid tree (connected, no cycles, n-1 edges).",
+    "recall_trigger": "Valid tree: exactly n-1 edges AND connected. Union-Find: if union finds same root → cycle.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "A tree with n nodes has exactly n-1 edges and is connected. Check both conditions.",
+        "key_observation": "Union-Find: process each edge. If two nodes share the same root before union, it's a cycle. After all edges, check if there's exactly one component.",
+        "complexity": { "time": "O(n × α(n))", "space": "O(n)" },
+        "code_hint": "if len(edges) != n - 1: return False\nparent = list(range(n))\ndef find(x): ...\ndef union(x, y):\n  px, py = find(x), find(y)\n  if px == py: return False  # cycle\n  parent[px] = py; return True\nreturn all(union(u,v) for u,v in edges)",
+        "trade_off": "O(n·α(n)) ≈ O(n). Union-Find is optimal for dynamic connectivity."
+      }
+    ],
+    "edge_cases": ["No edges (n=1 is tree, n>1 not)", "Self-loops", "Disconnected graph"],
+    "similar_problems": ["Number of Connected Components", "Redundant Connection"]
+  },
+  {
+    "title": "Number of Connected Components in an Undirected Graph",
+    "difficulty": "Medium",
+    "patterns": ["Union Find", "BFS"],
+    "problem_summary": "Count the number of connected components in an undirected graph.",
+    "recall_trigger": "Union-Find: union all edges, count distinct roots.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "Start with n components. Each successful union reduces the count by 1.",
+        "key_observation": "Union-Find: initialize n components. For each edge, if roots differ, union them and decrement count.",
+        "complexity": { "time": "O(n + E·α(n))", "space": "O(n)" },
+        "code_hint": "parent = list(range(n))\ncomponents = n\nfor u, v in edges:\n  pu, pv = find(u), find(v)\n  if pu != pv:\n    parent[pu] = pv\n    components -= 1\nreturn components",
+        "trade_off": "Near O(n+E). Union-Find is the standard tool for connectivity queries."
+      }
+    ],
+    "edge_cases": ["No edges (n components)", "Fully connected (1 component)", "Self-loops"],
+    "similar_problems": ["Graph Valid Tree", "Number of Islands", "Accounts Merge"]
+  },
+  {
+    "title": "Climbing Stairs",
+    "difficulty": "Easy",
+    "patterns": ["DP: Linear"],
+    "problem_summary": "Count the number of distinct ways to climb n stairs (1 or 2 steps at a time).",
+    "recall_trigger": "Fibonacci: ways(n) = ways(n-1) + ways(n-2).",
+    "approaches": [
+      {
+        "label": "Brute Force",
+        "intuition": "Recursion: at each step, either take 1 or 2 stairs.",
+        "key_observation": "Exponential tree of choices without memoization.",
+        "complexity": { "time": "O(2^n)", "space": "O(n)" },
+        "code_hint": "def climb(n):\n  if n <= 1: return 1\n  return climb(n-1) + climb(n-2)",
+        "trade_off": "Exponential — massive redundant computation."
+      },
+      {
+        "label": "Optimal",
+        "intuition": "Each step depends only on the previous two — classic Fibonacci pattern.",
+        "key_observation": "Only need two variables, not an array. dp[i] = dp[i-1] + dp[i-2].",
+        "complexity": { "time": "O(n)", "space": "O(1)" },
+        "code_hint": "a, b = 1, 1\nfor _ in range(2, n+1):\n  a, b = b, a + b\nreturn b",
+        "trade_off": "O(n) time, O(1) space — optimal."
+      }
+    ],
+    "edge_cases": ["n = 0 (1 way)", "n = 1 (1 way)", "Large n (overflow)"],
+    "similar_problems": ["Min Cost Climbing Stairs", "House Robber", "Fibonacci Number"]
+  },
+  {
+    "title": "House Robber",
+    "difficulty": "Medium",
+    "patterns": ["DP: Linear"],
+    "problem_summary": "Find the maximum sum of non-adjacent elements in an array.",
+    "recall_trigger": "At each house: max(rob this + skip prev, skip this). Two-variable DP.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "At each house, choose the maximum of: robbing it (+ best from 2 houses ago) or skipping it (best from 1 house ago).",
+        "key_observation": "dp[i] = max(dp[i-1], dp[i-2] + nums[i]). Only need last two values.",
+        "complexity": { "time": "O(n)", "space": "O(1)" },
+        "code_hint": "prev2 = prev1 = 0\nfor num in nums:\n  temp = max(prev1, prev2 + num)\n  prev2 = prev1\n  prev1 = temp\nreturn prev1",
+        "trade_off": "O(n) time, O(1) space — optimal."
+      }
+    ],
+    "edge_cases": ["Single house", "Two houses", "All same values"],
+    "similar_problems": ["House Robber II", "House Robber III", "Delete and Earn"]
+  },
+  {
+    "title": "House Robber II",
+    "difficulty": "Medium",
+    "patterns": ["DP: Linear"],
+    "problem_summary": "House Robber but houses are in a circle (first and last are adjacent).",
+    "recall_trigger": "Run House Robber twice: once without first house, once without last. Max of both.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "The circular constraint means you can't rob both first and last. Solve two linear subproblems.",
+        "key_observation": "max(rob(nums[1:]), rob(nums[:-1])). Each is a standard House Robber.",
+        "complexity": { "time": "O(n)", "space": "O(1)" },
+        "code_hint": "def rob_linear(nums):\n  prev2 = prev1 = 0\n  for num in nums:\n    prev2, prev1 = prev1, max(prev1, prev2 + num)\n  return prev1\nreturn max(rob_linear(nums[1:]), rob_linear(nums[:-1]))",
+        "trade_off": "Two O(n) passes = O(n). Elegant reduction to solved problem."
+      }
+    ],
+    "edge_cases": ["Single house", "Two houses", "Three houses"],
+    "similar_problems": ["House Robber", "House Robber III", "Paint House"]
+  },
+  {
+    "title": "Longest Increasing Subsequence",
+    "difficulty": "Medium",
+    "patterns": ["DP: Linear", "Binary Search"],
+    "problem_summary": "Find the length of the longest strictly increasing subsequence.",
+    "recall_trigger": "Patience sorting: maintain tails array, binary search for insertion point.",
+    "approaches": [
+      {
+        "label": "Brute Force",
+        "intuition": "DP: for each element, check all previous elements for possible extensions.",
+        "key_observation": "dp[i] = max(dp[j] + 1) for all j < i where nums[j] < nums[i].",
+        "complexity": { "time": "O(n²)", "space": "O(n)" },
+        "code_hint": "dp = [1] * n\nfor i in range(1, n):\n  for j in range(i):\n    if nums[j] < nums[i]: dp[i] = max(dp[i], dp[j]+1)\nreturn max(dp)",
+        "trade_off": "O(n²) — each element scans all predecessors."
+      },
+      {
+        "label": "Optimal",
+        "intuition": "Maintain an array of smallest tail elements for subsequences of each length. Binary search for insertion.",
+        "key_observation": "tails[i] = smallest ending element of all increasing subsequences of length i+1. Use bisect_left to find where to place new element.",
+        "complexity": { "time": "O(n log n)", "space": "O(n)" },
+        "code_hint": "tails = []\nfor num in nums:\n  pos = bisect_left(tails, num)\n  if pos == len(tails): tails.append(num)\n  else: tails[pos] = num\nreturn len(tails)",
+        "trade_off": "O(n log n) is optimal. Binary search replaces the inner O(n) scan."
+      }
+    ],
+    "edge_cases": ["Already sorted (LIS = n)", "Reverse sorted (LIS = 1)", "All same elements (LIS = 1)"],
+    "similar_problems": ["Longest Common Subsequence", "Number of LIS", "Russian Doll Envelopes"]
+  },
+  {
+    "title": "Longest Common Subsequence",
+    "difficulty": "Medium",
+    "patterns": ["DP: Grid"],
+    "problem_summary": "Find the length of the longest common subsequence of two strings.",
+    "recall_trigger": "2D DP: if chars match, dp[i][j] = dp[i-1][j-1]+1. Else max(left, up).",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "Compare characters of both strings. If they match, extend the LCS. Otherwise, take the best from excluding one character from either string.",
+        "key_observation": "dp[i][j] = dp[i-1][j-1] + 1 if s1[i] == s2[j], else max(dp[i-1][j], dp[i][j-1]).",
+        "complexity": { "time": "O(m × n)", "space": "O(m × n)" },
+        "code_hint": "dp = [[0]*(n+1) for _ in range(m+1)]\nfor i in range(1, m+1):\n  for j in range(1, n+1):\n    if s1[i-1] == s2[j-1]:\n      dp[i][j] = dp[i-1][j-1] + 1\n    else:\n      dp[i][j] = max(dp[i-1][j], dp[i][j-1])\nreturn dp[m][n]",
+        "trade_off": "O(mn) — can reduce space to O(min(m,n)) with rolling array."
+      }
+    ],
+    "edge_cases": ["One string empty", "Identical strings", "No common characters"],
+    "similar_problems": ["Longest Increasing Subsequence", "Edit Distance", "Shortest Common Supersequence"]
+  },
+  {
+    "title": "Word Break",
+    "difficulty": "Medium",
+    "patterns": ["DP: Linear"],
+    "problem_summary": "Determine if a string can be segmented into space-separated dictionary words.",
+    "recall_trigger": "dp[i] = can s[:i] be segmented? Check all j < i where dp[j] and s[j:i] in dict.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "dp[i] is true if s[:i] can be segmented. For each position, check if any valid split point exists.",
+        "key_observation": "dp[i] = any(dp[j] and s[j:i] in wordDict for j in range(i)). Start dp[0] = True (empty string).",
+        "complexity": { "time": "O(n² × m)", "space": "O(n)" },
+        "code_hint": "dp = [False] * (len(s) + 1)\ndp[0] = True\nfor i in range(1, len(s)+1):\n  for j in range(i):\n    if dp[j] and s[j:i] in word_set:\n      dp[i] = True; break\nreturn dp[len(s)]",
+        "trade_off": "O(n²m) worst case where m is max word length. Can optimize with trie."
+      }
+    ],
+    "edge_cases": ["Single character word", "Entire string is one word", "Repeated words needed"],
+    "similar_problems": ["Word Break II", "Concatenated Words"]
+  },
+  {
+    "title": "Coin Change",
+    "difficulty": "Medium",
+    "patterns": ["DP: Knapsack"],
+    "problem_summary": "Find the minimum number of coins needed to make a given amount.",
+    "recall_trigger": "dp[amount] = min coins. For each coin, dp[i] = min(dp[i], dp[i-coin]+1).",
+    "approaches": [
+      {
+        "label": "Brute Force",
+        "intuition": "Try all combinations recursively.",
+        "key_observation": "For each coin denomination, either use it or don't. Exponential branching.",
+        "complexity": { "time": "O(S^n)", "space": "O(S)" },
+        "code_hint": "def coinChange(amount):\n  if amount == 0: return 0\n  if amount < 0: return -1\n  return 1 + min(coinChange(amount - coin) for coin in coins)",
+        "trade_off": "Exponential without memoization."
+      },
+      {
+        "label": "Optimal",
+        "intuition": "Build up: dp[i] = minimum coins to make amount i.",
+        "key_observation": "For each amount i and each coin c, dp[i] = min(dp[i], dp[i-c] + 1).",
+        "complexity": { "time": "O(S × n)", "space": "O(S)" },
+        "code_hint": "dp = [float('inf')] * (amount + 1)\ndp[0] = 0\nfor i in range(1, amount+1):\n  for coin in coins:\n    if coin <= i:\n      dp[i] = min(dp[i], dp[i-coin] + 1)\nreturn dp[amount] if dp[amount] != inf else -1",
+        "trade_off": "O(S×n) where S is amount and n is number of coin types. Optimal for this problem."
+      }
+    ],
+    "edge_cases": ["Amount = 0 (0 coins)", "No valid combination (-1)", "Single coin type"],
+    "similar_problems": ["Coin Change II", "Perfect Squares", "Minimum Cost for Tickets"]
+  },
+  {
+    "title": "Decode Ways",
+    "difficulty": "Medium",
+    "patterns": ["DP: Linear"],
+    "problem_summary": "Count the number of ways to decode a digit string where A=1, B=2, ..., Z=26.",
+    "recall_trigger": "dp[i] = ways to decode s[:i]. Check single digit (1-9) and two digits (10-26).",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "At each position, you can decode 1 digit or 2 digits (if valid). Sum the ways.",
+        "key_observation": "dp[i] += dp[i-1] if s[i-1] != '0'. dp[i] += dp[i-2] if s[i-2:i] forms 10-26.",
+        "complexity": { "time": "O(n)", "space": "O(1)" },
+        "code_hint": "prev2, prev1 = 1, int(s[0] != '0')\nfor i in range(2, len(s)+1):\n  curr = 0\n  if s[i-1] != '0': curr += prev1\n  two = int(s[i-2:i])\n  if 10 <= two <= 26: curr += prev2\n  prev2, prev1 = prev1, curr\nreturn prev1",
+        "trade_off": "O(n) time, O(1) space — only needs previous two states."
+      }
+    ],
+    "edge_cases": ["Leading zero ('0' → 0 ways)", "String '10'", "String '06'"],
+    "similar_problems": ["Decode Ways II", "Climbing Stairs"]
+  },
+  {
+    "title": "Unique Paths",
+    "difficulty": "Medium",
+    "patterns": ["DP: Grid"],
+    "problem_summary": "Count paths from top-left to bottom-right of an m×n grid (only right or down).",
+    "recall_trigger": "dp[i][j] = dp[i-1][j] + dp[i][j-1]. First row and column are all 1s.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "Each cell can be reached from above or from the left. Sum the ways.",
+        "key_observation": "dp[i][j] = dp[i-1][j] + dp[i][j-1]. Base case: first row and first column are all 1.",
+        "complexity": { "time": "O(m × n)", "space": "O(n)" },
+        "code_hint": "dp = [1] * n\nfor i in range(1, m):\n  for j in range(1, n):\n    dp[j] += dp[j-1]\nreturn dp[n-1]",
+        "trade_off": "O(mn) time, O(n) space with rolling array. Could also use combinatorics: C(m+n-2, m-1)."
+      }
+    ],
+    "edge_cases": ["1×1 grid", "Single row or column", "Large m and n (overflow)"],
+    "similar_problems": ["Unique Paths II", "Minimum Path Sum", "Dungeon Game"]
+  },
+  {
+    "title": "Jump Game",
+    "difficulty": "Medium",
+    "patterns": ["Greedy"],
+    "problem_summary": "Determine if you can reach the last index from the first, given max jump lengths.",
+    "recall_trigger": "Track farthest reachable index. If current > farthest, stuck. If farthest ≥ last, done.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "Greedily track the farthest index reachable. If you can reach i, you can potentially reach i + nums[i].",
+        "key_observation": "farthest = max(farthest, i + nums[i]). If i > farthest at any point, you're stuck.",
+        "complexity": { "time": "O(n)", "space": "O(1)" },
+        "code_hint": "farthest = 0\nfor i in range(n):\n  if i > farthest: return False\n  farthest = max(farthest, i + nums[i])\nreturn True",
+        "trade_off": "O(n) — greedy is optimal here. No need for DP."
+      }
+    ],
+    "edge_cases": ["Single element (always true)", "First element is 0 (false unless n=1)", "All zeros"],
+    "similar_problems": ["Jump Game II", "Jump Game III"]
+  },
+  {
+    "title": "Merge Intervals",
+    "difficulty": "Medium",
+    "patterns": ["Greedy"],
+    "problem_summary": "Merge all overlapping intervals.",
+    "recall_trigger": "Sort by start → if current overlaps with last merged, extend end. Else add new.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "Sort intervals by start time. Merge each interval with the previous if they overlap.",
+        "key_observation": "After sorting, intervals overlap if current.start <= prev.end. Merge by extending prev.end = max(prev.end, current.end).",
+        "complexity": { "time": "O(n log n)", "space": "O(n)" },
+        "code_hint": "intervals.sort()\nmerged = [intervals[0]]\nfor start, end in intervals[1:]:\n  if start <= merged[-1][1]:\n    merged[-1][1] = max(merged[-1][1], end)\n  else:\n    merged.append([start, end])\nreturn merged",
+        "trade_off": "O(n log n) from sorting — this is the bottleneck. Merging is O(n)."
+      }
+    ],
+    "edge_cases": ["No overlaps", "All intervals overlap", "Single interval", "Nested intervals"],
+    "similar_problems": ["Insert Interval", "Non-overlapping Intervals", "Meeting Rooms"]
+  },
+  {
+    "title": "Insert Interval",
+    "difficulty": "Medium",
+    "patterns": ["Greedy"],
+    "problem_summary": "Insert a new interval into a sorted, non-overlapping list and merge if necessary.",
+    "recall_trigger": "Three phases: add all before, merge all overlapping, add all after.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "Walk through intervals: add non-overlapping ones before newInterval, merge overlapping ones, add the rest.",
+        "key_observation": "Interval ends before new → add it. Overlaps → merge into new. Starts after → add new, then the rest.",
+        "complexity": { "time": "O(n)", "space": "O(n)" },
+        "code_hint": "result = []; i = 0\n# Add all before\nwhile i < n and intervals[i][1] < newInterval[0]:\n  result.append(intervals[i]); i += 1\n# Merge overlapping\nwhile i < n and intervals[i][0] <= newInterval[1]:\n  newInterval = [min(newInterval[0],intervals[i][0]), max(newInterval[1],intervals[i][1])]\n  i += 1\nresult.append(newInterval)\n# Add remaining\nresult.extend(intervals[i:])",
+        "trade_off": "O(n) — single pass through sorted intervals."
+      }
+    ],
+    "edge_cases": ["Insert at beginning", "Insert at end", "New interval covers all", "No overlap"],
+    "similar_problems": ["Merge Intervals", "Range Module"]
+  },
+  {
+    "title": "Non-overlapping Intervals",
+    "difficulty": "Medium",
+    "patterns": ["Greedy"],
+    "problem_summary": "Find the minimum number of intervals to remove to make the rest non-overlapping.",
+    "recall_trigger": "Sort by end → greedily keep intervals that end earliest (maximize non-overlapping count).",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "Sort by end time. Always keep the interval that ends earliest (gives most room for future intervals).",
+        "key_observation": "Count non-overlapping intervals (greedy selection). Answer = total - count.",
+        "complexity": { "time": "O(n log n)", "space": "O(1)" },
+        "code_hint": "intervals.sort(key=lambda x: x[1])\ncount = 0; end = -inf\nfor s, e in intervals:\n  if s >= end:\n    count += 1\n    end = e\nreturn len(intervals) - count",
+        "trade_off": "O(n log n) sorting dominates. Greedy is optimal for interval scheduling."
+      }
+    ],
+    "edge_cases": ["No overlaps (remove 0)", "All overlap each other", "Two intervals"],
+    "similar_problems": ["Merge Intervals", "Meeting Rooms II", "Minimum Number of Arrows"]
+  },
+  {
+    "title": "Meeting Rooms",
+    "difficulty": "Easy",
+    "patterns": ["Greedy"],
+    "problem_summary": "Determine if a person can attend all meetings (no two meetings overlap).",
+    "recall_trigger": "Sort by start → if any meeting starts before the previous one ends, conflict.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "Sort by start time. If any consecutive meetings overlap, return false.",
+        "key_observation": "After sorting, overlap exists if intervals[i].start < intervals[i-1].end.",
+        "complexity": { "time": "O(n log n)", "space": "O(1)" },
+        "code_hint": "intervals.sort()\nfor i in range(1, len(intervals)):\n  if intervals[i][0] < intervals[i-1][1]: return False\nreturn True",
+        "trade_off": "O(n log n) from sorting. Linear scan after."
+      }
+    ],
+    "edge_cases": ["No meetings", "Single meeting", "All overlapping"],
+    "similar_problems": ["Meeting Rooms II", "Merge Intervals"]
+  },
+  {
+    "title": "Meeting Rooms II",
+    "difficulty": "Medium",
+    "patterns": ["Greedy", "Heap / Priority Queue"],
+    "problem_summary": "Find the minimum number of conference rooms required.",
+    "recall_trigger": "Sort by start → min-heap tracks end times. If earliest end ≤ start, reuse that room.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "Sort meetings by start time. Use a min-heap to track the earliest ending meeting.",
+        "key_observation": "If the earliest ending room is free (end ≤ current start), reuse it (pop and push). Otherwise, allocate a new room (just push).",
+        "complexity": { "time": "O(n log n)", "space": "O(n)" },
+        "code_hint": "intervals.sort()\nheap = []\nfor start, end in intervals:\n  if heap and heap[0] <= start:\n    heappop(heap)\n  heappush(heap, end)\nreturn len(heap)",
+        "trade_off": "O(n log n) — sorting + heap operations. Optimal."
+      }
+    ],
+    "edge_cases": ["No meetings (0 rooms)", "All meetings overlap (n rooms)", "Sequential meetings (1 room)"],
+    "similar_problems": ["Meeting Rooms", "Merge Intervals", "Car Pooling"]
+  },
+  {
+    "title": "Reverse Bits",
+    "difficulty": "Easy",
+    "patterns": ["Bit Manipulation"],
+    "problem_summary": "Reverse the bits of a 32-bit unsigned integer.",
+    "recall_trigger": "Extract LSB of n, shift result left, add bit. Repeat 32 times.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "Process each bit from right to left. Shift result left and add each extracted bit.",
+        "key_observation": "result = (result << 1) | (n & 1). Then n >>= 1. Repeat 32 times.",
+        "complexity": { "time": "O(1)", "space": "O(1)" },
+        "code_hint": "result = 0\nfor _ in range(32):\n  result = (result << 1) | (n & 1)\n  n >>= 1\nreturn result",
+        "trade_off": "O(1) — fixed 32 iterations. Optimal."
+      }
+    ],
+    "edge_cases": ["All zeros", "All ones", "Single set bit"],
+    "similar_problems": ["Number of 1 Bits", "Reverse Integer"]
+  },
+  {
+    "title": "Number of 1 Bits",
+    "difficulty": "Easy",
+    "patterns": ["Bit Manipulation"],
+    "problem_summary": "Count the number of set bits (1s) in a binary representation.",
+    "recall_trigger": "Brian Kernighan's trick: n & (n-1) removes the lowest set bit. Count removals.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "n & (n-1) turns off the lowest set bit. Count how many times until n becomes 0.",
+        "key_observation": "Brian Kernighan's trick — only iterates as many times as there are set bits, not 32.",
+        "complexity": { "time": "O(k)", "space": "O(1)" },
+        "code_hint": "count = 0\nwhile n:\n  n &= n - 1\n  count += 1\nreturn count",
+        "trade_off": "O(k) where k is number of set bits. More efficient than checking all 32 bits."
+      }
+    ],
+    "edge_cases": ["n = 0", "n = 2^31 - 1 (all 1s)", "Power of 2 (single set bit)"],
+    "similar_problems": ["Reverse Bits", "Counting Bits", "Power of Two"]
+  },
+  {
+    "title": "Counting Bits",
+    "difficulty": "Easy",
+    "patterns": ["Bit Manipulation", "DP: Linear"],
+    "problem_summary": "For every number 0 to n, count the number of 1 bits.",
+    "recall_trigger": "dp[i] = dp[i >> 1] + (i & 1). Right-shift reuses already-computed counts.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "The number of set bits in i is the same as i>>1 (drop last bit) plus the last bit itself.",
+        "key_observation": "dp[i] = dp[i >> 1] + (i & 1). Each number reuses the result of a smaller number.",
+        "complexity": { "time": "O(n)", "space": "O(n)" },
+        "code_hint": "dp = [0] * (n + 1)\nfor i in range(1, n+1):\n  dp[i] = dp[i >> 1] + (i & 1)\nreturn dp",
+        "trade_off": "O(n) — one pass, constant work per number."
+      }
+    ],
+    "edge_cases": ["n = 0", "n = 1", "Large n"],
+    "similar_problems": ["Number of 1 Bits", "Power of Two"]
+  },
+  {
+    "title": "Missing Number",
+    "difficulty": "Easy",
+    "patterns": ["Bit Manipulation"],
+    "problem_summary": "Find the one missing number in [0, n] given n numbers.",
+    "recall_trigger": "XOR all indices and values — duplicates cancel, missing number remains. Or: sum formula.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "XOR is self-inverse: a ^ a = 0. XOR all numbers with all indices — the missing one won't cancel.",
+        "key_observation": "result = n (start with n since indices go 0..n-1). XOR each index and value.",
+        "complexity": { "time": "O(n)", "space": "O(1)" },
+        "code_hint": "result = len(nums)\nfor i, num in enumerate(nums):\n  result ^= i ^ num\nreturn result",
+        "trade_off": "O(n) time, O(1) space. Alternative: sum(0..n) - sum(nums)."
+      }
+    ],
+    "edge_cases": ["Missing 0", "Missing n", "Single element"],
+    "similar_problems": ["Find the Duplicate Number", "Single Number", "First Missing Positive"]
+  },
+  {
+    "title": "Sum of Two Integers",
+    "difficulty": "Medium",
+    "patterns": ["Bit Manipulation"],
+    "problem_summary": "Add two integers without using + or - operators.",
+    "recall_trigger": "XOR = sum without carry. AND << 1 = carry. Repeat until carry is 0.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "XOR gives the sum ignoring carries. AND gives the carry positions. Shift carry left and repeat.",
+        "key_observation": "sum = a ^ b (add without carry). carry = (a & b) << 1. Repeat with sum and carry until carry is 0.",
+        "complexity": { "time": "O(1)", "space": "O(1)" },
+        "code_hint": "while b != 0:\n  carry = (a & b) << 1\n  a = a ^ b\n  b = carry\nreturn a",
+        "trade_off": "O(1) — at most 32 iterations for 32-bit integers."
+      }
+    ],
+    "edge_cases": ["One number is zero", "Negative numbers (use 32-bit mask)", "Both negative"],
+    "similar_problems": ["Add Binary", "Missing Number"]
+  },
+  {
+    "title": "Spiral Matrix",
+    "difficulty": "Medium",
+    "patterns": ["Two Pointers"],
+    "problem_summary": "Return all elements of a matrix in spiral order.",
+    "recall_trigger": "Four boundaries: top, bottom, left, right. Traverse → shrink → repeat.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "Maintain four boundaries. Traverse each edge of the current rectangle, then shrink inward.",
+        "key_observation": "Process: right along top row → down along right col → left along bottom row → up along left col. Shrink boundaries after each.",
+        "complexity": { "time": "O(m × n)", "space": "O(1)" },
+        "code_hint": "top, bottom, left, right = 0, m-1, 0, n-1\nwhile top <= bottom and left <= right:\n  for j in range(left, right+1): add (top, j)\n  top += 1\n  for i in range(top, bottom+1): add (i, right)\n  right -= 1\n  if top <= bottom:\n    for j in range(right, left-1, -1): add (bottom, j)\n    bottom -= 1\n  if left <= right:\n    for i in range(bottom, top-1, -1): add (i, left)\n    left += 1",
+        "trade_off": "O(mn) — must visit every element. Boundary checks prevent double-counting."
+      }
+    ],
+    "edge_cases": ["Single row", "Single column", "1×1 matrix", "Non-square matrix"],
+    "similar_problems": ["Spiral Matrix II", "Rotate Image"]
+  },
+  {
+    "title": "Rotate Image",
+    "difficulty": "Medium",
+    "patterns": ["Two Pointers"],
+    "problem_summary": "Rotate an n×n matrix 90° clockwise in-place.",
+    "recall_trigger": "Transpose (swap rows/cols) → then reverse each row.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "A 90° clockwise rotation = transpose + reverse each row.",
+        "key_observation": "Transpose: swap matrix[i][j] with matrix[j][i]. Then reverse each row in-place.",
+        "complexity": { "time": "O(n²)", "space": "O(1)" },
+        "code_hint": "# Transpose\nfor i in range(n):\n  for j in range(i+1, n):\n    matrix[i][j], matrix[j][i] = matrix[j][i], matrix[i][j]\n# Reverse rows\nfor row in matrix:\n  row.reverse()",
+        "trade_off": "O(n²) in-place. Must touch every element."
+      }
+    ],
+    "edge_cases": ["1×1 matrix", "2×2 matrix", "Already rotated"],
+    "similar_problems": ["Spiral Matrix", "Transpose Matrix"]
+  },
+  {
+    "title": "Set Matrix Zeroes",
+    "difficulty": "Medium",
+    "patterns": ["Hashing"],
+    "problem_summary": "If an element is 0, set its entire row and column to 0. Do it in-place.",
+    "recall_trigger": "Use first row/col as markers. Scan → mark → fill → handle first row/col separately.",
+    "approaches": [
+      {
+        "label": "Brute Force",
+        "intuition": "Track which rows and columns contain zeros using extra sets.",
+        "key_observation": "Two sets: zero_rows and zero_cols. Second pass sets elements to 0.",
+        "complexity": { "time": "O(mn)", "space": "O(m + n)" },
+        "code_hint": "zero_rows = set(); zero_cols = set()\nfor i in range(m):\n  for j in range(n):\n    if matrix[i][j] == 0: zero_rows.add(i); zero_cols.add(j)\nfor i in range(m):\n  for j in range(n):\n    if i in zero_rows or j in zero_cols: matrix[i][j] = 0",
+        "trade_off": "O(m+n) space for the sets."
+      },
+      {
+        "label": "Optimal",
+        "intuition": "Use the first row and first column as markers instead of extra space.",
+        "key_observation": "First pass: mark zeros in first row/col. Handle first row/col separately with a flag. Second pass: fill based on markers.",
+        "complexity": { "time": "O(mn)", "space": "O(1)" },
+        "code_hint": "first_col = any(matrix[i][0]==0 for i in range(m))\nfirst_row = any(matrix[0][j]==0 for j in range(n))\nfor i in range(1,m):\n  for j in range(1,n):\n    if matrix[i][j]==0: matrix[i][0]=matrix[0][j]=0\n# Fill based on markers, then handle first row/col",
+        "trade_off": "O(1) space — uses the matrix itself as storage."
+      }
+    ],
+    "edge_cases": ["No zeros", "All zeros", "Zero in first row/col"],
+    "similar_problems": ["Game of Life", "Sparse Matrix Multiplication"]
+  },
+  {
+    "title": "Longest Palindromic Substring",
+    "difficulty": "Medium",
+    "patterns": ["Two Pointers"],
+    "problem_summary": "Find the longest palindromic substring in a string.",
+    "recall_trigger": "Expand around each center (both odd and even length palindromes).",
+    "approaches": [
+      {
+        "label": "Brute Force",
+        "intuition": "Check every substring for palindrome property.",
+        "key_observation": "O(n²) substrings, each check is O(n).",
+        "complexity": { "time": "O(n³)", "space": "O(1)" },
+        "code_hint": "for all substrings:\n  if is_palindrome(sub): update longest",
+        "trade_off": "Cubic — redundant palindrome checks."
+      },
+      {
+        "label": "Optimal",
+        "intuition": "Every palindrome has a center. Expand outward from each possible center.",
+        "key_observation": "n centers for odd-length, n-1 for even-length. Expand while characters match.",
+        "complexity": { "time": "O(n²)", "space": "O(1)" },
+        "code_hint": "def expand(l, r):\n  while l>=0 and r<n and s[l]==s[r]: l-=1; r+=1\n  return s[l+1:r]\n\nbest = ''\nfor i in range(n):\n  odd = expand(i, i)\n  even = expand(i, i+1)\n  best = max(best, odd, even, key=len)",
+        "trade_off": "O(n²) time, O(1) space. Manacher's gives O(n) but rarely expected in interviews."
+      }
+    ],
+    "edge_cases": ["Single character", "All same characters", "No palindrome longer than 1"],
+    "similar_problems": ["Palindromic Substrings", "Longest Palindromic Subsequence"]
+  },
+  {
+    "title": "Palindromic Substrings",
+    "difficulty": "Medium",
+    "patterns": ["Two Pointers"],
+    "problem_summary": "Count the total number of palindromic substrings.",
+    "recall_trigger": "Expand around each center → count all valid expansions (same as LPS but count instead of track).",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "Same as Longest Palindromic Substring, but count every valid expansion instead of tracking the longest.",
+        "key_observation": "Each successful expansion step is one more palindromic substring.",
+        "complexity": { "time": "O(n²)", "space": "O(1)" },
+        "code_hint": "count = 0\ndef expand(l, r):\n  nonlocal count\n  while l>=0 and r<n and s[l]==s[r]:\n    count += 1; l-=1; r+=1\nfor i in range(n):\n  expand(i, i)    # odd\n  expand(i, i+1)  # even",
+        "trade_off": "O(n²) — same approach as LPS. Each expansion is O(n) worst case."
+      }
+    ],
+    "edge_cases": ["Single character (count = 1)", "All same characters (n*(n+1)/2)", "No palindromes > 1"],
+    "similar_problems": ["Longest Palindromic Substring", "Longest Palindromic Subsequence"]
+  },
+  {
+    "title": "Alien Dictionary",
+    "difficulty": "Hard",
+    "patterns": ["Topological Sort", "BFS"],
+    "problem_summary": "Given a sorted list of words in an alien language, determine the character ordering.",
+    "recall_trigger": "Compare adjacent words → extract char ordering edges → topological sort.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "Adjacent words in sorted order reveal character precedence. Build a graph, then topological sort.",
+        "key_observation": "Compare word[i] and word[i+1] char by char. First difference gives an edge: char_a → char_b. Topological sort gives the order.",
+        "complexity": { "time": "O(C)", "space": "O(U + min(U², N))" },
+        "code_hint": "# Build graph from adjacent word pairs\nfor w1, w2 in zip(words, words[1:]):\n  for c1, c2 in zip(w1, w2):\n    if c1 != c2:\n      graph[c1].add(c2); in_degree[c2] += 1\n      break\n  else:\n    if len(w1) > len(w2): return ''  # invalid\n# Kahn's topological sort\nqueue = [c for c in in_degree if in_degree[c] == 0]\n...",
+        "trade_off": "O(C) where C is total characters. Topological sort is O(V+E)."
+      }
+    ],
+    "edge_cases": ["Single word", "Invalid ordering (cycle)", "Prefix conflict (abc before ab)"],
+    "similar_problems": ["Course Schedule", "Course Schedule II"]
+  },
+  {
+    "title": "Word Search",
+    "difficulty": "Medium",
+    "patterns": ["Backtracking", "DFS"],
+    "problem_summary": "Find if a word exists in a grid by connecting adjacent cells (each cell used once).",
+    "recall_trigger": "DFS from each cell matching word[0] → mark visited → backtrack on failure.",
+    "approaches": [
+      {
+        "label": "Optimal",
+        "intuition": "DFS/Backtracking: try to match the word starting from each cell, exploring adjacent cells.",
+        "key_observation": "Mark cells as visited during exploration, unmark on backtrack. Prune when character doesn't match.",
+        "complexity": { "time": "O(m × n × 3^L)", "space": "O(L)" },
+        "code_hint": "def dfs(i, j, k):\n  if k == len(word): return True\n  if out_of_bounds or board[i][j] != word[k]: return False\n  board[i][j] = '#'  # mark visited\n  found = any(dfs(ni,nj,k+1) for ni,nj in neighbors(i,j))\n  board[i][j] = word[k]  # restore\n  return found",
+        "trade_off": "O(mn × 3^L) — 3 directions (not revisiting previous cell). Exponential but pruned."
+      }
+    ],
+    "edge_cases": ["Single cell grid", "Word longer than grid cells", "Word not in grid"],
+    "similar_problems": ["Word Search II", "N-Queens"]
+  },
+  {
+    "title": "Trapping Rain Water",
+    "difficulty": "Hard",
+    "patterns": ["Two Pointers"],
+    "problem_summary": "Calculate how much water can be trapped between bars after rain.",
+    "recall_trigger": "Two pointers: water at position = min(max_left, max_right) - height. Process shorter side.",
+    "approaches": [
+      {
+        "label": "Brute Force",
+        "intuition": "For each bar, find the max height to its left and right. Water = min(maxL, maxR) - height.",
+        "key_observation": "O(n) per bar to find left/right max → O(n²) total.",
+        "complexity": { "time": "O(n²)", "space": "O(1)" },
+        "code_hint": "for i in range(n):\n  left_max = max(height[:i+1])\n  right_max = max(height[i:])\n  water += min(left_max, right_max) - height[i]",
+        "trade_off": "Recomputes max values redundantly."
+      },
+      {
+        "label": "Optimal",
+        "intuition": "Two pointers from both ends. The shorter side determines the water level.",
+        "key_observation": "If left_max < right_max, process left pointer (water bounded by left_max). Otherwise process right.",
+        "complexity": { "time": "O(n)", "space": "O(1)" },
+        "code_hint": "lo, hi = 0, n-1\nleft_max = right_max = 0\nwhile lo < hi:\n  if height[lo] < height[hi]:\n    left_max = max(left_max, height[lo])\n    water += left_max - height[lo]\n    lo += 1\n  else:\n    right_max = max(right_max, height[hi])\n    water += right_max - height[hi]\n    hi -= 1",
+        "trade_off": "O(n) time, O(1) space — optimal. Two-pointer elegantly handles both sides."
+      }
+    ],
+    "edge_cases": ["Monotonically increasing/decreasing", "All same height", "Single bar"],
+    "similar_problems": ["Container With Most Water", "Largest Rectangle in Histogram"]
+  }
+]
