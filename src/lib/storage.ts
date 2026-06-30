@@ -1,4 +1,4 @@
-import type { FlashCard, ReviewEvent, StreakData } from "../types";
+import type { FlashCard, ReviewEvent, StreakData, SessionConfig } from "../types";
 
 const CARDS_KEY = "dsa_flashcards_v1";
 const HISTORY_KEY = "dsa_review_history_v1";
@@ -72,5 +72,23 @@ export const Storage = {
     } catch (e) {
       console.error("Failed to save imported decks to storage", e);
     }
+  },
+
+  getSessionConfig(): SessionConfig | null {
+    try {
+      const raw = localStorage.getItem("dsa_session_config_v1");
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  },
+
+  saveSessionConfig(config: SessionConfig): void {
+    try {
+      localStorage.setItem("dsa_session_config_v1", JSON.stringify(config));
+    } catch (e) {
+      console.error("Failed to save session config to storage", e);
+    }
   }
 };
+

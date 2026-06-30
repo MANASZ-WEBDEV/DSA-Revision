@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import type { FlashCard, ReviewEvent, StreakData, ReviewQuality } from "../types";
+import type { FlashCard, ReviewEvent, StreakData, ReviewQuality, SessionConfig } from "../types";
 import type { ProviderId } from "../lib/llm";
 import { PROVIDERS } from "../lib/llm";
 import { Storage } from "../lib/storage";
@@ -149,3 +149,27 @@ export function useReviewHistory() {
 
   return { events, streak, recordReview };
 }
+
+const DEFAULT_SESSION_CONFIG: SessionConfig = {
+  patterns: [],
+  difficulties: [],
+  decks: [],
+  sessionSize: 20,
+  timerEnabled: false,
+  timerSeconds: 60,
+  useSmartSession: true,
+};
+
+export function useSessionConfig() {
+  const [config, setConfigState] = useState<SessionConfig>(() => {
+    return Storage.getSessionConfig() ?? DEFAULT_SESSION_CONFIG;
+  });
+
+  const setConfig = useCallback((newConfig: SessionConfig) => {
+    Storage.saveSessionConfig(newConfig);
+    setConfigState(newConfig);
+  }, []);
+
+  return { config, setConfig };
+}
+

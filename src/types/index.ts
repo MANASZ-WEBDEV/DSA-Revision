@@ -105,3 +105,30 @@ export interface StreakData {
   longest: number;
   last_review_date: string | null; // YYYY-MM-DD, local date
 }
+
+// ─── Session configuration ───────────────────────────────────────────────────
+export interface SessionConfig {
+  patterns: PatternTag[];
+  difficulties: ("Easy" | "Medium" | "Hard")[];
+  decks: string[];
+  sessionSize: number;         // e.g. 5, 10, 15, 20, 25, 100
+  timerEnabled: boolean;
+  timerSeconds: number;        // e.g. 30, 60, 90, 120
+  useSmartSession: boolean;    // true = getDailySession, false = getDueCards
+}
+
+// ─── Session analytics ────────────────────────────────────────────────────────
+export interface SessionAnalytics {
+  totalCards: number;
+  results: {
+    cardId: string;
+    cardTitle: string;
+    quality: ReviewQuality;
+    timeMs: number;
+    recalledApproaches: string[];
+    isSelfExplained: boolean;
+  }[];
+  startedAt: string;
+  completedAt: string;
+}
+
