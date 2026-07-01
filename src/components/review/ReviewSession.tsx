@@ -439,6 +439,19 @@ export function ReviewSession({ cards, onUpdate, onRecordReview, onRecordSession
             })}
           </div>
 
+          {currentCard.notes && (
+            <div style={{ marginTop: 16, marginBottom: 18 }}>
+              <details style={s.notesDetails}>
+                <summary style={s.notesSummary}>
+                  <span>📝 View your personal notes on this problem</span>
+                </summary>
+                <div style={s.notesContent}>
+                  {currentCard.notes}
+                </div>
+              </details>
+            </div>
+          )}
+
           {/* Quality buttons */}
           <div style={s.qualityLabel}>How well did you recall this?</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: 8, marginTop: 10 }}>
@@ -482,4 +495,7 @@ const s: Record<string, React.CSSProperties> = {
   activeRecallLabel: { fontSize: 11, fontWeight: 600, color: "var(--caption)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: 6 },
   explanationTextarea: { width: "100%", background: "var(--bg-raised)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", padding: "10px 12px", fontSize: 14, color: "var(--ink)", outline: "none", resize: "none" },
   recallAttemptBox: { background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", padding: "12px 14px", fontSize: 13.5, color: "var(--ink-soft)", whiteSpace: "pre-wrap" as const, lineHeight: 1.5, fontStyle: "italic" },
+  notesDetails: { background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", overflow: "hidden" },
+  notesSummary: { padding: "10px 14px", fontSize: 12, fontWeight: 600, color: "var(--accent)", cursor: "pointer", userSelect: "none" as const },
+  notesContent: { padding: "0 14px 12px", fontSize: 13, color: "var(--ink-soft)", whiteSpace: "pre-wrap" as const, lineHeight: 1.5, fontStyle: "italic" },
 };

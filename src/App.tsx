@@ -183,6 +183,7 @@ export default function App() {
             element={
               <CardDetailRoute
                 cards={cards}
+                onUpdate={updateCard}
                 onDelete={(id) => { deleteCard(id); navigate("/library"); }}
               />
             }
@@ -234,9 +235,11 @@ export default function App() {
 // ─── Route wrapper for CardDetail (extracts :id param) ──────────────────────
 function CardDetailRoute({
   cards,
+  onUpdate,
   onDelete,
 }: {
   cards: FlashCard[];
+  onUpdate: (id: string, updates: Partial<FlashCard>) => void;
   onDelete: (id: string) => void;
 }) {
   const { id } = useParams<{ id: string }>();
@@ -258,7 +261,7 @@ function CardDetailRoute({
     );
   }
 
-  return <CardDetail card={card} onBack={() => navigate("/library")} onDelete={onDelete} />;
+  return <CardDetail card={card} onBack={() => navigate("/library")} onUpdate={onUpdate} onDelete={onDelete} />;
 }
 
 // ─── Navigation items ───────────────────────────────────────────────────────

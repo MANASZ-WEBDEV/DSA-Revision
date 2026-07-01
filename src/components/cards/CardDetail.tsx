@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { FlashCard, Approach } from "../../types";
 import { PATTERN_COLORS, PATTERN_TEXT_COLORS } from "../../lib/llm";
 import { nextReviewLabel, getBestBigO } from "../../lib/sm2";
@@ -6,6 +6,7 @@ import { nextReviewLabel, getBestBigO } from "../../lib/sm2";
 interface Props {
   card: FlashCard;
   onBack: () => void;
+  onUpdate: (id: string, updates: Partial<FlashCard>) => void;
   onDelete: (id: string) => void;
 }
 
@@ -15,10 +16,33 @@ const DIFFICULTY_VARS: Record<string, { bg: string; text: string }> = {
   Hard:   { bg: "var(--hard-soft)",   text: "var(--urgent-ink)" },
 };
 
-export function CardDetail({ card, onBack, onDelete }: Props) {
+export function CardDetail({ card, onBack, onUpdate, onDelete }: Props) {
   const [activeApproach, setActiveApproach] = useState(0);
   const [showHint, setShowHint] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  // Notes state
+  const [notesText, setNotesText] = useState(card.notes || "");
+  const [saveStatus, setSaveStatus] = useState("All changes saved locally");
+  const saveTimeoutRef = useRef<any>(null);
+
+  useEffect(() => {
+    setNotesText(card.notes || "");
+    setSaveStatus("All changes saved locally");
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+  }, [card.id]);
+
+  const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setNotesText(val);
+    setSaveStatus("Saving...");
+
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      onUpdate(card.id, { notes: val || undefined });
+      setSaveStatus("Saved ✔");
+    }, 600);
+  };
 
   const approach: Approach = card.approaches[activeApproach];
   const diff = DIFFICULTY_VARS[card.difficulty] ?? DIFFICULTY_VARS.Medium;
@@ -137,6 +161,20 @@ export function CardDetail({ card, onBack, onDelete }: Props) {
           </div>
         </div>
       )}
+      {/* 📝 Personal Notes Section */}
+      <div style={{ marginTop: 28, borderTop: "1px solid var(--border)", paddingTop: 20 }}>
+        <div style={s.fieldLabel}>📝 Personal Study Notes</div>
+        <textarea
+          value={notesText}
+          onChange={handleNotesChange}
+          placeholder="Write your personal notes, base cases, similar problem links, or key warnings about this question here (autosaves)..."
+          style={s.notesTextarea}
+          rows={4}
+        />
+        <div style={{ fontSize: 11, color: "var(--caption)", marginTop: 4, fontStyle: "italic" }}>
+          {saveStatus}
+        </div>
+      </div>
     </div>
   );
 }
@@ -160,4 +198,18 @@ const s: Record<string, React.CSSProperties> = {
   hintSection:     { marginTop: 16, padding: "12px 14px", background: "var(--bg-raised)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)" },
   revealBtn:       { fontSize: 12, color: "var(--accent)", background: "none", border: "none", cursor: "pointer", fontWeight: 500 },
   codeHint:        { margin: 0, fontSize: 12, fontFamily: "var(--font-mono)", color: "var(--ink)", whiteSpace: "pre-wrap", lineHeight: 1.7, background: "var(--bg-sunken)", padding: "10px 12px", borderRadius: "var(--radius-sm)" },
+  notesTextarea: {
+    width: "100%",
+    background: "var(--bg-sunken)",
+    border: "1px solid var(--border)",
+    borderRadius: "var(--radius-sm)",
+    padding: "10px 12px",
+    fontSize: 13,
+    color: "var(--ink)",
+    outline: "none",
+    resize: "none" as const,
+    marginTop: 10,
+    fontFamily: "inherit",
+    lineHeight: 1.5,
+  },
 };

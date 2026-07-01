@@ -35,6 +35,7 @@ export interface FlashCard {
   ease_factor: number;       // EF, starts at 2.5
   repetitions: number;       // How many times reviewed
   last_quality: number | null; // 0–5 last rating
+  notes?: string;            // User's personal notes on this card
 }
 
 // ─── Deck metadata ──────────────────────────────────────────────────────────

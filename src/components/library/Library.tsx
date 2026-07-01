@@ -165,6 +165,7 @@ export function Library({ cards, onSelectCard, onStartReview, onGenerate, onGoSt
                 <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
                   <span style={{ ...s.diffBadge, background: diff.bg, color: diff.text }}>{card.difficulty}</span>
                   {card.deck && <span style={s.deckBadge}>{card.deck}</span>}
+                  {card.notes && <span style={{ fontSize: 11, marginLeft: 2 }} title="Has personal study notes">📝</span>}
                 </div>
                 <span className="numeral" style={{ fontSize: 11, color: due ? "var(--urgent)" : "var(--caption)", fontWeight: due ? 600 : 400 }}>
                   {nextReviewLabel(card)}
