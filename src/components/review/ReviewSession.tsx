@@ -380,6 +380,16 @@ export function ReviewSession({ cards, onUpdate, onRecordReview, onRecordSession
         </div>
       ) : (
         <div style={{ marginTop: 20 }} className="animate-fadeIn">
+          {/* User's typed recall attempt */}
+          {selfExplanationText.trim() && (
+            <div style={{ marginBottom: 22 }}>
+              <div style={s.activeRecallLabel}>Your Recall Attempt</div>
+              <div style={s.recallAttemptBox}>
+                {selfExplanationText}
+              </div>
+            </div>
+          )}
+
           {/* Approaches and Recall Checklist */}
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 22 }}>
             <div style={s.activeRecallLabel}>Verify & Grade Recall</div>
@@ -461,4 +471,5 @@ const s: Record<string, React.CSSProperties> = {
   qualityBtn:   { display: "flex", flexDirection: "column" as const, alignItems: "center", padding: "10px 4px", background: "var(--bg-raised)", border: "1.5px solid", borderRadius: "var(--radius)", cursor: "pointer" },
   activeRecallLabel: { fontSize: 11, fontWeight: 600, color: "var(--caption)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: 6 },
   explanationTextarea: { width: "100%", background: "var(--bg-raised)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", padding: "10px 12px", fontSize: 14, color: "var(--ink)", outline: "none", resize: "none" },
+  recallAttemptBox: { background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", padding: "12px 14px", fontSize: 13.5, color: "var(--ink-soft)", whiteSpace: "pre-wrap" as const, lineHeight: 1.5, fontStyle: "italic" },
 };
