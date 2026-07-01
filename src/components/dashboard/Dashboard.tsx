@@ -167,31 +167,48 @@ export function Dashboard({ cards, events, streak, sessionHistory, onStartReview
               const rate = session.totalCards > 0 ? Math.round((passed / session.totalCards) * 100) : 0;
               const avgTime = session.totalCards > 0 ? Math.round((session.results.reduce((acc, c) => acc + c.timeMs, 0) / session.totalCards) / 1000) : 0;
 
-              return (
+               return (
                 <div key={sIdx} style={{
                   display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
+                  flexDirection: "column",
+                  gap: 8,
                   background: "var(--bg-raised)",
                   border: "1px solid var(--border)",
                   borderRadius: "var(--radius)",
                   padding: "12px 18px",
                   boxShadow: "var(--shadow-sm)"
                 }}>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>
-                      {new Date(session.completedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-                    </span>
-                    <span className="numeral" style={{ fontSize: 11, color: "var(--caption)" }}>
-                      {session.totalCards} cards · {mins > 0 ? `${mins}m ` : ""}{secs}s · {avgTime}s avg/card
-                    </span>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>
+                        {new Date(session.completedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                      <span className="numeral" style={{ fontSize: 11, color: "var(--caption)" }}>
+                        {session.totalCards} cards · {mins > 0 ? `${mins}m ` : ""}{secs}s · {avgTime}s avg/card
+                      </span>
+                    </div>
+                    <div className="bigstat" style={{
+                      fontSize: 16,
+                      color: rate >= 80 ? "var(--accent)" : rate >= 50 ? "var(--medium)" : "var(--urgent)"
+                    }}>
+                      {rate}% Recall
+                    </div>
                   </div>
-                  <div className="bigstat" style={{
-                    fontSize: 16,
-                    color: rate >= 80 ? "var(--accent)" : rate >= 50 ? "var(--medium)" : "var(--urgent)"
-                  }}>
-                    {rate}% Recall
-                  </div>
+                  {session.reflection && (
+                    <div style={{
+                      fontSize: 12,
+                      color: "var(--ink-soft)",
+                      background: "var(--bg-sunken)",
+                      padding: "8px 10px",
+                      borderRadius: "var(--radius-sm)",
+                      borderLeft: "3px solid var(--accent)",
+                      fontStyle: "italic",
+                      marginTop: 2,
+                      lineHeight: 1.45,
+                    }}>
+                      "{session.reflection}"
+                    </div>
+                  )}
                 </div>
               );
             })}

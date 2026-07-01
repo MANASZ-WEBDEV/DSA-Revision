@@ -203,7 +203,6 @@ export function ReviewSession({ cards, onUpdate, onRecordReview, onRecordSession
         startedAt: sessionStartTimeRef.current,
         completedAt: new Date().toISOString(),
       };
-      onRecordSession(analytics);
       setAnalyticsData(analytics);
       setStep("analytics");
     } else {
@@ -227,7 +226,18 @@ export function ReviewSession({ cards, onUpdate, onRecordReview, onRecordSession
   }
 
   if (step === "analytics" && analyticsData) {
-    return <ReviewAnalyticsComponent analytics={analyticsData} onDone={onDone} />;
+    return (
+      <ReviewAnalyticsComponent
+        analytics={analyticsData}
+        onDone={(reflection) => {
+          onRecordSession({
+            ...analyticsData,
+            reflection: reflection || undefined,
+          });
+          onDone();
+        }}
+      />
+    );
   }
 
   if (activeCards.length === 0) {

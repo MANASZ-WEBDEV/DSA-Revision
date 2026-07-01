@@ -1,9 +1,10 @@
+import { useState, useMemo } from "react";
 import type { SessionAnalytics } from "../../types";
 import { PATTERN_COLORS, PATTERN_TEXT_COLORS } from "../../lib/llm";
 
 interface Props {
   analytics: SessionAnalytics;
-  onDone: () => void;
+  onDone: (reflection: string) => void;
 }
 
 export function ReviewAnalytics({ analytics, onDone }: Props) {
@@ -55,11 +56,11 @@ export function ReviewAnalytics({ analytics, onDone }: Props) {
   return null; // Let's write the complete implementation below
 }
 
-// Let's import useMemo
-import { useMemo } from "react";
+// No duplicate imports needed
 
 export function ReviewAnalyticsComponent({ analytics, onDone }: Props) {
   const { results, startedAt, completedAt } = analytics;
+  const [reflection, setReflection] = useState("");
 
   const durationMs = new Date(completedAt).getTime() - new Date(startedAt).getTime();
   const minutes = Math.floor(durationMs / 60000);
@@ -145,29 +146,17 @@ export function ReviewAnalyticsComponent({ analytics, onDone }: Props) {
         {/* Right Side: Tips and Next Action */}
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           <div style={s.cardSection}>
-            <h3 style={s.sectionTitle}>Performance Summary</h3>
-            <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 12 }}>
-              <div style={s.summaryItem}>
-                <span style={{ fontSize: 13, color: "var(--ink-soft)" }}>Perfect Recall (Easy/Good):</span>
-                <span className="numeral" style={{ fontSize: 14, fontWeight: 600, color: "var(--accent)" }}>{perfect}</span>
-              </div>
-              <div style={s.summaryItem}>
-                <span style={{ fontSize: 13, color: "var(--ink-soft)" }}>Correct but Struggled (Hard):</span>
-                <span className="numeral" style={{ fontSize: 14, fontWeight: 600, color: "var(--medium)" }}>{passed - perfect}</span>
-              </div>
-              <div style={s.summaryItem}>
-                <span style={{ fontSize: 13, color: "var(--ink-soft)" }}>Incorrect (Vague/Forgot):</span>
-                <span className="numeral" style={{ fontSize: 14, fontWeight: 600, color: "var(--urgent)" }}>{struggled + forgot}</span>
-              </div>
-            </div>
-            {struggled + forgot > 0 && (
-              <p style={{ fontSize: 12, color: "var(--urgent)", background: "var(--hard-soft)", padding: "10px 12px", borderRadius: "var(--radius-sm)", margin: "14px 0 0", lineHeight: 1.5 }}>
-                ⚠️ {struggled + forgot} card{struggled + forgot > 1 ? "s" : ""} reset to interval=1 day. You'll see them again tomorrow to reinforce your recall.
-              </p>
-            )}
+            <h3 style={s.sectionTitle}>Session Reflection</h3>
+            <textarea
+              value={reflection}
+              onChange={(e) => setReflection(e.target.value)}
+              placeholder="Optional: How did you feel about this session? e.g. 'Struggled with DP base cases, but DFS was smooth...'"
+              style={s.reflectionTextarea}
+              rows={3}
+            />
           </div>
 
-          <button onClick={onDone} style={s.primaryBtn} className="btn-press">
+          <button onClick={() => onDone(reflection.trim())} style={s.primaryBtn} className="btn-press">
             Back to Library
           </button>
         </div>
@@ -295,5 +284,19 @@ const s: Record<string, React.CSSProperties> = {
     fontSize: 14,
     fontWeight: 600,
     cursor: "pointer",
+  },
+  reflectionTextarea: {
+    width: "100%",
+    background: "var(--bg-sunken)",
+    border: "1px solid var(--border)",
+    borderRadius: "var(--radius-sm)",
+    padding: "10px 12px",
+    fontSize: 13,
+    color: "var(--ink)",
+    outline: "none",
+    resize: "none" as const,
+    marginTop: 10,
+    fontFamily: "inherit",
+    lineHeight: 1.5,
   },
 };

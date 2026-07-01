@@ -130,5 +130,6 @@ export interface SessionAnalytics {
   }[];
   startedAt: string;
   completedAt: string;
+  reflection?: string;
 }
 
