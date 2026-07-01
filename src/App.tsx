@@ -10,6 +10,7 @@ import { StarterPacks }   from "./components/library/StarterPacks";
 import { ThemeToggle }    from "./components/layout/ThemeToggle";
 import { LandingPage }    from "./components/landing/LandingPage";
 import { Onboarding }     from "./components/landing/Onboarding";
+import { Analytics }      from "@vercel/analytics/react";
 import { useCardStore, useProviderStore, useReviewHistory, useSessionHistory } from "./hooks/useStore";
 import { useTheme }       from "./hooks/useTheme";
 import { getDueCards }    from "./lib/sm2";
@@ -223,6 +224,9 @@ export default function App() {
           onClose={() => setShowSettings(false)}
         />
       )}
+
+      {/* ─── Vercel Web Analytics ─────────────────────────────────────── */}
+      <Analytics />
     </div>
   );
 }
