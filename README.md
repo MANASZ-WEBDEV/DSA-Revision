@@ -3,6 +3,8 @@
 > **Active Recall + Spaced Repetition designed specifically for technical coding interview prep.**
 > *“The template-driven flashcard system Anki can't replicate.”*
 
+🔗 **Live App**: [dsarecall.whymanas.tech](https://dsarecall.whymanas.tech)
+
 ---
 
 [![Vite](https://img.shields.io/badge/Vite-6.x-646CFF?logo=vite)](https://vite.dev/)
