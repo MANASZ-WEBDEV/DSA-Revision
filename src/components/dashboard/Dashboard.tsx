@@ -100,7 +100,13 @@ export function Dashboard({ cards, events, streak, sessionHistory, syncStatus, o
         <StatRow label="Longest streak" value={streak.longest} unit={streak.longest === 1 ? "day" : "days"} />
         <StatRow label="Cards due now" value={dueCount} unit="cards" urgent={dueCount > 0} />
         <StatRow label="Total cards" value={stats.total} unit="in library" />
-        <StatRow label="Mastered" value={stats.mastered} unit="≥21 day interval" accent />
+        <StatRow
+          label="Mastered"
+          value={stats.mastered}
+          unit="≥21 day interval"
+          accent
+          tooltip="Cards you've reviewed successfully with a 21+ day gap"
+        />
         <StatRow
           label="7-day accuracy"
           value={accuracy7 === null ? "—" : accuracy7}
@@ -255,7 +261,7 @@ export function Dashboard({ cards, events, streak, sessionHistory, syncStatus, o
 // ─── Sub-components ─────────────────────────────────────────────────────────
 
 function StatRow({
-  label, value, unit, accent, urgent, flame, isLast,
+  label, value, unit, accent, urgent, flame, isLast, tooltip,
 }: {
   label: string;
   value: number | string;
@@ -264,11 +270,22 @@ function StatRow({
   urgent?: boolean;
   flame?: boolean;
   isLast?: boolean;
+  tooltip?: string;
 }) {
   const color = urgent ? "var(--urgent)" : accent ? "var(--accent)" : "var(--ink)";
   return (
-    <div style={{ ...s.statRow, borderBottom: isLast ? "none" : "1px solid var(--border)" }}>
-      <span style={s.statLabel}>{label}</span>
+    <div 
+      style={{ ...s.statRow, borderBottom: isLast ? "none" : "1px solid var(--border)" }}
+      title={tooltip}
+    >
+      <span style={{ ...s.statLabel, display: "flex", alignItems: "center", gap: 4 }}>
+        {label}
+        {tooltip && (
+          <span style={{ color: "var(--caption)", fontSize: 10, cursor: "help" }}>
+            ℹ
+          </span>
+        )}
+      </span>
       <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
         {flame && <span style={{ fontSize: 16 }}>🔥</span>}
         <span className="bigstat count-animate" style={{ fontSize: 26, color }}>{value}</span>
