@@ -27,7 +27,19 @@ export const Storage = {
   getReviewHistory(): ReviewEvent[] {
     try {
       const raw = localStorage.getItem(HISTORY_KEY);
-      return raw ? JSON.parse(raw) : [];
+      const parsed = raw ? JSON.parse(raw) as ReviewEvent[] : [];
+      const seen = new Set<string>();
+      const deduped: ReviewEvent[] = [];
+      for (const item of parsed) {
+        if (!item.card_id || !item.reviewed_at) continue;
+        const timestamp = new Date(item.reviewed_at).getTime();
+        const key = `${item.card_id}::${timestamp}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          deduped.push(item);
+        }
+      }
+      return deduped;
     } catch {
       return [];
     }
@@ -95,7 +107,18 @@ export const Storage = {
   getSessionHistory(): SessionAnalytics[] {
     try {
       const raw = localStorage.getItem("dsa_session_history_v1");
-      return raw ? JSON.parse(raw) : [];
+      const parsed = raw ? JSON.parse(raw) as SessionAnalytics[] : [];
+      const seen = new Set<string>();
+      const deduped: SessionAnalytics[] = [];
+      for (const item of parsed) {
+        if (!item.startedAt || !item.completedAt) continue;
+        const key = `${new Date(item.startedAt).getTime()}::${new Date(item.completedAt).getTime()}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          deduped.push(item);
+        }
+      }
+      return deduped;
     } catch {
       return [];
     }
@@ -270,15 +293,15 @@ export const Storage = {
       if (histErr) throw histErr;
 
       const localHistory = this.getReviewHistory();
-      const localHistKeys = new Set(localHistory.map(h => `${h.card_id}::${h.reviewed_at}`));
-      const remoteHistKeys = new Set((remoteHistory || []).map(r => `${r.card_local_id}::${r.reviewed_at}`));
+      const localHistKeys = new Set(localHistory.map(h => `${h.card_id}::${new Date(h.reviewed_at).getTime()}`));
+      const remoteHistKeys = new Set((remoteHistory || []).map(r => `${r.card_local_id}::${new Date(r.reviewed_at).getTime()}`));
 
       const historyToPush: any[] = [];
       const mergedHistory = [...localHistory];
 
       // Local events not in remote -> push
       for (const local of localHistory) {
-        const key = `${local.card_id}::${local.reviewed_at}`;
+        const key = `${local.card_id}::${new Date(local.reviewed_at).getTime()}`;
         if (!remoteHistKeys.has(key)) {
           historyToPush.push({
             user_id: userId,
@@ -287,12 +310,13 @@ export const Storage = {
             quality: local.quality,
             reviewed_at: local.reviewed_at,
           });
+          remoteHistKeys.add(key);
         }
       }
 
       // Remote events not in local -> pull
       for (const remote of remoteHistory || []) {
-        const key = `${remote.card_local_id}::${remote.reviewed_at}`;
+        const key = `${remote.card_local_id}::${new Date(remote.reviewed_at).getTime()}`;
         if (!localHistKeys.has(key)) {
           mergedHistory.push({
             card_id: remote.card_local_id,
@@ -300,6 +324,7 @@ export const Storage = {
             quality: remote.quality,
             reviewed_at: remote.reviewed_at,
           });
+          localHistKeys.add(key);
         }
       }
 
@@ -322,15 +347,15 @@ export const Storage = {
       if (sessErr) throw sessErr;
 
       const localSessions = this.getSessionHistory();
-      const localSessKeys = new Set(localSessions.map(s => `${s.startedAt}::${s.completedAt}`));
-      const remoteSessKeys = new Set((remoteSessions || []).map(r => `${r.started_at}::${r.completed_at}`));
+      const localSessKeys = new Set(localSessions.map(s => `${new Date(s.startedAt).getTime()}::${new Date(s.completedAt).getTime()}`));
+      const remoteSessKeys = new Set((remoteSessions || []).map(r => `${new Date(r.started_at).getTime()}::${new Date(r.completed_at).getTime()}`));
 
       const sessionsToPush: any[] = [];
       const mergedSessions = [...localSessions];
 
       // Local sessions not in remote -> push
       for (const local of localSessions) {
-        const key = `${local.startedAt}::${local.completedAt}`;
+        const key = `${new Date(local.startedAt).getTime()}::${new Date(local.completedAt).getTime()}`;
         if (!remoteSessKeys.has(key)) {
           sessionsToPush.push({
             user_id: userId,
@@ -340,12 +365,13 @@ export const Storage = {
             results: local.results,
             reflection: local.reflection,
           });
+          remoteSessKeys.add(key);
         }
       }
 
       // Remote sessions not in local -> pull
       for (const remote of remoteSessions || []) {
-        const key = `${remote.started_at}::${remote.completed_at}`;
+        const key = `${new Date(remote.started_at).getTime()}::${new Date(remote.completed_at).getTime()}`;
         if (!localSessKeys.has(key)) {
           mergedSessions.push({
             startedAt: remote.started_at,
@@ -354,6 +380,7 @@ export const Storage = {
             results: remote.results,
             reflection: remote.reflection,
           });
+          localSessKeys.add(key);
         }
       }
 
