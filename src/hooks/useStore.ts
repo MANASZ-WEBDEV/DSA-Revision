@@ -3,6 +3,8 @@ import type { FlashCard, ReviewEvent, StreakData, ReviewQuality, SessionConfig, 
 import type { ProviderId } from "../lib/llm";
 import { PROVIDERS } from "../lib/llm";
 import { Storage } from "../lib/storage";
+import { supabase } from "../lib/supabaseClient";
+
 
 const PROVIDER_KEY = "dsa_provider";
 const MODEL_KEY = "dsa_model";
@@ -29,25 +31,73 @@ export function useCardStore() {
     Storage.saveCards(cards);
   }, [cards]);
 
-  const addCard    = useCallback((card: FlashCard) => setCards((p) => [card, ...p]), []);
-  const updateCard = useCallback((id: string, updates: Partial<FlashCard>) =>
-    setCards((p) => p.map((c) => (c.id === id ? { ...c, ...updates } : c))), []);
-  const deleteCard = useCallback((id: string) =>
-    setCards((p) => p.filter((c) => c.id !== id)), []);
+  const addCard = useCallback((card: FlashCard) => {
+    const cardWithTimestamps: FlashCard = {
+      ...card,
+      updated_at: new Date().toISOString(),
+      dirty: true,
+    };
+    setCards((p) => [cardWithTimestamps, ...p]);
+  }, []);
+
+  const updateCard = useCallback((id: string, updates: Partial<FlashCard>) => {
+    setCards((p) =>
+      p.map((c) =>
+        c.id === id
+          ? {
+              ...c,
+              ...updates,
+              updated_at: new Date().toISOString(),
+              dirty: true,
+            }
+          : c
+      )
+    );
+  }, []);
+
+  const deleteCard = useCallback((id: string, userId?: string) => {
+    setCards((p) => p.filter((c) => c.id !== id));
+    if (userId) {
+      supabase
+        .from("cards")
+        .delete()
+        .eq("user_id", userId)
+        .eq("local_id", id)
+        .then(({ error }) => {
+          if (error) console.error("Failed to delete remote card:", error);
+        });
+    }
+  }, []);
 
   // Import a batch of cards (for starter packs / shared decks)
   // Deduplicates by card title + deck name to prevent double-imports
   const importCards = useCallback((newCards: FlashCard[]) => {
     setCards((prev) => {
       const existingKeys = new Set(prev.map((c) => `${c.deck}::${c.title}`));
-      const unique = newCards.filter((c) => !existingKeys.has(`${c.deck}::${c.title}`));
+      const unique = newCards
+        .filter((c) => !existingKeys.has(`${c.deck}::${c.title}`))
+        .map((c) => ({
+          ...c,
+          updated_at: new Date().toISOString(),
+          dirty: true,
+        }));
       return [...unique, ...prev];
     });
   }, []);
 
   // Delete all cards belonging to a specific deck
-  const deleteDeck = useCallback((deckName: string) => {
+  const deleteDeck = useCallback((deckName: string, userId?: string) => {
     setCards((p) => p.filter((c) => c.deck !== deckName));
+    if (userId) {
+      supabase
+        .from("cards")
+        .delete()
+        .eq("user_id", userId)
+        .eq("deck", deckName)
+        .then(({ error }) => {
+          if (error) console.error("Failed to delete remote deck:", error);
+        });
+    }
   }, []);
 
   // Check if a deck has already been imported
@@ -63,7 +113,7 @@ export function useCardStore() {
     }
   }, []);
 
-  return { cards, addCard, updateCard, deleteCard, importCards, deleteDeck, isDeckImported, markDeckImported };
+  return { cards, setCards, addCard, updateCard, deleteCard, importCards, deleteDeck, isDeckImported, markDeckImported };
 }
 
 // ─── Provider + model + per-provider key store ────────────────────────────────
@@ -124,11 +174,30 @@ export function useReviewHistory() {
   const recordReview = useCallback((card: FlashCard, quality: ReviewQuality) => {
     const now = new Date();
     const todayStr = localDateStr(now);
+    const isoStr = now.toISOString();
 
     setEvents((prev) => [
       ...prev,
-      { card_id: card.id, patterns: card.patterns, quality, reviewed_at: now.toISOString() },
+      { card_id: card.id, patterns: card.patterns, quality, reviewed_at: isoStr },
     ]);
+
+    // Async sync to Supabase if logged in
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        supabase
+          .from("review_history")
+          .insert({
+            user_id: session.user.id,
+            card_local_id: card.id,
+            patterns: card.patterns,
+            quality,
+            reviewed_at: isoStr,
+          })
+          .then(({ error }) => {
+            if (error) console.error("Failed to sync review history:", error);
+          });
+      }
+    });
 
     setStreak((prev) => {
       // Already reviewed today — streak unaffected, just keep as-is
@@ -147,7 +216,7 @@ export function useReviewHistory() {
     });
   }, []);
 
-  return { events, streak, recordReview };
+  return { events, setEvents, streak, setStreak, recordReview };
 }
 
 const DEFAULT_SESSION_CONFIG: SessionConfig = {
@@ -184,8 +253,27 @@ export function useSessionHistory() {
       Storage.saveSessionHistory(updated);
       return updated;
     });
+
+    // Async sync to Supabase if logged in
+    supabase.auth.getSession().then(({ data: { session: supabaseSession } }) => {
+      if (supabaseSession?.user) {
+        supabase
+          .from("session_history")
+          .insert({
+            user_id: supabaseSession.user.id,
+            started_at: session.startedAt,
+            completed_at: session.completedAt,
+            total_cards: session.totalCards,
+            results: session.results,
+            reflection: session.reflection,
+          })
+          .then(({ error }) => {
+            if (error) console.error("Failed to sync session history:", error);
+          });
+      }
+    });
   }, []);
 
-  return { sessionHistory, recordSession };
+  return { sessionHistory, setSessionHistory: setSessionHistoryState, recordSession };
 }
 
