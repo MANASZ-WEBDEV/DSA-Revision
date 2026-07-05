@@ -28,6 +28,7 @@ export interface FlashCard {
   deck: string | null;       // null = self-generated, "Blind 75" = imported from starter pack
 
   created_at: string;
+  updated_at: string;
 
   // ─── SM-2 spaced repetition fields ──────────────────────────────────────
   next_review: string;       // ISO date string
@@ -36,6 +37,7 @@ export interface FlashCard {
   repetitions: number;       // How many times reviewed
   last_quality: number | null; // 0–5 last rating
   notes?: string;            // User's personal notes on this card
+  dirty?: boolean;           // Local change dirty flag for syncing
 }
 
 // ─── Deck metadata ──────────────────────────────────────────────────────────
