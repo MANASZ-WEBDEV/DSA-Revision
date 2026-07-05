@@ -1,7 +1,8 @@
+import { useState, useEffect } from "react";
 import type { FlashCard, ReviewEvent, StreakData, PatternTag, SessionAnalytics } from "../../types";
 import { PATTERN_TAGS } from "../../types";
 import { PATTERN_COLORS, PATTERN_TEXT_COLORS } from "../../lib/llm";
-import { getDueCards, getStats } from "../../lib/sm2";
+import { getDueCards, getStats, formatRelativeTime } from "../../lib/sm2";
 import { Heatmap } from "./Heatmap";
 import { SyncBanner } from "../landing/SyncBanner";
 
@@ -12,6 +13,7 @@ interface Props {
   streak: StreakData;
   sessionHistory: SessionAnalytics[];
   syncStatus: "synced" | "syncing" | "offline" | "local";
+  lastSyncedAt: Date | null;
   onSignInClick: () => void;
   onStartReview: () => void;
   onGenerate: () => void;
@@ -19,7 +21,14 @@ interface Props {
   onGoStarterPacks: () => void;
 }
 
-export function Dashboard({ cards, events, streak, sessionHistory, syncStatus, onSignInClick, onStartReview, onGenerate, onGoLibrary, onGoStarterPacks }: Props) {
+export function Dashboard({ cards, events, streak, sessionHistory, syncStatus, lastSyncedAt, onSignInClick, onStartReview, onGenerate, onGoLibrary, onGoStarterPacks }: Props) {
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    if (syncStatus !== "synced" || !lastSyncedAt) return;
+    const interval = setInterval(() => setTick((t) => t + 1), 10000);
+    return () => clearInterval(interval);
+  }, [syncStatus, lastSyncedAt]);
+
   const stats = getStats(cards);
   const dueCount = getDueCards(cards).length;
 
@@ -61,7 +70,10 @@ export function Dashboard({ cards, events, streak, sessionHistory, syncStatus, o
           <div className="font-mono" style={{ display: "flex", alignItems: "center", gap: 6, ...s.eyebrow }}>
             <span>Dashboard</span>
             <span style={s.dividerDot}>·</span>
-            <span style={{ display: "flex", alignItems: "center", gap: 4, color: "var(--caption)" }}>
+            <span 
+              style={{ display: "flex", alignItems: "center", gap: 4, color: "var(--caption)", cursor: lastSyncedAt ? "help" : "default" }}
+              title={lastSyncedAt ? `Last synced at ${lastSyncedAt.toLocaleTimeString()}` : undefined}
+            >
               <span style={{
                 width: 7,
                 height: 7,
@@ -70,7 +82,9 @@ export function Dashboard({ cards, events, streak, sessionHistory, syncStatus, o
                 display: "inline-block",
               }} />
               <span style={{ fontSize: 10, textTransform: "capitalize" }}>
-                {syncStatus === "synced" ? "Synced" : syncStatus === "syncing" ? "Syncing..." : syncStatus === "offline" ? "Offline" : "Local Mode"}
+                {syncStatus === "synced" && lastSyncedAt
+                  ? `Synced ${formatRelativeTime(lastSyncedAt)}`
+                  : syncStatus === "synced" ? "Synced" : syncStatus === "syncing" ? "Syncing..." : syncStatus === "offline" ? "Offline" : "Local Mode"}
               </span>
             </span>
           </div>

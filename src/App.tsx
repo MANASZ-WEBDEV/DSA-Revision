@@ -13,6 +13,7 @@ import { Onboarding }     from "./components/landing/Onboarding";
 import { Analytics }      from "@vercel/analytics/react";
 import { useCardStore, useProviderStore, useReviewHistory, useSessionHistory } from "./hooks/useStore";
 import { useTheme }       from "./hooks/useTheme";
+import { formatRelativeTime } from "./lib/sm2";
 import { getDueCards }    from "./lib/sm2";
 import { PROVIDERS }      from "./lib/llm";
 import type { FlashCard } from "./types";
@@ -34,6 +35,14 @@ function AppContent() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [syncStatus, setSyncStatus] = useState<"synced" | "syncing" | "offline" | "local">("local");
+  const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    if (syncStatus !== "synced" || !lastSyncedAt) return;
+    const interval = setInterval(() => setTick((t) => t + 1), 1000);
+    return () => clearInterval(interval);
+  }, [syncStatus, lastSyncedAt]);
 
   const { session, user, signOut } = useAuth();
 
@@ -63,6 +72,7 @@ function AppContent() {
 
       if (res.success) {
         setSyncStatus("synced");
+        setLastSyncedAt(new Date());
         if (res.cards) {
           // Re-load state from storage (clears dirty flags & reconciles history/streaks)
           setCards(Storage.getCards());
@@ -207,10 +217,14 @@ function AppContent() {
                   <div style={{ ...s.dropdownMenu, zIndex: 99 }}>
                     <div style={s.dropdownHeader}>
                       <div style={s.dropdownEmail}>{user.email}</div>
-                      <div style={{
-                        ...s.dropdownSync,
-                        color: syncStatus === "synced" ? "var(--easy)" : syncStatus === "syncing" ? "var(--medium)" : syncStatus === "offline" ? "var(--hard)" : "var(--caption)"
-                      }}>
+                      <div 
+                        style={{
+                          ...s.dropdownSync,
+                          color: syncStatus === "synced" ? "var(--easy)" : syncStatus === "syncing" ? "var(--medium)" : syncStatus === "offline" ? "var(--hard)" : "var(--caption)",
+                          cursor: lastSyncedAt ? "help" : "default"
+                        }}
+                        title={lastSyncedAt ? `Last synced at ${lastSyncedAt.toLocaleTimeString()}` : undefined}
+                      >
                         <span style={{
                           width: 6,
                           height: 6,
@@ -220,7 +234,9 @@ function AppContent() {
                           marginRight: 6
                         }} />
                         <span style={{ fontSize: 10, textTransform: "capitalize" }}>
-                          {syncStatus === "synced" ? "Synced" : syncStatus === "syncing" ? "Syncing..." : syncStatus === "offline" ? "Offline" : "Local mode"}
+                          {syncStatus === "synced" && lastSyncedAt
+                            ? `Synced ${formatRelativeTime(lastSyncedAt)}`
+                            : syncStatus === "synced" ? "Synced" : syncStatus === "syncing" ? "Syncing..." : syncStatus === "offline" ? "Offline" : "Local mode"}
                         </span>
                       </div>
                     </div>
@@ -266,6 +282,7 @@ function AppContent() {
                   streak={streak}
                   sessionHistory={sessionHistory}
                   syncStatus={syncStatus}
+                  lastSyncedAt={lastSyncedAt}
                   onSignInClick={() => setShowLogin(true)}
                   onStartReview={() => navigate("/review")}
                   onGenerate={() => navigate("/generate")}
