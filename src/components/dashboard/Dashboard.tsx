@@ -15,7 +15,7 @@ interface Props {
   onSignInClick: () => void;
   onStartReview: () => void;
   onGenerate: () => void;
-  onGoLibrary: () => void;
+  onGoLibrary: (pattern?: string) => void;
   onGoStarterPacks: () => void;
 }
 
@@ -47,6 +47,11 @@ export function Dashboard({ cards, events, streak, sessionHistory, syncStatus, o
 
   const hasActivity = events.length > 0;
   const hasCards = cards.length > 0;
+
+  // Find weakest pattern (lowest accuracy under 85%, at least 1 review)
+  const weakPattern = patternStats.length > 0
+    ? [...patternStats].filter(p => p.accuracy < 85).sort((a, b) => a.accuracy - b.accuracy)[0]
+    : null;
 
   return (
     <div className="animate-fadeInUp" style={{ maxWidth: 880, margin: "0 auto", padding: "1.75rem 1rem 3rem" }}>
@@ -153,32 +158,51 @@ export function Dashboard({ cards, events, streak, sessionHistory, syncStatus, o
       <Section title="Pattern mastery" sub="Based on review accuracy per tag">
         {patternStats.length > 0 ? (
           <div className="stagger-list" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {patternStats.map((p) => (
-              <div key={p.tag} style={s.patternRow}>
-                <span
-                  style={{
-                    ...s.patternTag,
-                    background: PATTERN_COLORS[p.tag] ?? "var(--bg-sunken)",
-                    color: PATTERN_TEXT_COLORS[p.tag] ?? "var(--ink-soft)",
-                  }}
-                >
-                  {p.tag}
-                </span>
-                <div style={s.barTrack}>
-                  <div
-                    className="bar-animate"
+            {patternStats.map((p) => {
+              const isWeakest = weakPattern && p.tag === weakPattern.tag;
+              return (
+                <div key={p.tag} style={s.patternRow}>
+                  <span
                     style={{
-                      ...s.barFill,
-                      width: `${p.accuracy}%`,
-                      background:
-                        p.accuracy >= 75 ? "var(--accent)" : p.accuracy >= 50 ? "var(--medium)" : "var(--hard)",
+                      ...s.patternTag,
+                      background: PATTERN_COLORS[p.tag] ?? "var(--bg-sunken)",
+                      color: PATTERN_TEXT_COLORS[p.tag] ?? "var(--ink-soft)",
                     }}
-                  />
+                  >
+                    {p.tag}
+                  </span>
+                  {isWeakest && (
+                    <button
+                      onClick={() => onGoLibrary(p.tag)}
+                      style={s.nudgeBtn}
+                      className="btn-press"
+                      title={`Review your ${p.tag} cards`}
+                    >
+                      Review {p.tag} →
+                    </button>
+                  )}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, justifyContent: "flex-end" }}>
+                    <span className="numeral" style={{ fontSize: 12, color: "var(--caption)" }}>
+                      {p.reviews} review{p.reviews === 1 ? "" : "s"}
+                    </span>
+                    <div style={s.barTrack}>
+                      <div
+                        className="bar-animate"
+                        style={{
+                          ...s.barFill,
+                          width: `${p.accuracy}%`,
+                          background:
+                            p.accuracy >= 80 ? "var(--easy)" : p.accuracy >= 50 ? "var(--medium)" : "var(--hard)",
+                        }}
+                      />
+                    </div>
+                    <span className="numeral" style={{ fontSize: 12, fontWeight: 600, width: 34, textAlign: "right" }}>
+                      {p.accuracy}%
+                    </span>
+                  </div>
                 </div>
-                <span className="numeral" style={s.barPct}>{p.accuracy}%</span>
-                <span className="numeral" style={s.barCount}>{p.reviews}×</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <EmptyHint text="Review a few cards across different patterns to see your mastery breakdown here." />
@@ -250,7 +274,7 @@ export function Dashboard({ cards, events, streak, sessionHistory, syncStatus, o
 
       {/* Quick links */}
       <div style={{ display: "flex", gap: 10, marginTop: 24, flexWrap: "wrap" }}>
-        <button onClick={onGoLibrary} style={s.linkBtn}>Browse library →</button>
+        <button onClick={() => onGoLibrary()} style={s.linkBtn}>Browse library →</button>
         <button onClick={onGenerate} style={s.linkBtn}>Generate new card →</button>
         <button onClick={onGoStarterPacks} style={s.linkBtn}>Starter packs →</button>
       </div>
@@ -339,4 +363,17 @@ const s: Record<string, React.CSSProperties> = {
   emptyHint:    { display: "flex", alignItems: "center", background: "var(--bg-sunken)", border: "1px dashed var(--border-strong)", borderRadius: "var(--radius)", padding: "16px 18px" },
   linkBtn:      { background: "none", border: "none", fontSize: 13, color: "var(--accent)", fontWeight: 500, cursor: "pointer", padding: 0 },
   welcomeBanner: { background: "var(--accent-soft)", border: "1px solid var(--accent)", borderRadius: "var(--radius-lg)", padding: "22px 24px", marginTop: 24, boxShadow: "var(--shadow-sm)" },
+  nudgeBtn: {
+    background: "var(--accent-soft)",
+    border: "none",
+    color: "var(--accent-ink)",
+    fontSize: 10,
+    fontWeight: 600,
+    cursor: "pointer",
+    padding: "3px 8px",
+    borderRadius: 20,
+    transition: "transform 0.1s ease",
+    display: "inline-flex",
+    alignItems: "center",
+  },
 };

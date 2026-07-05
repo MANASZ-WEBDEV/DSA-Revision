@@ -269,7 +269,7 @@ function AppContent() {
                   onSignInClick={() => setShowLogin(true)}
                   onStartReview={() => navigate("/review")}
                   onGenerate={() => navigate("/generate")}
-                  onGoLibrary={() => navigate("/library")}
+                  onGoLibrary={(pattern) => navigate(pattern ? `/library?pattern=${encodeURIComponent(pattern)}` : "/library")}
                   onGoStarterPacks={() => navigate("/starter-packs")}
                 />
               )

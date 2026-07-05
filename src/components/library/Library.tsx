@@ -2,6 +2,7 @@ import type { FlashCard } from "../../types";
 import { PATTERN_COLORS, PATTERN_TEXT_COLORS } from "../../lib/llm";
 import { isDue, nextReviewLabel, getStats, getBestBigO } from "../../lib/sm2";
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 interface Props {
   cards: FlashCard[];
@@ -20,9 +21,22 @@ const DIFF_VARS = {
 type DeckFilter = "all" | "my-cards" | string; // string = specific deck name
 
 export function Library({ cards, onSelectCard, onStartReview, onGenerate, onGoStarterPacks }: Props) {
-  const [filterPattern, setFilterPattern] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const patternParam = searchParams.get("pattern");
+
+  const [filterPattern, setFilterPattern] = useState<string | null>(patternParam);
   const [filterDifficulty, setFilterDifficulty] = useState<string | null>(null);
   const [filterDeck, setFilterDeck] = useState<DeckFilter>("all");
+
+  const handleSelectPattern = (p: string | null) => {
+    setFilterPattern(p);
+    if (p) {
+      setSearchParams({ pattern: p });
+    } else {
+      searchParams.delete("pattern");
+      setSearchParams(searchParams);
+    }
+  };
   const stats = getStats(cards);
 
   // Get unique deck names from cards
@@ -127,7 +141,7 @@ export function Library({ cards, onSelectCard, onStartReview, onGenerate, onGoSt
         {usedPatterns.map((p) => (
           <button
             key={p}
-            onClick={() => setFilterPattern(filterPattern === p ? null : p)}
+            onClick={() => handleSelectPattern(filterPattern === p ? null : p)}
             style={{
               ...s.filterChip,
               background: filterPattern === p ? (PATTERN_COLORS[p] ?? "var(--accent-soft)") : "var(--bg-sunken)",
@@ -139,7 +153,7 @@ export function Library({ cards, onSelectCard, onStartReview, onGenerate, onGoSt
           </button>
         ))}
         {(filterPattern || filterDifficulty) && (
-          <button onClick={() => { setFilterPattern(null); setFilterDifficulty(null); }} style={{ ...s.filterChip, color: "var(--caption)" }}>
+          <button onClick={() => { handleSelectPattern(null); setFilterDifficulty(null); }} style={{ ...s.filterChip, color: "var(--caption)" }}>
             Clear ×
           </button>
         )}
