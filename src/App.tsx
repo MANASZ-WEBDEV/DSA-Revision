@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Routes, Route, NavLink, useNavigate, useParams } from "react-router-dom";
 import { Dashboard }      from "./components/dashboard/Dashboard";
 import { Library }        from "./components/library/Library";
@@ -16,17 +16,73 @@ import { useTheme }       from "./hooks/useTheme";
 import { getDueCards }    from "./lib/sm2";
 import { PROVIDERS }      from "./lib/llm";
 import type { FlashCard } from "./types";
+import { AuthProvider, useAuth } from "./hooks/useAuth";
+import { LoginModal } from "./components/settings/LoginModal";
+import { Storage } from "./lib/storage";
 
-export default function App() {
-  const { cards, addCard, updateCard, deleteCard, importCards } = useCardStore();
+
+function AppContent() {
+  const { cards, setCards, addCard, updateCard, deleteCard, importCards } = useCardStore();
   const { providerId, model, currentKey, keys, setProvider, setModel, setKey } = useProviderStore();
-  const { events, streak, recordReview } = useReviewHistory();
-  const { sessionHistory, recordSession } = useSessionHistory();
+  const { events, setEvents, streak, setStreak, recordReview } = useReviewHistory();
+  const { sessionHistory, setSessionHistory, recordSession } = useSessionHistory();
   const { theme, toggleTheme } = useTheme();
 
   const navigate = useNavigate();
   const [showSettings, setShowSettings] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<"synced" | "syncing" | "offline" | "local">("local");
+
+  const { session, user, signOut } = useAuth();
+
+  useEffect(() => {
+    if (!user) {
+      setSyncStatus("local");
+      return;
+    }
+
+    const userId = user.id;
+    let isSubscribed = true;
+
+    async function runSync() {
+      if (!isSubscribed) return;
+      setSyncStatus("syncing");
+
+      // 1. Run migration first
+      const migrated = await Storage.migrateLocalToSupabase(userId);
+      if (!migrated && isSubscribed) {
+        setSyncStatus("offline");
+        return;
+      }
+
+      // 2. Sync with remote
+      const res = await Storage.syncWithSupabase(userId);
+      if (!isSubscribed) return;
+
+      if (res.success) {
+        setSyncStatus("synced");
+        if (res.cards) {
+          // Re-load state from storage (clears dirty flags & reconciles history/streaks)
+          setCards(Storage.getCards());
+          setEvents(Storage.getReviewHistory());
+          setSessionHistory(Storage.getSessionHistory());
+          setStreak(Storage.getStreak());
+        }
+      } else {
+        setSyncStatus("offline");
+      }
+    }
+
+    runSync();
+
+    const interval = setInterval(runSync, 60000);
+
+    return () => {
+      isSubscribed = false;
+      clearInterval(interval);
+    };
+  }, [user]);
 
   const hasOnboarded = localStorage.getItem("dsa_onboarded_v1") === "true";
   const showLanding = cards.length === 0 && !hasOnboarded;
@@ -105,6 +161,7 @@ export default function App() {
 
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <ThemeToggle theme={theme} onToggle={toggleTheme} />
+          
           <button onClick={() => setShowSettings(true)} style={s.providerBtn} className="btn-press">
             <span>{provider.logo}</span>
             <span style={{ fontSize: 12 }}>
@@ -114,6 +171,29 @@ export default function App() {
               {keySet ? "✓" : "⚠"}
             </span>
           </button>
+
+          {user ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 12, color: "var(--accent-ink)", fontWeight: 500, background: "var(--accent-soft)", padding: "4px 8px", borderRadius: "var(--radius-sm)", maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {user.email}
+              </span>
+              <button
+                onClick={() => signOut()}
+                style={{ ...s.providerBtn, background: "var(--urgent-soft)", color: "var(--urgent-ink)", borderColor: "var(--urgent)" }}
+                className="btn-press"
+              >
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowLogin(true)}
+              style={{ ...s.providerBtn, background: "var(--accent)", color: "#fff", borderColor: "var(--accent)" }}
+              className="btn-press"
+            >
+              ☁️ Sync
+            </button>
+          )}
         </div>
       </nav>
 
@@ -131,6 +211,8 @@ export default function App() {
                   events={events}
                   streak={streak}
                   sessionHistory={sessionHistory}
+                  syncStatus={syncStatus}
+                  onSignInClick={() => setShowLogin(true)}
                   onStartReview={() => navigate("/review")}
                   onGenerate={() => navigate("/generate")}
                   onGoLibrary={() => navigate("/library")}
@@ -184,7 +266,7 @@ export default function App() {
               <CardDetailRoute
                 cards={cards}
                 onUpdate={updateCard}
-                onDelete={(id) => { deleteCard(id); navigate("/library"); }}
+                onDelete={(id) => { deleteCard(id, user?.id); navigate("/library"); }}
               />
             }
           />
@@ -226,9 +308,22 @@ export default function App() {
         />
       )}
 
+      {/* ─── Login Modal ───────────────────────────────────────────────── */}
+      {showLogin && (
+        <LoginModal onClose={() => setShowLogin(false)} />
+      )}
+
       {/* ─── Vercel Web Analytics ─────────────────────────────────────── */}
       <Analytics />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 

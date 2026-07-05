@@ -3,19 +3,23 @@ import { PATTERN_TAGS } from "../../types";
 import { PATTERN_COLORS, PATTERN_TEXT_COLORS } from "../../lib/llm";
 import { getDueCards, getStats } from "../../lib/sm2";
 import { Heatmap } from "./Heatmap";
+import { SyncBanner } from "../landing/SyncBanner";
+
 
 interface Props {
   cards: FlashCard[];
   events: ReviewEvent[];
   streak: StreakData;
   sessionHistory: SessionAnalytics[];
+  syncStatus: "synced" | "syncing" | "offline" | "local";
+  onSignInClick: () => void;
   onStartReview: () => void;
   onGenerate: () => void;
   onGoLibrary: () => void;
   onGoStarterPacks: () => void;
 }
 
-export function Dashboard({ cards, events, streak, sessionHistory, onStartReview, onGenerate, onGoLibrary, onGoStarterPacks }: Props) {
+export function Dashboard({ cards, events, streak, sessionHistory, syncStatus, onSignInClick, onStartReview, onGenerate, onGoLibrary, onGoStarterPacks }: Props) {
   const stats = getStats(cards);
   const dueCount = getDueCards(cards).length;
 
@@ -49,7 +53,22 @@ export function Dashboard({ cards, events, streak, sessionHistory, onStartReview
       {/* Header row */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 28, flexWrap: "wrap", gap: 12 }}>
         <div>
-          <div className="font-mono" style={s.eyebrow}>Dashboard</div>
+          <div className="font-mono" style={{ display: "flex", alignItems: "center", gap: 6, ...s.eyebrow }}>
+            <span>Dashboard</span>
+            <span style={s.dividerDot}>·</span>
+            <span style={{ display: "flex", alignItems: "center", gap: 4, color: "var(--caption)" }}>
+              <span style={{
+                width: 7,
+                height: 7,
+                borderRadius: "50%",
+                background: syncStatus === "synced" ? "var(--easy)" : syncStatus === "syncing" ? "var(--medium)" : syncStatus === "offline" ? "var(--hard)" : "var(--caption)",
+                display: "inline-block",
+              }} />
+              <span style={{ fontSize: 10, textTransform: "capitalize" }}>
+                {syncStatus === "synced" ? "Synced" : syncStatus === "syncing" ? "Syncing..." : syncStatus === "offline" ? "Offline" : "Local Mode"}
+              </span>
+            </span>
+          </div>
           <h1 style={s.h1}>Your progress</h1>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
@@ -63,6 +82,11 @@ export function Dashboard({ cards, events, streak, sessionHistory, onStartReview
           )}
         </div>
       </div>
+
+      {/* Sync banner for anonymous local users */}
+      {syncStatus === "local" && (
+        <SyncBanner onSignInClick={onSignInClick} />
+      )}
 
       {/* Stat ledger — horizontal rows, hairline dividers */}
       <div style={s.ledger} className="card-interactive">
@@ -279,6 +303,7 @@ function EmptyHint({ text }: { text: string }) {
 
 const s: Record<string, React.CSSProperties> = {
   eyebrow:      { fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", color: "var(--accent)", textTransform: "uppercase" as const, marginBottom: 4 },
+  dividerDot:   { color: "var(--border-strong)", fontSize: 11 },
   h1:           { fontFamily: "var(--font-display)", fontSize: 28, fontWeight: 600, margin: 0, color: "var(--ink)", letterSpacing: "-0.01em" },
   primaryBtn:   { padding: "10px 18px", background: "var(--accent)", color: "#fff", border: "none", borderRadius: "var(--radius)", fontSize: 13, fontWeight: 600, cursor: "pointer" },
   secondaryBtn: { padding: "10px 18px", background: "var(--ink)", color: "var(--bg)", border: "none", borderRadius: "var(--radius)", fontSize: 13, fontWeight: 500, cursor: "pointer" },
