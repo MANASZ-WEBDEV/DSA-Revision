@@ -251,3 +251,24 @@ export function formatRelativeTime(date: Date | null): string {
   const hours = Math.floor(minutes / 60);
   return `${hours}h ago`;
 }
+
+export function formatSessionDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (seconds < 5) return "just now";
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+
+export function isSubstantiveReflection(reflection?: string): boolean {
+  if (!reflection) return false;
+  const trimmed = reflection.trim().toLowerCase();
+  if (trimmed.length <= 3) return false;
+  const fillerWords = ["ok", "okay", "good", "fine", "nice", "done", "yes", "none", "null", "none."];
+  if (fillerWords.includes(trimmed)) return false;
+  return true;
+}

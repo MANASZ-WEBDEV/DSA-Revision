@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import type { FlashCard, ReviewEvent, StreakData, PatternTag, SessionAnalytics } from "../../types";
 import { PATTERN_TAGS } from "../../types";
 import { PATTERN_COLORS, PATTERN_TEXT_COLORS } from "../../lib/llm";
-import { getDueCards, getStats, formatRelativeTime } from "../../lib/sm2";
+import { getDueCards, getStats, formatRelativeTime, formatSessionDate, isSubstantiveReflection } from "../../lib/sm2";
 import { Heatmap } from "./Heatmap";
 import { SyncBanner } from "../landing/SyncBanner";
 
@@ -249,8 +249,8 @@ export function Dashboard({ cards, events, streak, sessionHistory, syncStatus, l
                 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>
-                        {new Date(session.completedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)", textTransform: "capitalize" }}>
+                        {formatSessionDate(session.completedAt)}
                       </span>
                       <span className="numeral" style={{ fontSize: 11, color: "var(--caption)" }}>
                         {session.totalCards} cards · {mins > 0 ? `${mins}m ` : ""}{secs}s · {avgTime}s avg/card
@@ -258,12 +258,12 @@ export function Dashboard({ cards, events, streak, sessionHistory, syncStatus, l
                     </div>
                     <div className="bigstat" style={{
                       fontSize: 16,
-                      color: rate >= 80 ? "var(--accent)" : rate >= 50 ? "var(--medium)" : "var(--urgent)"
+                      color: rate >= 90 ? "var(--success)" : rate >= 70 ? "var(--accent)" : "var(--medium)"
                     }}>
                       {rate}% Recall
                     </div>
                   </div>
-                  {session.reflection && (
+                  {isSubstantiveReflection(session.reflection) && (
                     <div style={{
                       fontSize: 12,
                       color: "var(--ink-soft)",

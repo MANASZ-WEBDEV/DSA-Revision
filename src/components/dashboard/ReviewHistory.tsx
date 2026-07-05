@@ -1,5 +1,6 @@
 import type { SessionAnalytics } from "../../types";
 import React from "react";
+import { formatSessionDate, isSubstantiveReflection } from "../../lib/sm2";
 
 interface Props {
   sessionHistory: SessionAnalytics[];
@@ -86,14 +87,8 @@ export function ReviewHistory({ sessionHistory, onBack }: Props) {
                 <div key={sIdx} style={s.sessionCard}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                      <span style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)" }}>
-                        {new Date(session.completedAt).toLocaleDateString(undefined, { 
-                          weekday: "short",
-                          month: "short", 
-                          day: "numeric", 
-                          hour: "2-digit", 
-                          minute: "2-digit" 
-                        })}
+                      <span style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)", textTransform: "capitalize" }}>
+                        {formatSessionDate(session.completedAt)}
                       </span>
                       <span className="numeral" style={{ fontSize: 11, color: "var(--caption)" }}>
                         {session.totalCards} cards · {mins > 0 ? `${mins}m ` : ""}{secs}s · {avgTime}s avg/card
@@ -101,12 +96,12 @@ export function ReviewHistory({ sessionHistory, onBack }: Props) {
                     </div>
                     <div className="bigstat" style={{
                       fontSize: 18,
-                      color: rate >= 80 ? "var(--accent)" : rate >= 50 ? "var(--medium)" : "var(--hard)"
+                      color: rate >= 90 ? "var(--success)" : rate >= 70 ? "var(--accent)" : "var(--medium)"
                     }}>
                       {rate}% Recall
                     </div>
                   </div>
-                  {session.reflection && (
+                  {isSubstantiveReflection(session.reflection) && (
                     <div style={s.reflectionBox}>
                       "{session.reflection}"
                     </div>
