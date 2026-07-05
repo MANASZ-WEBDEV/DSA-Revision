@@ -281,7 +281,7 @@ export function Dashboard({ cards, events, streak, sessionHistory, syncStatus, l
                 </div>
               );
             })}
-            {sessionHistory.length > 5 && (
+            {sessionHistory.length > 0 && (
               <div style={{ marginTop: 4 }}>
                 <button onClick={onGoHistory} style={s.linkBtn} className="btn-press">
                   View all sessions →
