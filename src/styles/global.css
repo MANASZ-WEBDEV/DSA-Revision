@@ -258,3 +258,9 @@ main {
   border-radius: 8px;
   border: 2px solid var(--bg);
 }
+
+/* Dropdown Item Hover */
+.dropdown-item:hover {
+  background: var(--bg-sunken);
+}
+

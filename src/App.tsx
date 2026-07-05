@@ -31,6 +31,7 @@ function AppContent() {
   const navigate = useNavigate();
   const [showSettings, setShowSettings] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [syncStatus, setSyncStatus] = useState<"synced" | "syncing" | "offline" | "local">("local");
 
@@ -162,28 +163,90 @@ function AppContent() {
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <ThemeToggle theme={theme} onToggle={toggleTheme} />
           
-          <button onClick={() => setShowSettings(true)} style={s.providerBtn} className="btn-press">
-            <span>{provider.logo}</span>
-            <span style={{ fontSize: 12 }}>
-              {provider.id === "anthropic" ? "Claude" : provider.id === "gemini" ? "Gemini" : "Groq"}
-            </span>
-            <span style={{ fontSize: 10, color: keySet ? "var(--accent)" : "var(--urgent)" }}>
-              {keySet ? "✓" : "⚠"}
-            </span>
-          </button>
+          {!user && (
+            <button onClick={() => setShowSettings(true)} style={s.providerBtn} className="btn-press">
+              <span>{provider.logo}</span>
+              <span style={{ fontSize: 12 }}>
+                {provider.id === "anthropic" ? "Claude" : provider.id === "gemini" ? "Gemini" : "Groq"}
+              </span>
+              <span style={{ fontSize: 10, color: keySet ? "var(--accent)" : "var(--urgent)" }}>
+                {keySet ? "✓" : "⚠"}
+              </span>
+            </button>
+          )}
 
           {user ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ fontSize: 12, color: "var(--accent-ink)", fontWeight: 500, background: "var(--accent-soft)", padding: "4px 8px", borderRadius: "var(--radius-sm)", maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {user.email}
-              </span>
+            <div style={{ position: "relative" }}>
               <button
-                onClick={() => signOut()}
-                style={{ ...s.providerBtn, background: "var(--urgent-soft)", color: "var(--urgent-ink)", borderColor: "var(--urgent)" }}
+                onClick={() => setMenuOpen(!menuOpen)}
+                style={s.avatarBtn}
                 className="btn-press"
               >
-                Sign Out
+                {user.user_metadata?.avatar_url ? (
+                  <img src={user.user_metadata.avatar_url} alt="Profile" style={s.avatarImg} />
+                ) : (
+                  <div style={s.avatarInitials}>
+                    {user.email ? user.email.charAt(0).toUpperCase() : "?"}
+                  </div>
+                )}
               </button>
+
+              {menuOpen && (
+                <>
+                  <div
+                    style={{ position: "fixed", inset: 0, zIndex: 98, background: "transparent" }}
+                    onClick={() => setMenuOpen(false)}
+                  />
+                  <div style={{ ...s.dropdownMenu, zIndex: 99 }}>
+                    <div style={s.dropdownHeader}>
+                      <div style={s.dropdownEmail}>{user.email}</div>
+                      <div style={{
+                        ...s.dropdownSync,
+                        color: syncStatus === "synced" ? "var(--easy)" : syncStatus === "syncing" ? "var(--medium)" : syncStatus === "offline" ? "var(--hard)" : "var(--caption)"
+                      }}>
+                        <span style={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: "50%",
+                          background: syncStatus === "synced" ? "var(--easy)" : syncStatus === "syncing" ? "var(--medium)" : syncStatus === "offline" ? "var(--hard)" : "var(--caption)",
+                          display: "inline-block",
+                          marginRight: 6
+                        }} />
+                        <span style={{ fontSize: 10, textTransform: "capitalize" }}>
+                          {syncStatus === "synced" ? "Synced" : syncStatus === "syncing" ? "Syncing..." : syncStatus === "offline" ? "Offline" : "Local mode"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={s.dropdownDivider} />
+
+                    <button
+                      onClick={() => { setMenuOpen(false); setShowSettings(true); }}
+                      style={s.dropdownItem}
+                      className="dropdown-item"
+                    >
+                      <span style={{ marginRight: 8 }}>{provider.logo}</span>
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
+                        <span style={{ fontSize: 12, fontWeight: 500 }}>LLM: {provider.name.split(" ")[0]}</span>
+                        <span style={{ fontSize: 10, color: keySet ? "var(--accent)" : "var(--urgent)" }}>
+                          {keySet ? "Configured" : "Missing Key ⚠"}
+                        </span>
+                      </div>
+                    </button>
+
+                    <div style={s.dropdownDivider} />
+
+                    <button
+                      onClick={() => { setMenuOpen(false); signOut(); }}
+                      style={{ ...s.dropdownItem, color: "var(--hard)", fontWeight: 500 }}
+                      className="dropdown-item"
+                    >
+                      <span style={{ marginRight: 8, fontSize: 14 }}>🚪</span>
+                      Sign Out
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           ) : (
             <button
@@ -375,4 +438,82 @@ const s: Record<string, React.CSSProperties> = {
   pill:        { background: "var(--urgent)", color: "#fff", fontSize: 10, fontWeight: 700, padding: "1px 6px", borderRadius: 10 },
   providerBtn: { display: "flex", alignItems: "center", gap: 5, background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "5px 10px", cursor: "pointer", fontSize: 13, color: "var(--ink-soft)", transition: "border-color 0.15s ease" },
   primaryBtn:  { padding: "10px 22px", background: "var(--ink)", color: "var(--bg)", border: "none", borderRadius: "var(--radius)", fontSize: 14, fontWeight: 500, cursor: "pointer" },
+  avatarBtn: {
+    background: "none",
+    padding: 0,
+    cursor: "pointer",
+    width: 32,
+    height: 32,
+    borderRadius: "50%",
+    overflow: "hidden",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    border: "2px solid var(--border-strong)",
+    transition: "border-color 0.15s ease",
+  },
+  avatarImg: {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+  },
+  avatarInitials: {
+    width: "100%",
+    height: "100%",
+    background: "var(--accent-soft)",
+    color: "var(--accent-ink)",
+    fontWeight: 600,
+    fontSize: 14,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  dropdownMenu: {
+    position: "absolute",
+    top: "calc(100% + 8px)",
+    right: 0,
+    width: 220,
+    background: "var(--bg-raised)",
+    border: "1px solid var(--border)",
+    borderRadius: "var(--radius)",
+    boxShadow: "var(--shadow-lg)",
+    padding: "6px 0",
+    display: "flex",
+    flexDirection: "column",
+    animation: "fadeIn 0.15s ease both",
+  },
+  dropdownHeader: {
+    padding: "8px 12px",
+  },
+  dropdownEmail: {
+    fontSize: 12,
+    fontWeight: 600,
+    color: "var(--ink)",
+    wordBreak: "break-all",
+  },
+  dropdownSync: {
+    fontSize: 11,
+    color: "var(--caption)",
+    marginTop: 4,
+    display: "flex",
+    alignItems: "center",
+  },
+  dropdownDivider: {
+    height: 1,
+    background: "var(--border)",
+    margin: "4px 0",
+  },
+  dropdownItem: {
+    width: "100%",
+    padding: "8px 12px",
+    background: "none",
+    border: "none",
+    display: "flex",
+    alignItems: "center",
+    fontSize: 12,
+    color: "var(--ink-soft)",
+    cursor: "pointer",
+    transition: "background 0.1s ease",
+    textAlign: "left",
+  },
 };
