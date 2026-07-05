@@ -97,6 +97,26 @@ export function Heatmap({ events, weeks = 26 }: Props) {
           );
         })}
       </svg>
+
+      {/* Legend & Early activity hint */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8, flexWrap: "wrap", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: "var(--caption)" }}>
+          <span>Less</span>
+          <span style={{ width: 9, height: 9, borderRadius: 1.5, background: "var(--bg-sunken)", border: "1px solid var(--border)", display: "inline-block" }} />
+          <span style={{ width: 9, height: 9, borderRadius: 1.5, background: "var(--easy-soft)", display: "inline-block" }} />
+          <span style={{ width: 9, height: 9, borderRadius: 1.5, background: "color-mix(in srgb, var(--accent) 45%, var(--bg-sunken))", display: "inline-block" }} />
+          <span style={{ width: 9, height: 9, borderRadius: 1.5, background: "color-mix(in srgb, var(--accent) 75%, var(--bg-sunken))", display: "inline-block" }} />
+          <span style={{ width: 9, height: 9, borderRadius: 1.5, background: "var(--accent)", display: "inline-block" }} />
+          <span>More</span>
+        </div>
+
+        {events.length < 15 && (
+          <span style={{ fontSize: 11, color: "var(--caption)", fontStyle: "italic", display: "flex", alignItems: "center", gap: 4 }}>
+            <span>ℹ</span>
+            <span>Your activity will show up here as you review</span>
+          </span>
+        )}
+      </div>
     </div>
   );
 }
