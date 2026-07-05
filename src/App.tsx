@@ -10,6 +10,7 @@ import { StarterPacks }   from "./components/library/StarterPacks";
 import { ThemeToggle }    from "./components/layout/ThemeToggle";
 import { LandingPage }    from "./components/landing/LandingPage";
 import { Onboarding }     from "./components/landing/Onboarding";
+import { ReviewHistory }  from "./components/dashboard/ReviewHistory";
 import { Analytics }      from "@vercel/analytics/react";
 import { useCardStore, useProviderStore, useReviewHistory, useSessionHistory } from "./hooks/useStore";
 import { useTheme }       from "./hooks/useTheme";
@@ -288,6 +289,7 @@ function AppContent() {
                   onGenerate={() => navigate("/generate")}
                   onGoLibrary={(pattern) => navigate(pattern ? `/library?pattern=${encodeURIComponent(pattern)}` : "/library")}
                   onGoStarterPacks={() => navigate("/starter-packs")}
+                  onGoHistory={() => navigate("/history")}
                 />
               )
             }
@@ -350,6 +352,15 @@ function AppContent() {
                 onRecordReview={recordReview}
                 onRecordSession={recordSession}
                 onDone={() => navigate("/")}
+              />
+            }
+          />
+          <Route
+            path="/history"
+            element={
+              <ReviewHistory
+                sessionHistory={sessionHistory}
+                onBack={() => navigate("/")}
               />
             }
           />

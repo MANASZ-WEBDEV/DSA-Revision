@@ -19,9 +19,10 @@ interface Props {
   onGenerate: () => void;
   onGoLibrary: (pattern?: string) => void;
   onGoStarterPacks: () => void;
+  onGoHistory: () => void;
 }
 
-export function Dashboard({ cards, events, streak, sessionHistory, syncStatus, lastSyncedAt, onSignInClick, onStartReview, onGenerate, onGoLibrary, onGoStarterPacks }: Props) {
+export function Dashboard({ cards, events, streak, sessionHistory, syncStatus, lastSyncedAt, onSignInClick, onStartReview, onGenerate, onGoLibrary, onGoStarterPacks, onGoHistory }: Props) {
   const [, setTick] = useState(0);
   useEffect(() => {
     if (syncStatus !== "synced" || !lastSyncedAt) return;
@@ -280,6 +281,13 @@ export function Dashboard({ cards, events, streak, sessionHistory, syncStatus, l
                 </div>
               );
             })}
+            {sessionHistory.length > 5 && (
+              <div style={{ marginTop: 4 }}>
+                <button onClick={onGoHistory} style={s.linkBtn} className="btn-press">
+                  View all sessions →
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <EmptyHint text="Your session summaries and recall accuracy history will appear here." />
