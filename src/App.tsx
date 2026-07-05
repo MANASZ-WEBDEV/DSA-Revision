@@ -144,6 +144,23 @@ function AppContent() {
             </NavLink>
           ))}
 
+          {/* LLM settings badge next to Generate */}
+          <button
+            onClick={() => setShowSettings(true)}
+            style={s.navProviderBtn}
+            className="btn-press"
+            title="LLM Generation Settings"
+          >
+            <span>{provider.logo}</span>
+            <span style={{ fontSize: 12 }}>
+              {provider.id === "anthropic" ? "Claude" : provider.id === "gemini" ? "Gemini" : "Groq"}
+            </span>
+            <span style={{ fontSize: 10, color: keySet ? "var(--accent)" : "var(--urgent)" }}>
+              {keySet ? "✓" : "⚠"}
+            </span>
+          </button>
+
+
           {cards.length > 0 && (
             <NavLink
               to="/review"
@@ -160,20 +177,10 @@ function AppContent() {
           )}
         </div>
 
+
+
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <ThemeToggle theme={theme} onToggle={toggleTheme} />
-          
-          {!user && (
-            <button onClick={() => setShowSettings(true)} style={s.providerBtn} className="btn-press">
-              <span>{provider.logo}</span>
-              <span style={{ fontSize: 12 }}>
-                {provider.id === "anthropic" ? "Claude" : provider.id === "gemini" ? "Gemini" : "Groq"}
-              </span>
-              <span style={{ fontSize: 10, color: keySet ? "var(--accent)" : "var(--urgent)" }}>
-                {keySet ? "✓" : "⚠"}
-              </span>
-            </button>
-          )}
 
           {user ? (
             <div style={{ position: "relative" }}>
@@ -218,23 +225,7 @@ function AppContent() {
                       </div>
                     </div>
 
-                    <div style={s.dropdownDivider} />
 
-                    <button
-                      onClick={() => { setMenuOpen(false); setShowSettings(true); }}
-                      style={s.dropdownItem}
-                      className="dropdown-item"
-                    >
-                      <span style={{ marginRight: 8 }}>{provider.logo}</span>
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-                        <span style={{ fontSize: 12, fontWeight: 500 }}>LLM: {provider.name.split(" ")[0]}</span>
-                        <span style={{ fontSize: 10, color: keySet ? "var(--accent)" : "var(--urgent)" }}>
-                          {keySet ? "Configured" : "Missing Key ⚠"}
-                        </span>
-                      </div>
-                    </button>
-
-                    <div style={s.dropdownDivider} />
 
                     <button
                       onClick={() => { setMenuOpen(false); signOut(); }}
@@ -515,5 +506,20 @@ const s: Record<string, React.CSSProperties> = {
     cursor: "pointer",
     transition: "background 0.1s ease",
     textAlign: "left",
+  },
+  navProviderBtn: {
+    display: "flex",
+    alignItems: "center",
+    gap: 4,
+    background: "var(--bg-sunken)",
+    border: "1px solid var(--border)",
+    borderRadius: "var(--radius-sm)",
+    padding: "4px 8px",
+    cursor: "pointer",
+    fontSize: 11,
+    color: "var(--ink-soft)",
+    transition: "border-color 0.15s ease",
+    alignSelf: "center",
+    height: 28,
   },
 };
