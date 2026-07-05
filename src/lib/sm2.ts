@@ -69,7 +69,11 @@ export function initSM2(): Pick<FlashCard, "next_review" | "interval_days" | "ea
 
 // ─── Is this card due for review today? ─────────────────────────────────────
 export function isDue(card: FlashCard): boolean {
-  return new Date(card.next_review) <= new Date();
+  const next = new Date(card.next_review);
+  next.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return next <= today;
 }
 
 // ─── Get all due cards sorted by most overdue first ─────────────────────────
@@ -85,9 +89,11 @@ export function getDueCards(cards: FlashCard[]): FlashCard[] {
 // ─── Human-readable next review label ────────────────────────────────────────
 export function nextReviewLabel(card: FlashCard): string {
   const now = new Date();
+  now.setHours(0, 0, 0, 0);
   const next = new Date(card.next_review);
+  next.setHours(0, 0, 0, 0);
   const diffMs = next.getTime() - now.getTime();
-  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
 
   if (diffDays <= 0) return "Due now";
   if (diffDays === 1) return "Tomorrow";
@@ -189,9 +195,9 @@ export function getDailySession(cards: FlashCard[]): DailySessionResult {
       const alreadyCovered = patternCards.some((c) => dueIds.has(c.id));
       if (alreadyCovered) continue;
 
-      // Find the most recent "touch" for this pattern: latest created_at across its cards
+      // Find the most recent "touch" for this pattern: latest updated_at or created_at across its cards
       const mostRecentTouch = Math.max(
-        ...patternCards.map((c) => new Date(c.created_at).getTime())
+        ...patternCards.map((c) => new Date(c.updated_at || c.created_at).getTime())
       );
       const isStale = now - mostRecentTouch > staleThresholdMs;
       if (!isStale) continue;
