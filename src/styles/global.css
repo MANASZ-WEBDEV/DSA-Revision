@@ -320,3 +320,10 @@ main {
   }
 }
 
+/* ─── Textarea Webkit Resizer ────────────────────────────────────────────── */
+textarea::-webkit-resizer {
+  background-color: var(--border-strong);
+  border: 3px solid var(--bg-sunken);
+  border-radius: 4px;
+}
+

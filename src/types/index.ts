@@ -37,6 +37,7 @@ export interface FlashCard {
   repetitions: number;       // How many times reviewed
   last_quality: number | null; // 0–5 last rating
   notes?: string;            // User's personal notes on this card
+  notes_updated_at?: string; // Last edited timestamp of notes
   dirty?: boolean;           // Local change dirty flag for syncing
 }
 

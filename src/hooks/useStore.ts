@@ -41,19 +41,32 @@ export function useCardStore() {
     setCards((p) => [cardWithTimestamps, ...p]);
   }, []);
 
-  const updateCard = useCallback((id: string, updates: Partial<FlashCard>) => {
-    setCards((p) =>
-      p.map((c) =>
-        c.id === id
-          ? {
-              ...c,
-              ...updates,
-              updated_at: new Date().toISOString(),
-              dirty: true,
-            }
-          : c
-      )
-    );
+  const updateCard = useCallback((id: string, updates: Partial<FlashCard>): boolean => {
+    try {
+      let success = true;
+      setCards((p) => {
+        const next = p.map((c) =>
+          c.id === id
+            ? {
+                ...c,
+                ...updates,
+                updated_at: new Date().toISOString(),
+                dirty: true,
+              }
+            : c
+        );
+        try {
+          Storage.saveCards(next);
+        } catch (e) {
+          success = false;
+          throw e;
+        }
+        return next;
+      });
+      return success;
+    } catch {
+      return false;
+    }
   }, []);
 
   const deleteCard = useCallback((id: string, userId?: string) => {

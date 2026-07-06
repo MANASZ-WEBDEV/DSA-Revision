@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import type { FlashCard, Approach } from "../../types";
 import { PATTERN_COLORS, PATTERN_TEXT_COLORS } from "../../lib/llm";
-import { nextReviewLabel, getBestBigO } from "../../lib/sm2";
+import { nextReviewLabel, getBestBigO, formatRelativeTime } from "../../lib/sm2";
 
 interface Props {
   card: FlashCard;
   onBack: () => void;
-  onUpdate: (id: string, updates: Partial<FlashCard>) => void;
+  onUpdate: (id: string, updates: Partial<FlashCard>) => boolean;
   onDelete: (id: string) => void;
 }
 
@@ -39,8 +39,15 @@ export function CardDetail({ card, onBack, onUpdate, onDelete }: Props) {
 
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(() => {
-      onUpdate(card.id, { notes: val || undefined });
-      setSaveStatus("Saved ✔");
+      const success = onUpdate(card.id, {
+        notes: val || undefined,
+        notes_updated_at: new Date().toISOString()
+      });
+      if (success) {
+        setSaveStatus("Saved ✔");
+      } else {
+        setSaveStatus("Failed to save — storage full ⚠");
+      }
     }, 600);
   };
 
@@ -171,8 +178,11 @@ export function CardDetail({ card, onBack, onUpdate, onDelete }: Props) {
           style={s.notesTextarea}
           rows={4}
         />
-        <div style={{ fontSize: 11, color: "var(--caption)", marginTop: 4, fontStyle: "italic" }}>
-          {saveStatus}
+        <div style={{ fontSize: 11, color: "var(--caption)", marginTop: 6, fontStyle: "italic", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span>{saveStatus}</span>
+          {card.notes_updated_at && (
+            <span>Last edited {formatRelativeTime(new Date(card.notes_updated_at))}</span>
+          )}
         </div>
       </div>
     </div>
@@ -207,7 +217,7 @@ const s: Record<string, React.CSSProperties> = {
     fontSize: 13,
     color: "var(--ink)",
     outline: "none",
-    resize: "none" as const,
+    resize: "vertical" as const,
     marginTop: 10,
     fontFamily: "inherit",
     lineHeight: 1.5,

@@ -499,7 +499,7 @@ function CardDetailRoute({
   onDelete,
 }: {
   cards: FlashCard[];
-  onUpdate: (id: string, updates: Partial<FlashCard>) => void;
+  onUpdate: (id: string, updates: Partial<FlashCard>) => boolean;
   onDelete: (id: string) => void;
 }) {
   const { id } = useParams<{ id: string }>();
