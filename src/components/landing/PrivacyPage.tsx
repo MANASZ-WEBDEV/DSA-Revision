@@ -12,7 +12,7 @@ export function PrivacyPage() {
         ← Back to dashboard
       </Link>
 
-      <div style={{ marginBottom: 28, marginTop: 12 }}>
+      <div style={{ marginBottom: 18, marginTop: 8 }}>
         <span className="font-mono" style={s.eyebrow}>Legal & Compliance</span>
         <h1 style={s.h1}>Privacy Policy</h1>
         <p style={{ fontSize: 14, color: "var(--ink-soft)", margin: "4px 0 0", lineHeight: 1.55 }}>
@@ -74,9 +74,9 @@ export function PrivacyPage() {
 
 const s: Record<string, React.CSSProperties> = {
   container: {
-    maxWidth: 680,
+    maxWidth: 780,
     margin: "0 auto",
-    padding: "1.5rem 1rem 4rem",
+    padding: "1rem 1rem 2rem",
   },
   backLink: {
     background: "none",
@@ -109,11 +109,11 @@ const s: Record<string, React.CSSProperties> = {
     background: "var(--bg-raised)",
     border: "1px solid var(--border)",
     borderRadius: "var(--radius-lg)",
-    padding: "24px 28px",
+    padding: "20px 24px",
     boxShadow: "var(--shadow-sm)",
-    display: "flex",
-    flexDirection: "column",
-    gap: 24,
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+    gap: "20px 24px",
   },
   section: {
     display: "flex",
