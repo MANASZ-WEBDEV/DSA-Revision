@@ -74,9 +74,9 @@ export function PrivacyPage() {
 
 const s: Record<string, React.CSSProperties> = {
   container: {
-    maxWidth: 780,
+    maxWidth: 680,
     margin: "0 auto",
-    padding: "1rem 1rem 2rem",
+    padding: "1rem 1rem 0.5rem",
   },
   backLink: {
     background: "none",
@@ -109,11 +109,11 @@ const s: Record<string, React.CSSProperties> = {
     background: "var(--bg-raised)",
     border: "1px solid var(--border)",
     borderRadius: "var(--radius-lg)",
-    padding: "20px 24px",
+    padding: "24px 28px",
     boxShadow: "var(--shadow-sm)",
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-    gap: "20px 24px",
+    display: "flex",
+    flexDirection: "column",
+    gap: 24,
   },
   section: {
     display: "flex",
