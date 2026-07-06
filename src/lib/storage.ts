@@ -21,6 +21,7 @@ export const Storage = {
       localStorage.setItem(CARDS_KEY, JSON.stringify(cards));
     } catch (e) {
       console.error("Failed to save cards to storage", e);
+      throw e;
     }
   },
 
@@ -261,7 +262,11 @@ export const Storage = {
             mergedCards.push({ ...local, dirty: undefined });
           } else {
             // Remote is newer -> pull to local
-            mergedCards.push(mapRemoteToLocal(remote));
+            const pulled = mapRemoteToLocal(remote);
+            if (local.notes === pulled.notes) {
+              pulled.notes_updated_at = local.notes_updated_at;
+            }
+            mergedCards.push(pulled);
           }
         }
       }
@@ -423,6 +428,7 @@ function mapLocalToRemote(local: FlashCard, userId: string) {
     next_review: local.next_review,
     last_quality: local.last_quality,
     notes: local.notes,
+    notes_updated_at: local.notes_updated_at,
     created_at: local.created_at,
     updated_at: local.updated_at || local.created_at,
   };
@@ -447,6 +453,7 @@ function mapRemoteToLocal(remote: any): FlashCard {
     next_review: remote.next_review,
     last_quality: remote.last_quality,
     notes: remote.notes,
+    notes_updated_at: remote.notes_updated_at,
     created_at: remote.created_at,
     updated_at: remote.updated_at,
   };
