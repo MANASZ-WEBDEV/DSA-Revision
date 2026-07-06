@@ -56,7 +56,13 @@ function AppContent() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const shouldLockViewport = (isPrivacyPage || isGeneratePage || isAboutPage || isContactPage || isSupportPage || isHowToUsePage || isFeedbackPage) && !isMobile;
+  const knownPaths = ["/", "/welcome", "/onboarding", "/library", "/review", "/history", "/starter-packs"];
+  const isKnownPath = knownPaths.includes(location.pathname);
+  const cardIdMatch = location.pathname.match(/^\/card\/([^/]+)$/);
+  const cardExists = cardIdMatch ? !!cards.find((c) => c.id === cardIdMatch[1]) : true;
+  const is404 = !isKnownPath && (!cardIdMatch || !cardExists);
+
+  const shouldLockViewport = (isPrivacyPage || isGeneratePage || isAboutPage || isContactPage || isSupportPage || isHowToUsePage || isFeedbackPage || is404) && !isMobile;
   const [showSettings, setShowSettings] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
