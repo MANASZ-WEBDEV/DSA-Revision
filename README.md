@@ -45,6 +45,32 @@ Cards are built around a custom pedagogical template tailored for SWE interview 
 
 ---
 
+## 🔒 Phase 2 Auth, Sync, & Utility Enhancements
+
+We implemented a comprehensive suite of cloud synchronization, utility, and safety features in Phase 2:
+
+### 1. Cross-Device Sync & Supabase Auth
+* **GitHub OAuth & Magic Links**: Secure sign-in options integrated via Supabase Auth.
+* **Local-First, Sync-Second**: Offline usage remains fully supported. Upon sign-in, a background sync engine reconciles `localStorage` with remote Supabase tables, executing auto-conflict resolution based on `updated_at` timestamps.
+
+### 2. Intelligent Duplicate Prevention
+* **First-Pass (Exact Title/Slug Hashing)**: Normalizes problem titles (strips formatting, numbers, symbols, spaces, and case) to block exact duplicate cards during bulk imports.
+* **Second-Pass (Fuzzy Similarity Checking)**: Runs token-based Jaccard similarity checks against existing card titles and descriptions. If a match is detected during AI generation, it warns the user with options to "Add Anyway" or "Discard".
+
+### 3. Interactive Binary Search 404 Page
+* A custom Page Not Found route displaying a live, interactive visualization of a binary search. It dynamically narrows down a sorted array step-by-step to show the user that their target route does not exist.
+
+### 4. Note-Taking Quick Wins
+* **Vertical Textarea Resize**: Resizable notes area styled customly to integrate cleanly with dark theme.
+* **Autosave Fail-Safe**: Debounced autosaving status with error-handling validation. If storage quotas are reached, it flags `"Failed to save"` instead of failing silently.
+* **Last Edited Timestamp**: Displays a relative date timestamp tracking exactly when notes were modified.
+
+### 5. Interactive Pages & Feedbacks
+* Dedicated pages for **About Us**, **Contact Us**, **Support & FAQ**, and **How to Use** (with an interactive demo card preview).
+* **Feedback Page**: Feedback forms linked directly to inserts in a secure Supabase `feedback` table.
+
+---
+
 ## 📦 Bundled Content
 
 DSA Recall ships with the **Blind 75 starter pack** built-in:
@@ -60,7 +86,7 @@ DSA Recall ships with the **Blind 75 starter pack** built-in:
 * **Build System**: Vite 6
 * **Router**: React Router 6
 * **Styling**: Vanilla CSS (Harmonious custom pine/terracotta palette, fully dark-mode responsive, premium animations).
-* **Storage**: Local-First via abstracted `Storage` layer wrapping `localStorage`.
+* **Storage**: Local-First via abstracted `Storage` layer wrapping `localStorage` with background synchronization to Supabase.
 
 ### Folder Structure (Feature-Wise)
 
