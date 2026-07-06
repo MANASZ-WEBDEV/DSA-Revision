@@ -17,6 +17,7 @@ import { ContactPage }    from "./components/landing/ContactPage";
 import { SupportPage }    from "./components/landing/SupportPage";
 import { HowToUsePage }   from "./components/landing/HowToUsePage";
 import { FeedbackPage }   from "./components/landing/FeedbackPage";
+import { NotFoundPage }   from "./components/layout/NotFoundPage";
 import { Analytics }      from "@vercel/analytics/react";
 import { useCardStore, useProviderStore, useReviewHistory, useSessionHistory } from "./hooks/useStore";
 import { useTheme }       from "./hooks/useTheme";
@@ -430,6 +431,10 @@ function AppContent() {
           <Route
             path="/feedback"
             element={<FeedbackPage />}
+          />
+          <Route
+            path="*"
+            element={<NotFoundPage />}
           />
         </Routes>
       </main>
