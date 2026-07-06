@@ -374,7 +374,17 @@ export function NotFoundPage() {
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m16 6 4 14"/><path d="M12 6v14"/><path d="M8 8v12"/><path d="M4 4v16"/></svg>
               Browse Library
             </button>
-            <button className="btn-404" onClick={() => navigate("/feedback?category=bug")}>
+            <button
+              className="btn-404"
+              onClick={() =>
+                navigate("/feedback", {
+                  state: {
+                    category: "bug",
+                    message: `Broken link report:\nI tried to reach "${window.location.pathname}"\n\n(Add any extra detail below.)`
+                  }
+                })
+              }
+            >
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 7v5"/><path d="M12 16h.01"/></svg>
               Report broken link
             </button>
