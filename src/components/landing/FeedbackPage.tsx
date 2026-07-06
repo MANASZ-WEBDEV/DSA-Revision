@@ -1,11 +1,16 @@
 import { Link } from "react-router-dom";
 import React, { useState } from "react";
+import { useAuth } from "../../hooks/useAuth";
+import { supabase } from "../../lib/supabaseClient";
 
 export function FeedbackPage() {
+  const { user } = useAuth();
   const [email, setEmail] = useState("");
   const [category, setCategory] = useState("general");
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   React.useEffect(() => {
     window.scrollTo(0, 0);
@@ -23,13 +28,34 @@ export function FeedbackPage() {
     };
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim()) return;
 
-    // Simulate form submission
-    console.log("Feedback submitted:", { email, category, message });
-    setSubmitted(true);
+    setLoading(true);
+    setError(null);
+
+    // Prepend Category and optional Email to the message field to align with the database schema
+    const formattedMessage = `Category: ${category}\n${email.trim() ? `Email: ${email.trim()}\n` : ""}\nMessage:\n${message.trim()}`;
+
+    try {
+      const { error: insertError } = await supabase.from("feedback").insert({
+        user_id: user?.id || null,
+        message: formattedMessage,
+        page_context: "Feedback Page",
+      });
+
+      if (insertError) {
+        throw insertError;
+      }
+
+      setSubmitted(true);
+    } catch (err: any) {
+      console.error("Error submitting feedback:", err);
+      setError(err?.message || "Failed to submit feedback. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -56,12 +82,18 @@ export function FeedbackPage() {
             <p style={s.successText}>
               Your feedback has been logged. We appreciate you taking the time to help improve DSA Recall.
             </p>
-            <button onClick={() => { setSubmitted(false); setMessage(""); }} style={s.resetBtn} className="btn-press">
+            <button onClick={() => { setSubmitted(false); setMessage(""); setError(null); }} style={s.resetBtn} className="btn-press">
               Send another response
             </button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} style={s.form}>
+            {error && (
+              <div style={s.errorBanner}>
+                {error}
+              </div>
+            )}
+
             <div style={s.formGroup}>
               <label htmlFor="email" style={s.label}>
                 Email Address <span style={{ color: "var(--caption)" }}>(Optional)</span>
@@ -72,6 +104,7 @@ export function FeedbackPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
+                disabled={loading}
                 style={s.input}
               />
             </div>
@@ -82,6 +115,7 @@ export function FeedbackPage() {
                 id="category"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
+                disabled={loading}
                 style={s.select}
               >
                 <option value="general">General Feedback</option>
@@ -100,17 +134,18 @@ export function FeedbackPage() {
                 placeholder="What's on your mind?..."
                 rows={4}
                 style={s.textarea}
+                disabled={loading}
                 required
               />
             </div>
 
             <button
               type="submit"
-              disabled={!message.trim()}
-              style={{ ...s.submitBtn, opacity: message.trim() ? 1 : 0.5 }}
+              disabled={loading || !message.trim()}
+              style={{ ...s.submitBtn, opacity: (loading || !message.trim()) ? 0.5 : 1 }}
               className="btn-press"
             >
-              Submit Feedback →
+              {loading ? "Submitting..." : "Submit Feedback →"}
             </button>
           </form>
         )}
@@ -254,5 +289,14 @@ const s: Record<string, React.CSSProperties> = {
     fontWeight: 500,
     color: "var(--ink-soft)",
     cursor: "pointer",
+  },
+  errorBanner: {
+    background: "var(--hard-soft, #fce8e6)",
+    color: "var(--hard, #c5221f)",
+    border: "1px solid var(--hard)",
+    borderRadius: "var(--radius)",
+    padding: "10px 12px",
+    fontSize: 13,
+    fontWeight: 500,
   },
 };
