@@ -1,7 +1,7 @@
 # 🧠 DSA Recall
 
 > **Active Recall + Spaced Repetition designed specifically for technical coding interview prep.**
-> *“The template-driven flashcard system Anki can't replicate.”*
+> *"Purpose-built pedagogical structure for coding interviews — not a general-purpose flashcard format stretched to fit."*
 
 🔗 **Live App**: [dsarecall.whymanas.tech](https://dsarecall.whymanas.tech)
 
@@ -34,13 +34,13 @@ Cards are built around a custom pedagogical template tailored for SWE interview 
 * **O(N) Complexity Watermark**: Ghosted optimal complexities layered behind difficulty badges.
 
 ### 3. High-Friction Active Recall Helpers
-* **Self-Explanation Prompt**: Draft your key intuition in your own words before revealing the approaches (shown to boost retention by ~40%).
+* **Self-Explanation Prompt**: Draft your key intuition in your own words before revealing the approaches — a technique [shown in cognitive science research](https://doi.org/10.1111/j.1467-9280.2006.01693.x) to significantly improve long-term retention.
 * **Approach Recall Checklist**: Grade yourself on which complexity tiers (Brute Force vs Optimal Hashing) you successfully remembered.
 * **Visual Countdown Timer**: Circular countdown display simulating high-pressure mock interviews.
 
 ### 4. Interactive Analytics & Streaks
 * Heatmap tracker mapping reviews over time.
-* Streak counter to enforce daily discipline.
+* Streak counter to build daily consistency.
 * **Recent Sessions Summary**: View recall rates, durations, and average response times across your last 30 sessions.
 
 ---
@@ -67,6 +67,7 @@ We implemented a comprehensive suite of cloud synchronization, utility, and safe
 
 ### 5. Interactive Pages & Feedbacks
 * Dedicated pages for **About Us**, **Contact Us**, **Support & FAQ**, and **How to Use** (with an interactive demo card preview).
+* **Privacy Policy**: A dedicated page outlining data handling, auth scopes, and local-first storage guarantees.
 * **Feedback Page**: Feedback forms linked directly to inserts in a secure Supabase `feedback` table.
 
 ---
@@ -117,20 +118,29 @@ dsa-flashcards/
 1. **Clone the repository**:
    ```bash
    git clone https://github.com/MANASZ-WEBDEV/DSA-Revision.git
-   cd dsa-flashcards
+   cd DSA-Revision
    ```
 
-2. **Install dependencies**:
+2. **Configure environment variables**:
+   Create a `.env` file by copying the template and filling in your Supabase credentials:
+   ```bash
+   cp .env.example .env
+   # Then open .env and replace the placeholder values:
+   # VITE_SUPABASE_URL=your-supabase-project-url
+   # VITE_SUPABASE_ANON_KEY=your-supabase-anonymous-key
+   ```
+
+3. **Install dependencies**:
    ```bash
    npm install
    ```
 
-3. **Start the local development server**:
+4. **Start the local development server**:
    ```bash
    npm run dev
    ```
 
-4. **Verify types and build**:
+5. **Verify types and build**:
    ```bash
    npx tsc --noEmit
    npm run build
