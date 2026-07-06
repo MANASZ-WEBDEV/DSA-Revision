@@ -16,6 +16,8 @@ export function FeedbackPage() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
   // Prefill email once the user session loads asynchronously
   useEffect(() => {
@@ -23,6 +25,15 @@ export function FeedbackPage() {
       setEmail(user.email);
     }
   }, [user]);
+
+  // Focus and position cursor at the end of the text on mount if prefilled
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+      const valLength = textareaRef.current.value.length;
+      textareaRef.current.setSelectionRange(valLength, valLength);
+    }
+  }, []);
 
   React.useEffect(() => {
     window.scrollTo(0, 0);
@@ -141,6 +152,7 @@ export function FeedbackPage() {
               <label htmlFor="message" style={s.label}>Your Message</label>
               <textarea
                 id="message"
+                ref={textareaRef}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="What's on your mind?..."
