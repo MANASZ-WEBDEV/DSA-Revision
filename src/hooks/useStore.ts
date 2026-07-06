@@ -4,6 +4,7 @@ import type { ProviderId } from "../lib/llm";
 import { PROVIDERS } from "../lib/llm";
 import { Storage } from "../lib/storage";
 import { supabase } from "../lib/supabaseClient";
+import { getTitleHash } from "../lib/duplicateCheck";
 
 
 const PROVIDER_KEY = "dsa_provider";
@@ -73,14 +74,21 @@ export function useCardStore() {
   // Deduplicates by card title + deck name to prevent double-imports
   const importCards = useCallback((newCards: FlashCard[]) => {
     setCards((prev) => {
-      const existingKeys = new Set(prev.map((c) => `${c.deck}::${c.title}`));
-      const unique = newCards
-        .filter((c) => !existingKeys.has(`${c.deck}::${c.title}`))
-        .map((c) => ({
-          ...c,
-          updated_at: new Date().toISOString(),
-          dirty: true,
-        }));
+      const existingHashes = new Set(prev.map((c) => getTitleHash(c.title)));
+      const unique = [];
+      const seenInBatch = new Set<string>();
+
+      for (const card of newCards) {
+        const hash = getTitleHash(card.title);
+        if (!existingHashes.has(hash) && !seenInBatch.has(hash)) {
+          seenInBatch.add(hash);
+          unique.push({
+            ...card,
+            updated_at: new Date().toISOString(),
+            dirty: true,
+          });
+        }
+      }
       return [...unique, ...prev];
     });
   }, []);

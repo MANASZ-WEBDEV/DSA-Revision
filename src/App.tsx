@@ -357,6 +357,7 @@ function AppContent() {
             path="/generate"
             element={
               <GenerateCard
+                cards={cards}
                 providerId={providerId}
                 model={model}
                 apiKey={currentKey}
