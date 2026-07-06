@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Routes, Route, NavLink, useNavigate, useParams } from "react-router-dom";
+import { Routes, Route, NavLink, useNavigate, useParams, Link } from "react-router-dom";
 import { Dashboard }      from "./components/dashboard/Dashboard";
 import { Library }        from "./components/library/Library";
 import { GenerateCard }   from "./components/generate/GenerateCard";
@@ -11,6 +11,7 @@ import { ThemeToggle }    from "./components/layout/ThemeToggle";
 import { LandingPage }    from "./components/landing/LandingPage";
 import { Onboarding }     from "./components/landing/Onboarding";
 import { ReviewHistory }  from "./components/dashboard/ReviewHistory";
+import { PrivacyPage }    from "./components/landing/PrivacyPage";
 import { Analytics }      from "@vercel/analytics/react";
 import { useCardStore, useProviderStore, useReviewHistory, useSessionHistory } from "./hooks/useStore";
 import { useTheme }       from "./hooks/useTheme";
@@ -113,7 +114,7 @@ function AppContent() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
+    <div style={{ minHeight: "100vh", background: "var(--bg)", display: "flex", flexDirection: "column" }}>
       {/* ─── Glassmorphism Navigation ──────────────────────────────────── */}
       <nav className="nav">
         <NavLink
@@ -269,7 +270,7 @@ function AppContent() {
       </nav>
 
       {/* ─── Routes ────────────────────────────────────────────────────── */}
-      <main>
+      <main style={{ flex: 1 }}>
         <Routes>
           <Route
             path="/"
@@ -373,6 +374,10 @@ function AppContent() {
                 onGoLibrary={() => navigate("/library")}
               />
             }
+          />
+          <Route
+            path="/privacy"
+            element={<PrivacyPage />}
           />
         </Routes>
       </main>
@@ -549,5 +554,34 @@ const s: Record<string, React.CSSProperties> = {
     transition: "border-color 0.15s ease",
     alignSelf: "center",
     height: 28,
+  },
+  footer: {
+    borderTop: "1px solid var(--border)",
+    background: "var(--bg-raised)",
+    padding: "20px 0",
+    marginTop: "auto",
+  },
+  footerInner: {
+    maxWidth: 880,
+    margin: "0 auto",
+    padding: "0 16px",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    fontSize: 12,
+    color: "var(--caption)",
+    flexWrap: "wrap",
+    gap: 12,
+  },
+  footerLinks: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+  },
+  footerLink: {
+    color: "var(--caption)",
+    textDecoration: "underline",
+    cursor: "pointer",
+    transition: "color 0.15s ease",
   },
 };
