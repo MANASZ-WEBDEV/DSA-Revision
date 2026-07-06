@@ -1,16 +1,28 @@
-import { Link } from "react-router-dom";
-import React, { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { supabase } from "../../lib/supabaseClient";
 
 export function FeedbackPage() {
   const { user } = useAuth();
-  const [email, setEmail] = useState("");
-  const [category, setCategory] = useState("general");
-  const [message, setMessage] = useState("");
+  const location = useLocation();
+
+  const queryParams = new URLSearchParams(location.search);
+  const queryCategory = queryParams.get("category");
+
+  const [email, setEmail] = useState(user?.email || "");
+  const [category, setCategory] = useState(location.state?.category || queryCategory || "general");
+  const [message, setMessage] = useState(location.state?.message || "");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Prefill email once the user session loads asynchronously
+  useEffect(() => {
+    if (user?.email && !email) {
+      setEmail(user.email);
+    }
+  }, [user]);
 
   React.useEffect(() => {
     window.scrollTo(0, 0);
