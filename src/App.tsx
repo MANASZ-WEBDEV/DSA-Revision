@@ -15,6 +15,7 @@ import { PrivacyPage }    from "./components/landing/PrivacyPage";
 import { AboutPage }      from "./components/landing/AboutPage";
 import { ContactPage }    from "./components/landing/ContactPage";
 import { SupportPage }    from "./components/landing/SupportPage";
+import { HowToUsePage }   from "./components/landing/HowToUsePage";
 import { Analytics }      from "@vercel/analytics/react";
 import { useCardStore, useProviderStore, useReviewHistory, useSessionHistory } from "./hooks/useStore";
 import { useTheme }       from "./hooks/useTheme";
@@ -41,6 +42,7 @@ function AppContent() {
   const isAboutPage = location.pathname === "/about";
   const isContactPage = location.pathname === "/contact";
   const isSupportPage = location.pathname === "/support";
+  const isHowToUsePage = location.pathname === "/how-to-use";
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   useEffect(() => {
@@ -51,7 +53,7 @@ function AppContent() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const shouldLockViewport = (isPrivacyPage || isGeneratePage || isAboutPage || isContactPage || isSupportPage) && !isMobile;
+  const shouldLockViewport = (isPrivacyPage || isGeneratePage || isAboutPage || isContactPage || isSupportPage || isHowToUsePage) && !isMobile;
   const [showSettings, setShowSettings] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -418,6 +420,10 @@ function AppContent() {
             path="/support"
             element={<SupportPage />}
           />
+          <Route
+            path="/how-to-use"
+            element={<HowToUsePage />}
+          />
         </Routes>
       </main>
 
@@ -425,6 +431,8 @@ function AppContent() {
         <div style={s.footerInner}>
           <span>© {new Date().getFullYear()} DSA Recall</span>
           <div style={s.footerLinks}>
+            <Link to="/how-to-use" style={s.footerLink}>How to Use</Link>
+            <span style={{ color: "var(--border-strong)" }}>·</span>
             <Link to="/about" style={s.footerLink}>About</Link>
             <span style={{ color: "var(--border-strong)" }}>·</span>
             <Link to="/privacy" style={s.footerLink}>Privacy Policy</Link>
