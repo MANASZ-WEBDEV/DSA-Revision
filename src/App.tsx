@@ -12,6 +12,7 @@ import { LandingPage }    from "./components/landing/LandingPage";
 import { Onboarding }     from "./components/landing/Onboarding";
 import { ReviewHistory }  from "./components/dashboard/ReviewHistory";
 import { PrivacyPage }    from "./components/landing/PrivacyPage";
+import { AboutPage }      from "./components/landing/AboutPage";
 import { Analytics }      from "@vercel/analytics/react";
 import { useCardStore, useProviderStore, useReviewHistory, useSessionHistory } from "./hooks/useStore";
 import { useTheme }       from "./hooks/useTheme";
@@ -35,6 +36,7 @@ function AppContent() {
   const location = useLocation();
   const isPrivacyPage = location.pathname === "/privacy";
   const isGeneratePage = location.pathname === "/generate";
+  const isAboutPage = location.pathname === "/about";
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   useEffect(() => {
@@ -45,7 +47,7 @@ function AppContent() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const shouldLockViewport = (isPrivacyPage || isGeneratePage) && !isMobile;
+  const shouldLockViewport = (isPrivacyPage || isGeneratePage || isAboutPage) && !isMobile;
   const [showSettings, setShowSettings] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -400,6 +402,10 @@ function AppContent() {
             path="/privacy"
             element={<PrivacyPage />}
           />
+          <Route
+            path="/about"
+            element={<AboutPage />}
+          />
         </Routes>
       </main>
 
@@ -407,6 +413,8 @@ function AppContent() {
         <div style={s.footerInner}>
           <span>© {new Date().getFullYear()} DSA Recall</span>
           <div style={s.footerLinks}>
+            <Link to="/about" style={s.footerLink}>About</Link>
+            <span style={{ color: "var(--border-strong)" }}>·</span>
             <Link to="/privacy" style={s.footerLink}>Privacy Policy</Link>
             <span style={{ color: "var(--border-strong)" }}>·</span>
             <a href="https://github.com/MANASZ-WEBDEV/DSA-Revision" target="_blank" rel="noreferrer" style={s.footerLink}>GitHub</a>
