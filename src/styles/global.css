@@ -302,3 +302,21 @@ main {
   }
 }
 
+/* ─── Generate Page Layout ───────────────────────────────────────────────── */
+.generate-container {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 16px 20px 8px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .generate-container {
+    height: auto;
+    padding: 1rem 1rem 2rem;
+  }
+}
+

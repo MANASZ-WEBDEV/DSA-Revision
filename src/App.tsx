@@ -34,6 +34,7 @@ function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
   const isPrivacyPage = location.pathname === "/privacy";
+  const isGeneratePage = location.pathname === "/generate";
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   useEffect(() => {
@@ -44,7 +45,7 @@ function AppContent() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const shouldLockViewport = isPrivacyPage && !isMobile;
+  const shouldLockViewport = (isPrivacyPage || isGeneratePage) && !isMobile;
   const [showSettings, setShowSettings] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);

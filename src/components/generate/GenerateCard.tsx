@@ -45,7 +45,7 @@ export function GenerateCard({ providerId, model, apiKey, onCardCreated, onNeedA
   }
 
   return (
-    <div style={{ maxWidth: 680, margin: "0 auto", padding: "2rem 1rem" }}>
+    <div className="animate-fadeInUp generate-container">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
         <h2 style={styles.heading}>Generate a card</h2>
         {/* Active provider badge */}
@@ -65,7 +65,7 @@ export function GenerateCard({ providerId, model, apiKey, onCardCreated, onNeedA
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder={PLACEHOLDER}
-        rows={12}
+        rows={8}
         style={styles.textarea}
         disabled={loading}
       />
@@ -74,7 +74,7 @@ export function GenerateCard({ providerId, model, apiKey, onCardCreated, onNeedA
         <div style={styles.error}>⚠ {error}</div>
       )}
 
-      <div style={{ display: "flex", gap: 12, marginTop: 16, alignItems: "center" }}>
+      <div style={{ display: "flex", gap: 12, marginTop: 12, alignItems: "center" }}>
         <button
           onClick={handleGenerate}
           disabled={loading || !text.trim()}
@@ -87,7 +87,7 @@ export function GenerateCard({ providerId, model, apiKey, onCardCreated, onNeedA
 
       <div style={styles.tip}>
         <strong>Tips for better cards</strong>
-        <ul style={{ margin: "6px 0 0", paddingLeft: "1.2rem", lineHeight: 1.8, fontSize: 13 }}>
+        <ul style={{ margin: "4px 0 0", paddingLeft: "1.2rem", lineHeight: 1.7, fontSize: 13 }}>
           <li>Include constraints — they hint at the expected complexity</li>
           <li>Include examples — they help the model identify the pattern</li>
           <li>Paste the full problem description, not just the title</li>
@@ -105,10 +105,10 @@ Constraints: 2 <= nums.length <= 10^4, -10^9 <= nums[i] <= 10^9`;
 
 const styles: Record<string, React.CSSProperties> = {
   heading:       { fontSize: 21, fontWeight: 600, margin: "0 0 6px", color: "var(--ink)", fontFamily: "var(--font-display)" },
-  sub:           { fontSize: 14, color: "var(--caption)", margin: "0 0 20px", lineHeight: 1.6 },
+  sub:           { fontSize: 14, color: "var(--caption)", margin: "0 0 12px", lineHeight: 1.6 },
   providerBadge: { display: "flex", alignItems: "center", gap: 5, background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "5px 10px" },
-  textarea:      { width: "100%", boxSizing: "border-box" as const, padding: "12px 14px", fontSize: 13, fontFamily: "var(--font-mono)", border: "1px solid var(--border-strong)", borderRadius: "var(--radius)", resize: "vertical" as const, outline: "none", lineHeight: 1.6, color: "var(--ink)", background: "var(--bg-raised)" },
+  textarea:      { width: "100%", boxSizing: "border-box" as const, padding: "12px 14px", fontSize: 13, fontFamily: "var(--font-mono)", border: "1px solid var(--border-strong)", borderRadius: "var(--radius)", resize: "none" as const, outline: "none", lineHeight: 1.6, color: "var(--ink)", background: "var(--bg-raised)" },
   btn:           { padding: "10px 20px", background: "var(--ink)", color: "var(--bg-raised)", border: "none", borderRadius: "var(--radius)", fontSize: 14, fontWeight: 500, cursor: "pointer" },
   error:         { marginTop: 12, padding: "10px 14px", background: "var(--hard-soft)", border: "1px solid var(--hard-soft)", borderRadius: "var(--radius)", color: "var(--urgent)", fontSize: 14 },
-  tip:           { marginTop: 24, padding: "14px 16px", background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: "var(--radius)", fontSize: 13, color: "var(--ink-soft)" },
+  tip:           { marginTop: 16, padding: "14px 16px", background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: "var(--radius)", fontSize: 13, color: "var(--ink-soft)" },
 };
