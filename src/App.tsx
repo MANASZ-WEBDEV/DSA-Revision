@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Routes, Route, NavLink, useNavigate, useParams, Link } from "react-router-dom";
+import { Routes, Route, NavLink, useNavigate, useParams, Link, useLocation } from "react-router-dom";
 import { Dashboard }      from "./components/dashboard/Dashboard";
 import { Library }        from "./components/library/Library";
 import { GenerateCard }   from "./components/generate/GenerateCard";
@@ -32,6 +32,19 @@ function AppContent() {
   const { theme, toggleTheme } = useTheme();
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const isPrivacyPage = location.pathname === "/privacy";
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const shouldLockViewport = isPrivacyPage && !isMobile;
   const [showSettings, setShowSettings] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -114,7 +127,14 @@ function AppContent() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg)", display: "flex", flexDirection: "column" }}>
+    <div style={{
+      height: shouldLockViewport ? "100vh" : undefined,
+      minHeight: shouldLockViewport ? undefined : "100vh",
+      overflow: shouldLockViewport ? "hidden" : undefined,
+      background: "var(--bg)",
+      display: "flex",
+      flexDirection: "column"
+    }}>
       {/* ─── Glassmorphism Navigation ──────────────────────────────────── */}
       <nav className="nav">
         <NavLink
@@ -270,7 +290,7 @@ function AppContent() {
       </nav>
 
       {/* ─── Routes ────────────────────────────────────────────────────── */}
-      <main style={{ flex: 1 }}>
+      <main style={{ flex: 1, minHeight: shouldLockViewport ? "0" : undefined }}>
         <Routes>
           <Route
             path="/"
