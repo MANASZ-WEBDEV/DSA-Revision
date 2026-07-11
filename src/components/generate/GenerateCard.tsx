@@ -137,24 +137,25 @@ export function GenerateCard({ cards, providerId, model, apiKey, onCardCreated, 
       {/* Main input generation controls */}
       {!fuzzyMatch && (
         <>
-          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 6 }}>
-            <button
-              onClick={() => { setText(EXAMPLE_PROBLEM); setHint(null); }}
-              style={styles.pasteExampleChip}
-              className="btn-press"
+          <div style={{ position: "relative" }}>
+            <textarea
+              value={text}
+              onChange={(e) => { setText(e.target.value); if (hint) setHint(null); }}
+              placeholder={PLACEHOLDER}
+              rows={8}
+              style={{ ...styles.textarea, paddingTop: 32 }}
               disabled={loading}
-            >
-              Paste example
-            </button>
+            />
+            {!text && !loading && (
+              <button
+                onClick={() => { setText(EXAMPLE_PROBLEM); setHint(null); }}
+                style={styles.pasteExampleChip}
+                className="btn-press"
+              >
+                Paste example
+              </button>
+            )}
           </div>
-          <textarea
-            value={text}
-            onChange={(e) => { setText(e.target.value); if (hint) setHint(null); }}
-            placeholder={PLACEHOLDER}
-            rows={8}
-            style={styles.textarea}
-            disabled={loading}
-          />
 
           {error && (
             <div style={styles.error}>⚠ {error}</div>
@@ -220,5 +221,5 @@ const styles: Record<string, React.CSSProperties> = {
   matchCard: { display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--bg-sunken)", border: "1px solid var(--border-strong)", borderRadius: "var(--radius)", padding: "10px 14px", fontSize: 13.5 },
   matchPercentage: { fontSize: 11, fontWeight: 600, color: "var(--accent)", background: "var(--accent-soft)", padding: "2px 8px", borderRadius: 12 },
   hint: { fontSize: 13, color: "var(--medium)", padding: "8px 12px", background: "var(--medium-soft)", borderRadius: "var(--radius-sm)", border: "1px solid var(--medium)", lineHeight: 1.4 },
-  pasteExampleChip: { fontSize: 11, fontWeight: 600, padding: "4px 10px", borderRadius: 20, border: "1px solid var(--border-strong)", background: "var(--bg-sunken)", color: "var(--ink-soft)", cursor: "pointer", transition: "background 0.15s ease" }
+  pasteExampleChip: { position: "absolute" as const, top: 8, right: 8, fontSize: 11, fontWeight: 600, padding: "4px 10px", borderRadius: 20, border: "1px solid var(--border-strong)", background: "var(--bg-sunken)", color: "var(--ink-soft)", cursor: "pointer", transition: "background 0.15s ease", zIndex: 1 }
 };
