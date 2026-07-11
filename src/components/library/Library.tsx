@@ -56,15 +56,36 @@ export function Library({ cards, onSelectCard, onStartReview, onGenerate, onGoSt
 
   if (cards.length === 0) {
     return (
-      <div className="animate-fadeInUp" style={{ maxWidth: 560, margin: "4rem auto", textAlign: "center", padding: "0 1rem" }}>
-        <div className="bigstat" style={{ fontSize: 40, color: "var(--accent)", marginBottom: 16 }}>{"{ }"}</div>
-        <h2 style={{ fontSize: 21, fontWeight: 600, margin: "0 0 10px", fontFamily: "var(--font-display)" }}>No cards yet</h2>
-        <p style={{ fontSize: 14, color: "var(--caption)", margin: "0 0 24px", lineHeight: 1.65 }}>
-          Start with the Blind 75 deck or paste a problem description to generate your first flashcard.
-        </p>
-        <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
-          <button onClick={onGoStarterPacks} style={s.primaryBtn} className="btn-press">📦 Get Blind 75</button>
-          <button onClick={onGenerate} style={s.addBtn} className="btn-press">✦ Generate card</button>
+      <div className="animate-fadeInUp" style={{ maxWidth: 720, margin: "2.5rem auto", padding: "0 1rem" }}>
+        <div style={{ textAlign: "center", marginBottom: 28 }}>
+          <div className="bigstat" style={{ fontSize: 40, color: "var(--accent)", marginBottom: 16 }}>{"{ }"}</div>
+          <h2 style={{ fontSize: 21, fontWeight: 600, margin: "0 0 10px", fontFamily: "var(--font-display)" }}>No cards yet</h2>
+          <p style={{ fontSize: 14, color: "var(--caption)", margin: "0 0 24px", lineHeight: 1.65 }}>
+            Start with the Blind 75 deck or paste a problem description to generate your first flashcard.
+          </p>
+          <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
+            <button onClick={onGoStarterPacks} style={s.primaryBtn} className="btn-press">📦 Get Blind 75</button>
+            <button onClick={onGenerate} style={s.addBtn} className="btn-press">✦ Generate card</button>
+          </div>
+        </div>
+
+        {/* Skeleton card previews — show what a filled library looks like */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12, opacity: 0.45, pointerEvents: "none" }}>
+          {[1, 2, 3].map((i) => (
+            <div key={i} style={{ background: "var(--bg-raised)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: 14 }}>
+              <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+                <div className="skeleton" style={{ width: 40, height: 16, borderRadius: 10 }} />
+                <div className="skeleton" style={{ width: 55, height: 16, borderRadius: 10 }} />
+              </div>
+              <div className="skeleton" style={{ width: "80%", height: 14, marginBottom: 8 }} />
+              <div className="skeleton" style={{ width: "100%", height: 12, marginBottom: 4 }} />
+              <div className="skeleton" style={{ width: "65%", height: 12, marginBottom: 12 }} />
+              <div style={{ display: "flex", gap: 4 }}>
+                <div className="skeleton" style={{ width: 50, height: 16, borderRadius: 10 }} />
+                <div className="skeleton" style={{ width: 65, height: 16, borderRadius: 10 }} />
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
