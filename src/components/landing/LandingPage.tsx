@@ -34,7 +34,7 @@ export function LandingPage({ onStart }: Props) {
           <span style={{ color: "var(--accent)" }}>Start remembering.</span>
         </h1>
         <p style={s.subheading}>
-          DSA Recall combines structured active recall with space optimization so you never let a coding pattern go cold.
+          DSA Recall combines structured active recall with spaced repetition so you never let a coding pattern go cold.
         </p>
         <button onClick={onStart} style={s.ctaBtn} className="btn-press">
           Start Practicing Free →
