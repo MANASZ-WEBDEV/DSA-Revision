@@ -165,7 +165,7 @@ export function LandingPage({ onStart }: Props) {
             <thead>
               <tr style={s.tableHeader}>
                 <th style={s.th}>Feature</th>
-                <th style={{ ...s.th, color: "var(--accent)", fontWeight: 700 }}>DSA Recall</th>
+                <th style={{ ...s.th, color: "var(--accent)", fontWeight: 700, background: "var(--accent-soft)", borderLeft: "2px solid var(--accent)" }}>DSA Recall</th>
                 <th style={s.th}>Anki</th>
                 <th style={s.th}>LeetCode Premium</th>
               </tr>
@@ -173,7 +173,7 @@ export function LandingPage({ onStart }: Props) {
             <tbody>
               {COMPARISONS.map((c, i) => {
                 const renderCell = (val: { yes: boolean; text: string }, isRecall?: boolean) => (
-                  <td style={{ ...s.td, ...(isRecall ? { fontWeight: 600 } : {}) }}>
+                  <td style={{ ...s.td, ...(isRecall ? { fontWeight: 600, background: "var(--accent-soft)", borderLeft: "2px solid var(--accent)" } : {}) }}>
                     <span style={{
                       display: "inline-block",
                       fontSize: 10,
