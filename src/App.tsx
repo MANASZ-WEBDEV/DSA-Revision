@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Component } from "react";
+import type { ReactNode, ErrorInfo } from "react";
 import { Routes, Route, useNavigate, useParams, Link, useLocation } from "react-router-dom";
 import { Dashboard } from "./components/dashboard/Dashboard";
 import { Library } from "./components/library/Library";
@@ -165,6 +166,7 @@ function AppContent() {
 
       {/* ─── Routes ────────────────────────────────────────────────────── */}
       <main style={{ flex: 1, minHeight: shouldLockViewport ? "0" : undefined }}>
+        <ErrorBoundary>
         <Routes>
           <Route
             path="/"
@@ -299,6 +301,7 @@ function AppContent() {
             element={<NotFoundPage />}
           />
         </Routes>
+        </ErrorBoundary>
       </main>
 
       <Footer />
@@ -333,6 +336,41 @@ export default function App() {
       <AppContent />
     </AuthProvider>
   );
+}
+
+// ─── Error Boundary ─────────────────────────────────────────────────────────────────
+class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error: Error | null }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("[DSA Recall] Uncaught error:", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ maxWidth: 480, margin: "4rem auto", textAlign: "center", padding: "0 1rem" }}>
+          <div className="bigstat" style={{ fontSize: 36, color: "var(--hard)", marginBottom: 16 }}>Error</div>
+          <h2 style={{ fontSize: 20, fontWeight: 600, margin: "0 0 8px", fontFamily: "var(--font-display)" }}>Something went wrong</h2>
+          <p style={{ fontSize: 14, color: "var(--caption)", margin: "0 0 20px", lineHeight: 1.6 }}>
+            {this.state.error?.message || "An unexpected error occurred."}
+          </p>
+          <button
+            onClick={() => { this.setState({ hasError: false, error: null }); window.location.href = "/"; }}
+            style={{ padding: "10px 20px", background: "var(--accent)", color: "#fff", border: "none", borderRadius: "var(--radius)", fontSize: 14, fontWeight: 500, cursor: "pointer" }}
+            className="btn-press"
+          >
+            Go Home
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
 }
 
 // ─── Route wrapper for CardDetail (extracts :id param) ──────────────────────
