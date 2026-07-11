@@ -244,6 +244,21 @@ main {
   color: var(--hard);
 }
 
+/* ─── Table scroll hint (mobile) ─────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .table-scroll-hint::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 40px;
+    background: linear-gradient(to right, transparent, var(--bg));
+    pointer-events: none;
+    z-index: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

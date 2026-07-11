@@ -160,7 +160,7 @@ export function LandingPage({ onStart }: Props) {
           <p style={s.sectionSub}>Why DSA Recall is built differently for coding interviews:</p>
         </div>
 
-        <div style={{ overflowX: "auto" }}>
+        <div className="table-scroll-hint" style={{ overflowX: "auto", position: "relative" }}>
           <table style={s.table}>
             <thead>
               <tr style={s.tableHeader}>
