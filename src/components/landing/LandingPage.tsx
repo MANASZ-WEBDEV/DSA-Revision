@@ -166,14 +166,34 @@ export function LandingPage({ onStart }: Props) {
               </tr>
             </thead>
             <tbody>
-              {COMPARISONS.map((c, i) => (
-                <tr key={i} style={s.tableRow}>
-                  <td style={{ ...s.td, fontWeight: 500 }}>{c.feature}</td>
-                  <td style={{ ...s.td, color: "var(--accent)", fontWeight: 600 }}>{c.recall}</td>
-                  <td style={s.td}>{c.anki}</td>
-                  <td style={s.td}>{c.leetcode}</td>
-                </tr>
-              ))}
+              {COMPARISONS.map((c, i) => {
+                const renderCell = (val: { yes: boolean; text: string }, isRecall?: boolean) => (
+                  <td style={{ ...s.td, ...(isRecall ? { fontWeight: 600 } : {}) }}>
+                    <span style={{
+                      display: "inline-block",
+                      fontSize: 10,
+                      fontWeight: 700,
+                      padding: "2px 7px",
+                      borderRadius: 10,
+                      marginRight: 6,
+                      verticalAlign: "middle",
+                      background: val.yes ? "var(--easy-soft)" : "var(--hard-soft)",
+                      color: val.yes ? "var(--easy)" : "var(--hard)",
+                    }}>
+                      {val.yes ? "Yes" : "No"}
+                    </span>
+                    <span style={{ color: isRecall ? "var(--accent)" : "var(--ink-soft)" }}>{val.text}</span>
+                  </td>
+                );
+                return (
+                  <tr key={i} style={s.tableRow}>
+                    <td style={{ ...s.td, fontWeight: 500 }}>{c.feature}</td>
+                    {renderCell(c.recall, true)}
+                    {renderCell(c.anki)}
+                    {renderCell(c.leetcode)}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -211,34 +231,34 @@ const DEMO_GRADES = [
 const COMPARISONS = [
   {
     feature: "Pedagogical DSA Template",
-    recall: "✅ Built-in (Brute → Optimal, intuition, complexities)",
-    anki: "❌ No (Requires manual design)",
-    leetcode: "❌ No (Solution essays only)"
+    recall: { yes: true, text: "Built-in (Brute → Optimal, intuition, complexities)" },
+    anki: { yes: false, text: "Requires manual design" },
+    leetcode: { yes: false, text: "Solution essays only" },
   },
   {
     feature: "Automatic Card Generation",
-    recall: "✅ Yes (AI extracts code details automatically)",
-    anki: "❌ No (Manual writing)",
-    leetcode: "❌ No cards exist"
+    recall: { yes: true, text: "AI extracts code details automatically" },
+    anki: { yes: false, text: "Manual writing" },
+    leetcode: { yes: false, text: "No cards exist" },
   },
   {
     feature: "Adaptive Spaced Repetition",
-    recall: "✅ Yes (Custom SM-2 scheduling)",
-    anki: "✅ Yes (Standard SuperMemo)",
-    leetcode: "❌ No scheduling"
+    recall: { yes: true, text: "Custom SM-2 scheduling" },
+    anki: { yes: true, text: "Standard SuperMemo" },
+    leetcode: { yes: false, text: "No scheduling" },
   },
   {
     feature: "Pattern Staleness Protection",
-    recall: "✅ Yes (Ensures DP/Graphs check-ins)",
-    anki: "❌ No (Only per-card cues)",
-    leetcode: "❌ No reviews"
+    recall: { yes: true, text: "Ensures DP/Graphs check-ins" },
+    anki: { yes: false, text: "Only per-card cues" },
+    leetcode: { yes: false, text: "No reviews" },
   },
   {
     feature: "Self-Explanation Prompts",
-    recall: "✅ Yes (Active recall drafting)",
-    anki: "❌ No text support",
-    leetcode: "❌ No drafts"
-  }
+    recall: { yes: true, text: "Active recall drafting" },
+    anki: { yes: false, text: "No text support" },
+    leetcode: { yes: false, text: "No drafts" },
+  },
 ];
 
 const s: Record<string, React.CSSProperties> = {
