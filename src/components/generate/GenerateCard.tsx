@@ -18,6 +18,7 @@ export function GenerateCard({ cards, providerId, model, apiKey, onCardCreated, 
   const [text, setText]       = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState<string | null>(null);
+  const [hint, setHint]       = useState<string | null>(null);
   
   // State for fuzzy match warnings
   const [pendingCard, setPendingCard] = useState<FlashCard | null>(null);
@@ -26,7 +27,11 @@ export function GenerateCard({ cards, providerId, model, apiKey, onCardCreated, 
   const provider = PROVIDERS.find((p) => p.id === providerId)!;
 
   async function handleGenerate() {
-    if (!text.trim()) return;
+    if (!text.trim()) {
+      setHint("Paste a problem description above to generate a card");
+      return;
+    }
+    setHint(null);
     if (!apiKey) { onNeedApiKey(); return; }
 
     setLoading(true);
@@ -133,7 +138,7 @@ export function GenerateCard({ cards, providerId, model, apiKey, onCardCreated, 
         <>
           <textarea
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => { setText(e.target.value); if (hint) setHint(null); }}
             placeholder={PLACEHOLDER}
             rows={8}
             style={styles.textarea}
@@ -144,15 +149,26 @@ export function GenerateCard({ cards, providerId, model, apiKey, onCardCreated, 
             <div style={styles.error}>⚠ {error}</div>
           )}
 
-          <div style={{ display: "flex", gap: 12, marginTop: 12, alignItems: "center" }}>
-            <button
-              onClick={handleGenerate}
-              disabled={loading || !text.trim()}
-              style={{ ...styles.btn, opacity: loading || !text.trim() ? 0.5 : 1 }}
-            >
-              {loading ? "Generating…" : "Generate card →"}
-            </button>
-            <span style={{ fontSize: 12, color: "var(--caption)" }}>{provider.freeNote}</span>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 12 }}>
+            <div style={{ display: "flex", gap: 12, marginTop: 0, alignItems: "center" }}>
+              <button
+                onClick={handleGenerate}
+                disabled={loading}
+                style={{
+                  ...styles.btn,
+                  ...(loading ? { opacity: 0.6, cursor: "wait" } : !text.trim() ? { background: "var(--border-strong)", color: "var(--caption)", cursor: "default" } : {}),
+                }}
+                className="btn-press"
+              >
+                {loading ? "Generating…" : "Generate card →"}
+              </button>
+              <span style={{ fontSize: 12, color: "var(--caption)" }}>{provider.freeNote}</span>
+            </div>
+            {hint && !text.trim() && (
+              <div className="animate-fadeIn" style={styles.hint}>
+                {hint}
+              </div>
+            )}
           </div>
         </>
       )}
@@ -187,5 +203,6 @@ const styles: Record<string, React.CSSProperties> = {
   warningTitle: { fontSize: 16, fontWeight: 600, color: "var(--urgent)", margin: 0 },
   warningText: { fontSize: 13.5, color: "var(--ink-soft)", lineHeight: 1.5, margin: 0 },
   matchCard: { display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--bg-sunken)", border: "1px solid var(--border-strong)", borderRadius: "var(--radius)", padding: "10px 14px", fontSize: 13.5 },
-  matchPercentage: { fontSize: 11, fontWeight: 600, color: "var(--accent)", background: "var(--accent-soft)", padding: "2px 8px", borderRadius: 12 }
+  matchPercentage: { fontSize: 11, fontWeight: 600, color: "var(--accent)", background: "var(--accent-soft)", padding: "2px 8px", borderRadius: 12 },
+  hint: { fontSize: 13, color: "var(--medium)", padding: "8px 12px", background: "var(--medium-soft)", borderRadius: "var(--radius-sm)", border: "1px solid var(--medium)", lineHeight: 1.4 }
 };
