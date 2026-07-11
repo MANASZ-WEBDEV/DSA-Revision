@@ -338,7 +338,7 @@ const s: Record<string, React.CSSProperties> = {
     color: "var(--ink)",
   },
   sectionSub: {
-    fontSize: 13,
+    fontSize: 14,
     color: "var(--caption)",
     margin: "4px 0 0",
   },
@@ -449,7 +449,7 @@ const s: Record<string, React.CSSProperties> = {
     width: "100%",
     borderCollapse: "collapse",
     marginTop: 20,
-    fontSize: 13,
+    fontSize: 14,
   },
   tableHeader: {
     borderBottom: "1.5px solid var(--border-strong)",
