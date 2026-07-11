@@ -1,7 +1,7 @@
 import type { FlashCard } from "../../types";
 import { PATTERN_COLORS, PATTERN_TEXT_COLORS } from "../../lib/llm";
 import { isDue, nextReviewLabel, getStats, getBestBigO } from "../../lib/sm2";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 
 interface Props {
@@ -23,6 +23,22 @@ type DeckFilter = "all" | "my-cards" | string; // string = specific deck name
 export function Library({ cards, onSelectCard, onStartReview, onGenerate, onGoStarterPacks }: Props) {
   const [searchParams, setSearchParams] = useSearchParams();
   const patternParam = searchParams.get("pattern");
+
+  useEffect(() => {
+    if (cards.length > 0) return;
+    
+    // Apply overflow: hidden to body to prevent body-level scrolling on desktop when library is empty
+    const isDesktop = window.innerWidth > 768;
+    const originalOverflow = document.body.style.overflow;
+    
+    if (isDesktop) {
+      document.body.style.overflow = "hidden";
+    }
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [cards.length]);
 
   const [filterPattern, setFilterPattern] = useState<string | null>(patternParam);
   const [filterDifficulty, setFilterDifficulty] = useState<string | null>(null);
