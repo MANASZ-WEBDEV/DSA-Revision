@@ -58,12 +58,14 @@
 /* ─── Card hover micro-animations ─────────────────────────────────────────── */
 .card-interactive {
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.2s ease;
+              box-shadow 0.2s ease,
+              border-color 0.2s ease;
 }
 
 .card-interactive:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
+  border-color: var(--accent);
 }
 
 .card-interactive:active {
