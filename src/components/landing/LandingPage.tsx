@@ -25,18 +25,18 @@ export function LandingPage({ onStart }: Props) {
   };
 
   return (
-    <div className="animate-fadeIn" style={s.container}>
+    <div className="animate-fadeIn landing-container">
       {/* ─── Hero Section ─────────────────────────────────────────────── */}
-      <section style={s.hero}>
-        <div style={s.badge}>For FAANG Interview Prep</div>
-        <h1 style={s.headline}>
+      <section className="landing-hero">
+        <div className="landing-badge">For FAANG Interview Prep</div>
+        <h1 className="landing-headline">
           Stop re-solving.<br />
           <span style={{ color: "var(--accent)" }}>Start remembering.</span>
         </h1>
-        <p style={s.subheading}>
+        <p className="landing-subheading">
           DSA Recall combines structured active recall with spaced repetition so you never let a coding pattern go cold.
         </p>
-        <button onClick={onStart} style={s.ctaBtn} className="btn-press">
+        <button onClick={onStart} className="landing-cta-btn btn-press">
           Start Practicing Free →
         </button>
         <div style={{ fontSize: 12, color: "var(--caption)", marginTop: 10 }}>
@@ -50,41 +50,41 @@ export function LandingPage({ onStart }: Props) {
       </section>
 
       {/* ─── Interactive Live Demo ────────────────────────────────────── */}
-      <section style={s.section}>
+      <section className="landing-section">
         <div style={{ textAlign: "center", marginBottom: 28 }}>
-          <h2 style={s.sectionTitle}>Try the Core Workflow</h2>
-          <p style={s.sectionSub}>Experience active recall in 10 seconds. Try this mock Two Sum card:</p>
+          <h2 className="landing-section-title">Try the Core Workflow</h2>
+          <p className="landing-section-sub">Experience active recall in 10 seconds. Try this mock Two Sum card:</p>
         </div>
 
-        <div style={s.demoWrapper}>
-          <div style={s.demoCard} className="card-interactive">
+        <div className="landing-demo-wrapper">
+          <div className="landing-demo-card card-interactive">
             <span className="watermark" style={{ top: -10, right: 10 }}>O(N)</span>
             
             <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
-              <span style={s.tagEasy}>Easy</span>
-              <span style={s.tagPattern}>Hashing</span>
-              <span style={s.tagPattern}>Two Pointers</span>
+              <span className="landing-tag-easy">Easy</span>
+              <span className="landing-tag-pattern">Hashing</span>
+              <span className="landing-tag-pattern">Two Pointers</span>
             </div>
 
-            <h3 style={s.cardTitle}>1. Two Sum</h3>
+            <h3 className="landing-card-title">1. Two Sum</h3>
             
-            <div style={s.label}>Recall Trigger</div>
-            <p style={s.cardTrigger}>
+            <div className="landing-label">Recall Trigger</div>
+            <p className="landing-card-trigger">
               Need a pair summing to target → store elements in hash map to check complement `target - x` in O(1) time.
             </p>
 
             {/* Step 1: Self explanation */}
             {!revealed && (
               <div className="animate-fadeIn" style={{ marginTop: 16 }}>
-                <div style={s.label}>Active Recall Helper</div>
+                <div className="landing-label">Active Recall Helper</div>
                 <textarea
                   value={selfExplanation}
                   onChange={(e) => setSelfExplanation(e.target.value)}
                   placeholder="Outline the optimal strategy in your own words before revealing..."
-                  style={s.textarea}
+                  className="landing-textarea"
                   rows={2}
                 />
-                <button onClick={() => setRevealed(true)} style={s.revealBtn} className="btn-press">
+                <button onClick={() => setRevealed(true)} className="landing-reveal-btn btn-press">
                   Reveal Approaches →
                 </button>
               </div>
@@ -93,7 +93,7 @@ export function LandingPage({ onStart }: Props) {
             {/* Step 2: Checklist and Grading */}
             {revealed && (
               <div className="animate-fadeInUp" style={{ marginTop: 16 }}>
-                <div style={s.label}>Verify Your Recall</div>
+                <div className="landing-label">Verify Your Recall</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
                   {DEMO_APPROACHES.map((a) => {
                     const isChecked = recalled.includes(a.label);
@@ -101,10 +101,8 @@ export function LandingPage({ onStart }: Props) {
                       <div
                         key={a.label}
                         onClick={() => toggleRecall(a.label)}
-                        style={{
-                          ...s.approachRow,
-                          ...(isChecked ? { borderColor: "var(--accent)", background: "var(--accent-soft)", color: "var(--accent-ink)" } : {}),
-                        }}
+                        className="landing-approach-row"
+                        style={isChecked ? { borderColor: "var(--accent)", background: "var(--accent-soft)", color: "var(--accent-ink)" } : {}}
                       >
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -123,14 +121,14 @@ export function LandingPage({ onStart }: Props) {
 
                 {grade === null ? (
                   <div>
-                    <div style={s.label}>Rate your recall:</div>
-                    <div style={s.gradesRow}>
+                    <div className="landing-label">Rate your recall:</div>
+                    <div className="landing-grades-row">
                       {DEMO_GRADES.map((g) => (
                         <button
                           key={g.val}
                           onClick={() => setGrade(g.val)}
-                          style={{ ...s.gradeBtn, borderColor: g.color, color: g.color }}
-                          className="btn-press"
+                          className="landing-grade-btn btn-press"
+                          style={{ borderColor: g.color, color: g.color }}
                         >
                           {g.label}
                         </button>
@@ -138,11 +136,11 @@ export function LandingPage({ onStart }: Props) {
                     </div>
                   </div>
                 ) : (
-                  <div className="animate-fadeIn" style={s.demoDone}>
+                  <div className="animate-fadeIn landing-demo-done">
                     <p style={{ margin: 0, fontWeight: 500 }}>
                       🎉 You graded this session as <strong>{DEMO_GRADES.find(g => g.val === grade)?.label}</strong>!
                     </p>
-                    <button onClick={handleResetDemo} style={s.resetBtn}>
+                    <button onClick={handleResetDemo} className="landing-reset-btn">
                       Reset Demo
                     </button>
                   </div>
@@ -154,26 +152,26 @@ export function LandingPage({ onStart }: Props) {
       </section>
 
       {/* ─── Comparison Grid ─────────────────────────────────────────── */}
-      <section style={s.section}>
+      <section className="landing-section">
         <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <h2 style={s.sectionTitle}>How We Compare</h2>
-          <p style={s.sectionSub}>Why DSA Recall is built differently for coding interviews:</p>
+          <h2 className="landing-section-title">How We Compare</h2>
+          <p className="landing-section-sub">Why DSA Recall is built differently for coding interviews:</p>
         </div>
 
         <div className="table-scroll-hint" style={{ overflowX: "auto", position: "relative" }}>
-          <table style={s.table}>
+          <table className="landing-table">
             <thead>
-              <tr style={s.tableHeader}>
-                <th style={s.th}>Feature</th>
-                <th style={{ ...s.th, color: "var(--accent)", fontWeight: 700, background: "var(--accent-soft)", borderLeft: "2px solid var(--accent)" }}>DSA Recall</th>
-                <th style={s.th}>Anki</th>
-                <th style={s.th}>LeetCode Premium</th>
+              <tr className="landing-table-header">
+                <th className="landing-th">Feature</th>
+                <th className="landing-th" style={{ color: "var(--accent)", fontWeight: 700, background: "var(--accent-soft)", borderLeft: "2px solid var(--accent)" }}>DSA Recall</th>
+                <th className="landing-th">Anki</th>
+                <th className="landing-th">LeetCode Premium</th>
               </tr>
             </thead>
             <tbody>
               {COMPARISONS.map((c, i) => {
                 const renderCell = (val: { yes: boolean; text: string }, isRecall?: boolean) => (
-                  <td style={{ ...s.td, ...(isRecall ? { fontWeight: 600, background: "var(--accent-soft)", borderLeft: "2px solid var(--accent)" } : {}) }}>
+                  <td className="landing-td" style={isRecall ? { fontWeight: 600, background: "var(--accent-soft)", borderLeft: "2px solid var(--accent)" } : {}}>
                     <span style={{
                       display: "inline-block",
                       fontSize: 10,
@@ -191,8 +189,8 @@ export function LandingPage({ onStart }: Props) {
                   </td>
                 );
                 return (
-                  <tr key={i} style={s.tableRow}>
-                    <td style={{ ...s.td, fontWeight: 500 }}>{c.feature}</td>
+                  <tr key={i} className="landing-table-row">
+                    <td className="landing-td" style={{ fontWeight: 500 }}>{c.feature}</td>
                     {renderCell(c.recall, true)}
                     {renderCell(c.anki)}
                     {renderCell(c.leetcode)}
@@ -205,14 +203,14 @@ export function LandingPage({ onStart }: Props) {
       </section>
 
       {/* ─── Call to Action ──────────────────────────────────────────── */}
-      <section style={s.ctaBlock}>
+      <section className="landing-cta-block">
         <h2 style={{ fontFamily: "var(--font-display)", fontSize: 24, margin: "0 0 10px" }}>
           Start Building Coding Mastery
         </h2>
         <p style={{ fontSize: 14, color: "var(--ink-soft)", margin: "0 0 20px", maxWidth: 500, marginLeft: "auto", marginRight: "auto" }}>
           Free forever. Ships pre-bundled with the Blind 75 starter pack. Import it instantly and configure your first smart review session now.
         </p>
-        <button onClick={onStart} style={s.ctaBtnLarge} className="btn-press">
+        <button onClick={onStart} className="landing-cta-btn-large btn-press">
           Setup Your Library
         </button>
       </section>
@@ -266,230 +264,4 @@ const COMPARISONS = [
   },
 ];
 
-const s: Record<string, React.CSSProperties> = {
-  container: {
-    maxWidth: 820,
-    margin: "0 auto",
-    padding: "2.5rem 1.25rem 4rem",
-  },
-  hero: {
-    textAlign: "center",
-    padding: "2rem 0 1.5rem",
-  },
-  badge: {
-    display: "inline-block",
-    fontSize: 10,
-    fontWeight: 700,
-    textTransform: "uppercase",
-    letterSpacing: "0.08em",
-    padding: "4px 10px",
-    background: "var(--accent-soft)",
-    color: "var(--accent-ink)",
-    borderRadius: 20,
-    marginBottom: 16,
-  },
-  headline: {
-    fontFamily: "var(--font-display)",
-    fontSize: 36,
-    fontWeight: 700,
-    lineHeight: 1.15,
-    margin: "0 0 16px",
-    color: "var(--ink)",
-  },
-  subheading: {
-    fontSize: 15,
-    color: "var(--ink-soft)",
-    lineHeight: 1.6,
-    maxWidth: 540,
-    margin: "0 auto 26px",
-  },
-  ctaBtn: {
-    padding: "12px 28px",
-    background: "var(--accent)",
-    color: "#fff",
-    border: "none",
-    borderRadius: "var(--radius)",
-    fontSize: 14,
-    fontWeight: 600,
-    cursor: "pointer",
-    boxShadow: "var(--shadow)",
-  },
-  ctaBtnLarge: {
-    padding: "13px 32px",
-    background: "var(--accent)",
-    color: "#fff",
-    border: "none",
-    borderRadius: "var(--radius)",
-    fontSize: 14,
-    fontWeight: 600,
-    cursor: "pointer",
-    boxShadow: "var(--shadow-lg)",
-  },
-  section: {
-    marginTop: 36,
-    paddingTop: 28,
-    borderTop: "1px solid var(--border)",
-  },
-  sectionTitle: {
-    fontFamily: "var(--font-display)",
-    fontSize: 22,
-    fontWeight: 600,
-    margin: 0,
-    color: "var(--ink)",
-  },
-  sectionSub: {
-    fontSize: 14,
-    color: "var(--caption)",
-    margin: "4px 0 0",
-  },
-  demoWrapper: {
-    display: "flex",
-    justifyContent: "center",
-    marginTop: 20,
-  },
-  demoCard: {
-    background: "var(--bg-raised)",
-    border: "1px solid var(--border)",
-    borderRadius: "var(--radius-lg)",
-    padding: "24px",
-    maxWidth: 520,
-    width: "100%",
-    boxShadow: "var(--shadow-lg)",
-    position: "relative",
-  },
-  cardTitle: {
-    fontSize: 17,
-    fontWeight: 600,
-    margin: "0 0 14px",
-    color: "var(--ink)",
-  },
-  label: {
-    fontSize: 10,
-    fontWeight: 700,
-    textTransform: "uppercase",
-    letterSpacing: "0.06em",
-    color: "var(--caption)",
-    marginBottom: 4,
-  },
-  cardTrigger: {
-    fontSize: 14,
-    color: "var(--ink-soft)",
-    margin: "0 0 16px",
-    lineHeight: 1.5,
-  },
-  textarea: {
-    width: "100%",
-    background: "var(--bg-sunken)",
-    border: "1px solid var(--border)",
-    borderRadius: "var(--radius-sm)",
-    padding: "8px 12px",
-    fontSize: 13,
-    color: "var(--ink)",
-    outline: "none",
-    resize: "none",
-    marginBottom: 10,
-  },
-  revealBtn: {
-    width: "100%",
-    padding: "10px 0",
-    background: "var(--ink)",
-    color: "var(--bg)",
-    border: "none",
-    borderRadius: "var(--radius)",
-    fontSize: 13,
-    fontWeight: 600,
-    cursor: "pointer",
-  },
-  approachRow: {
-    background: "var(--bg-sunken)",
-    border: "1px solid var(--border)",
-    borderRadius: "var(--radius-sm)",
-    padding: "10px 12px",
-    cursor: "pointer",
-    transition: "all 0.15s ease",
-  },
-  gradesRow: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr",
-    gap: 6,
-    marginTop: 8,
-  },
-  gradeBtn: {
-    padding: "8px 2px",
-    background: "var(--bg-raised)",
-    border: "1.5px solid",
-    borderRadius: "var(--radius-sm)",
-    fontSize: 11,
-    fontWeight: 600,
-    cursor: "pointer",
-    textAlign: "center" as const,
-  },
-  demoDone: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    background: "var(--accent-soft)",
-    padding: "12px 14px",
-    borderRadius: "var(--radius-sm)",
-    border: "1px solid var(--accent)",
-    color: "var(--accent-ink)",
-    fontSize: 13,
-  },
-  resetBtn: {
-    background: "none",
-    border: "none",
-    textDecoration: "underline",
-    fontSize: 11,
-    fontWeight: 600,
-    color: "var(--accent-ink)",
-    cursor: "pointer",
-    padding: 0,
-  },
-  table: {
-    width: "100%",
-    borderCollapse: "collapse",
-    marginTop: 20,
-    fontSize: 14,
-  },
-  tableHeader: {
-    borderBottom: "1.5px solid var(--border-strong)",
-  },
-  th: {
-    padding: "12px 16px",
-    textAlign: "left" as const,
-    color: "var(--caption)",
-    fontWeight: 500,
-  },
-  tableRow: {
-    borderBottom: "1px solid var(--border)",
-  },
-  td: {
-    padding: "14px 16px",
-    color: "var(--ink-soft)",
-  },
-  ctaBlock: {
-    marginTop: 70,
-    background: "var(--bg-sunken)",
-    border: "1px solid var(--border)",
-    borderRadius: "var(--radius-lg)",
-    padding: "36px 20px",
-    textAlign: "center",
-    boxShadow: "var(--shadow-sm)",
-  },
-  tagEasy: {
-    fontSize: 10,
-    fontWeight: 600,
-    padding: "2px 8px",
-    borderRadius: 12,
-    background: "var(--easy-soft)",
-    color: "var(--easy)",
-  },
-  tagPattern: {
-    fontSize: 10,
-    fontWeight: 600,
-    padding: "2px 8px",
-    borderRadius: 12,
-    background: "var(--bg-sunken)",
-    color: "var(--ink-soft)",
-  },
-};
+
