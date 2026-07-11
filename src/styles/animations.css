@@ -196,3 +196,9 @@
 .logo-wrap:hover .logo-bracket-right {
   transform: translateX(2px);
 }
+
+/* ─── Scroll indicator bounce ─────────────────────────────────────────── */
+@keyframes scrollBounce {
+  0%, 100% { transform: translateY(0); opacity: 0.5; }
+  50%      { transform: translateY(6px); opacity: 1; }
+}

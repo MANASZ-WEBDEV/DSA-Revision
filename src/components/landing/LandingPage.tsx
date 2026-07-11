@@ -42,6 +42,11 @@ export function LandingPage({ onStart }: Props) {
         <div style={{ fontSize: 12, color: "var(--caption)", marginTop: 10 }}>
           No accounts required · Local-first data
         </div>
+
+        {/* Scroll indicator */}
+        <div style={{ marginTop: 24, display: "flex", justifyContent: "center" }}>
+          <span style={{ fontSize: 18, color: "var(--caption)", animation: "scrollBounce 2s ease-in-out infinite" }}>↓</span>
+        </div>
       </section>
 
       {/* ─── Interactive Live Demo ────────────────────────────────────── */}
@@ -269,7 +274,7 @@ const s: Record<string, React.CSSProperties> = {
   },
   hero: {
     textAlign: "center",
-    padding: "2rem 0 3.5rem",
+    padding: "2rem 0 1.5rem",
   },
   badge: {
     display: "inline-block",
@@ -321,8 +326,8 @@ const s: Record<string, React.CSSProperties> = {
     boxShadow: "var(--shadow-lg)",
   },
   section: {
-    marginTop: 60,
-    paddingTop: 40,
+    marginTop: 36,
+    paddingTop: 28,
     borderTop: "1px solid var(--border)",
   },
   sectionTitle: {
