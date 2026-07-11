@@ -212,8 +212,7 @@ export function Library({ cards, onSelectCard, onStartReview, onGenerate, onGoSt
                 ...(due ? s.cardDue : {}), 
                 position: "relative", 
                 overflow: "hidden", 
-                viewTransitionName: `card-${card.id}` as any,
-                viewTransitionClass: "card-morph" as any
+                viewTransitionName: `card-${card.id}` as any
               }}
             >
               {/* O(n) Watermark */}

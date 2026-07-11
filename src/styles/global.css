@@ -279,8 +279,9 @@ main {
 
 /* ─── View Transitions (route slide + fade) ──────────────────────────────── */
 @media (prefers-reduced-motion: no-preference) {
-  ::view-transition-group(root) {
-    animation-duration: 0.25s;
+  /* Universal timing for ALL transition groups (pages + card morphs) */
+  ::view-transition-group(*) {
+    animation-duration: 0.3s;
     animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   }
 
@@ -299,18 +300,6 @@ main {
   /* Page content: new slides up + fades in */
   ::view-transition-new(page-content) {
     animation: vt-slide-fade-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
-  }
-
-  /* Shared element: library card ↔ card detail morph */
-  ::view-transition-group(.card-morph) {
-    animation-duration: 0.3s;
-    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  ::view-transition-old(.card-morph),
-  ::view-transition-new(.card-morph) {
-    animation: none;
-    mix-blend-mode: normal;
   }
 }
 

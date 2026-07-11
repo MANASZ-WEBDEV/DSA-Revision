@@ -60,8 +60,7 @@ export function CardDetail({ card, onBack, onUpdate, onDelete }: Props) {
       maxWidth: 720, 
       margin: "0 auto", 
       padding: "1.5rem 1rem", 
-      viewTransitionName: `card-${card.id}` as any,
-      viewTransitionClass: "card-morph" as any
+      viewTransitionName: `card-${card.id}` as any
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
         <button onClick={onBack} style={s.backBtn}>← Library</button>
