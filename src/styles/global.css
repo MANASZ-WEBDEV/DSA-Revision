@@ -201,6 +201,16 @@ a {
   .hamburger {
     display: flex !important;
   }
+
+  .footer-links-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px !important;
+    width: 100%;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+  }
 }
 
 .hamburger {

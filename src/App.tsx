@@ -454,19 +454,13 @@ function AppContent() {
       <footer style={s.footer}>
         <div style={s.footerInner}>
           <span>© {new Date().getFullYear()} DSA Recall</span>
-          <div style={s.footerLinks}>
+          <div className="footer-links-grid" style={s.footerLinks}>
             <Link to="/how-to-use" style={s.footerLink}>How to Use</Link>
-            <span style={{ color: "var(--border-strong)" }}>·</span>
             <Link to="/about" style={s.footerLink}>About</Link>
-            <span style={{ color: "var(--border-strong)" }}>·</span>
             <Link to="/privacy" style={s.footerLink}>Privacy Policy</Link>
-            <span style={{ color: "var(--border-strong)" }}>·</span>
             <Link to="/contact" style={s.footerLink}>Contact</Link>
-            <span style={{ color: "var(--border-strong)" }}>·</span>
             <Link to="/support" style={s.footerLink}>Support</Link>
-            <span style={{ color: "var(--border-strong)" }}>·</span>
             <Link to="/feedback" style={s.footerLink}>Feedback</Link>
-            <span style={{ color: "var(--border-strong)" }}>·</span>
             <a href="https://github.com/MANASZ-WEBDEV/DSA-Revision" target="_blank" rel="noreferrer" style={s.footerLink}>GitHub</a>
           </div>
         </div>
