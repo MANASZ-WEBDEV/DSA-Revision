@@ -327,3 +327,8 @@ textarea::-webkit-resizer {
   border-radius: 4px;
 }
 
+textarea::placeholder {
+  opacity: 0.45;
+  font-style: italic;
+}
+

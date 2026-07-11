@@ -136,6 +136,16 @@ export function GenerateCard({ cards, providerId, model, apiKey, onCardCreated, 
       {/* Main input generation controls */}
       {!fuzzyMatch && (
         <>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 6 }}>
+            <button
+              onClick={() => { setText(EXAMPLE_PROBLEM); setHint(null); }}
+              style={styles.pasteExampleChip}
+              className="btn-press"
+              disabled={loading}
+            >
+              Paste example
+            </button>
+          </div>
           <textarea
             value={text}
             onChange={(e) => { setText(e.target.value); if (hint) setHint(null); }}
@@ -185,9 +195,13 @@ export function GenerateCard({ cards, providerId, model, apiKey, onCardCreated, 
   );
 }
 
-const PLACEHOLDER = `Example — paste something like:
+const PLACEHOLDER = `Paste a problem description here...
 
-Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.
+e.g. "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target."`;
+
+const EXAMPLE_PROBLEM = `Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.
+
+You may assume that each input would have exactly one solution, and you may not use the same element twice.
 
 Constraints: 2 <= nums.length <= 10^4, -10^9 <= nums[i] <= 10^9`;
 
@@ -204,5 +218,6 @@ const styles: Record<string, React.CSSProperties> = {
   warningText: { fontSize: 13.5, color: "var(--ink-soft)", lineHeight: 1.5, margin: 0 },
   matchCard: { display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--bg-sunken)", border: "1px solid var(--border-strong)", borderRadius: "var(--radius)", padding: "10px 14px", fontSize: 13.5 },
   matchPercentage: { fontSize: 11, fontWeight: 600, color: "var(--accent)", background: "var(--accent-soft)", padding: "2px 8px", borderRadius: 12 },
-  hint: { fontSize: 13, color: "var(--medium)", padding: "8px 12px", background: "var(--medium-soft)", borderRadius: "var(--radius-sm)", border: "1px solid var(--medium)", lineHeight: 1.4 }
+  hint: { fontSize: 13, color: "var(--medium)", padding: "8px 12px", background: "var(--medium-soft)", borderRadius: "var(--radius-sm)", border: "1px solid var(--medium)", lineHeight: 1.4 },
+  pasteExampleChip: { fontSize: 11, fontWeight: 600, padding: "4px 10px", borderRadius: 20, border: "1px solid var(--border-strong)", background: "var(--bg-sunken)", color: "var(--ink-soft)", cursor: "pointer", transition: "background 0.15s ease" }
 };
