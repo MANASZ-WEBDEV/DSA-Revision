@@ -197,17 +197,22 @@ function AppContent() {
           {/* LLM settings badge next to Generate */}
           <button
             onClick={() => setShowSettings(true)}
-            style={s.navProviderBtn}
+            style={{
+              ...s.navProviderBtn,
+              ...(keySet ? {} : { borderColor: "var(--medium)", background: "var(--medium-soft)" }),
+            }}
             className="btn-press"
             title="LLM Generation Settings"
           >
             <span>{provider.logo}</span>
             <span style={{ fontSize: 12 }}>
-              {provider.id === "anthropic" ? "Claude" : provider.id === "gemini" ? "Gemini" : "Groq"}
+              {keySet ? (provider.id === "anthropic" ? "Claude" : provider.id === "gemini" ? "Gemini" : "Groq") : "AI Setup"}
             </span>
-            <span style={{ fontSize: 10, color: keySet ? "var(--accent)" : "var(--urgent)" }}>
-              {keySet ? "✓" : "⚠"}
-            </span>
+            {keySet ? (
+              <span style={{ fontSize: 10, color: "var(--accent)", fontWeight: 600 }}>✓</span>
+            ) : (
+              <span style={{ fontSize: 10, color: "var(--medium)", fontWeight: 600 }}>Setup</span>
+            )}
           </button>
 
 
