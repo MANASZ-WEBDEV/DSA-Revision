@@ -44,10 +44,37 @@ export function LandingPage({ onStart }: Props) {
         </div>
 
         {/* Scroll indicator */}
-        <div style={{ marginTop: 24, display: "flex", justifyContent: "center" }}>
+        <div style={{ marginTop: 20, display: "flex", justifyContent: "center" }}>
           <span style={{ fontSize: 18, color: "var(--caption)", animation: "scrollBounce 2s ease-in-out infinite" }}>↓</span>
         </div>
       </section>
+
+      {/* ─── Starter Decks & Features Trust Badges ─────────────────────── */}
+      <div className="landing-features-row">
+        <div className="landing-feature-badge">
+          <span className="landing-feature-icon">🎯</span>
+          <div>
+            <h4 style={{ margin: 0 }} className="landing-feature-title">Pre-loaded Blind 75</h4>
+            <span className="landing-feature-desc">Start reviewing the essential 75 curated coding patterns immediately.</span>
+          </div>
+        </div>
+
+        <div className="landing-feature-badge">
+          <span className="landing-feature-icon">🔑</span>
+          <div>
+            <h4 style={{ margin: 0 }} className="landing-feature-title">Bring Your Own Key</h4>
+            <span className="landing-feature-desc">Connect Claude, Gemini, or Llama for custom flashcard generation.</span>
+          </div>
+        </div>
+
+        <div className="landing-feature-badge">
+          <span className="landing-feature-icon">⚡</span>
+          <div>
+            <h4 style={{ margin: 0 }} className="landing-feature-title">100% Free & Local-First</h4>
+            <span className="landing-feature-desc">Your cards, notes, and progress stay securely stored in your browser.</span>
+          </div>
+        </div>
+      </div>
 
       {/* ─── Interactive Live Demo ────────────────────────────────────── */}
       <section className="landing-section">
