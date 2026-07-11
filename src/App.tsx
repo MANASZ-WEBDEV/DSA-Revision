@@ -1,6 +1,7 @@
 import { useState, useEffect, Component } from "react";
 import type { ReactNode, ErrorInfo } from "react";
-import { Routes, Route, useNavigate, useParams, Link, useLocation } from "react-router-dom";
+import { Routes, Route, useParams, Link, useLocation } from "react-router-dom";
+import { useViewTransitionNavigate } from "./hooks/useViewTransitionNavigate";
 import { Dashboard } from "./components/dashboard/Dashboard";
 import { Library } from "./components/library/Library";
 import { GenerateCard } from "./components/generate/GenerateCard";
@@ -38,7 +39,7 @@ function AppContent() {
   const { sessionHistory, setSessionHistory, recordSession } = useSessionHistory();
   const { theme, toggleTheme } = useTheme();
 
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const location = useLocation();
   const isPrivacyPage = location.pathname === "/privacy";
   const isGeneratePage = location.pathname === "/generate";
@@ -167,7 +168,7 @@ function AppContent() {
       />
 
       {/* ─── Routes ────────────────────────────────────────────────────── */}
-      <main style={{ flex: 1, minHeight: shouldLockViewport ? "0" : undefined }}>
+      <main style={{ flex: 1, minHeight: shouldLockViewport ? "0" : undefined, viewTransitionName: "page-content" as any }}>
         <ErrorBoundary>
         <Routes>
           <Route
@@ -386,7 +387,7 @@ function CardDetailRoute({
   onDelete: (id: string) => void;
 }) {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const card = cards.find((c) => c.id === id);
 
   if (!card) {

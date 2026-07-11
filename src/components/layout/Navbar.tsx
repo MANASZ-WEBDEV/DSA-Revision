@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
 import { UserMenu } from "./UserMenu";
 import { ProviderIcon } from "./ProviderIcon";
 import { s } from "./layoutStyles";
+import { useViewTransitionNavigate } from "../../hooks/useViewTransitionNavigate";
 import type { FlashCard } from "../../types";
 
 interface NavbarProps {
@@ -48,18 +49,24 @@ export function Navbar({
   setShowLogin
 }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const goTo = useViewTransitionNavigate();
+  const location = useLocation();
 
-  function closeMobileMenu() {
+  function handleNavClick(e: React.MouseEvent, path: string) {
+    e.preventDefault();
     setMobileMenuOpen(false);
+    // Skip transition if already on the target page
+    if (location.pathname === path) return;
+    goTo(path);
   }
 
   return (
-    <nav className="nav">
+    <nav className="nav" style={{ viewTransitionName: "nav-bar" as any }}>
       <NavLink
         to="/"
         className="logo-wrap"
         style={s.logo}
-        onClick={closeMobileMenu}
+        onClick={(e) => handleNavClick(e, "/")}
       >
         <span className="logo-bracket logo-bracket-left font-mono" style={{ color: "var(--accent)", marginRight: 4 }}>{"{"}</span>
         <span>DSA Recall</span>
@@ -80,7 +87,7 @@ export function Navbar({
           <NavLink
             key={item.path}
             to={item.path}
-            onClick={closeMobileMenu}
+            onClick={(e) => handleNavClick(e, item.path)}
             style={({ isActive }) => ({
               ...s.navBtn,
               ...(isActive ? s.navActive : {}),
@@ -118,7 +125,7 @@ export function Navbar({
         {cards.length > 0 && (
           <NavLink
             to="/review"
-            onClick={closeMobileMenu}
+            onClick={(e) => handleNavClick(e, "/review")}
             style={({ isActive }) => ({
               ...s.navBtn,
               ...(isActive ? s.navActive : {}),

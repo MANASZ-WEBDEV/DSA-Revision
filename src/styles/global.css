@@ -277,6 +277,42 @@ main {
   }
 }
 
+/* ─── View Transitions (route slide + fade) ──────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-group(root) {
+    animation-duration: 0.25s;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Navbar stays fixed — no crossfade on persistent chrome */
+  ::view-transition-old(nav-bar),
+  ::view-transition-new(nav-bar) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+
+  /* Page content: old fades out quickly */
+  ::view-transition-old(page-content) {
+    animation: vt-fade-out 0.15s ease both;
+  }
+
+  /* Page content: new slides up + fades in */
+  ::view-transition-new(page-content) {
+    animation: vt-slide-fade-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+@keyframes vt-fade-out {
+  to { opacity: 0; }
+}
+
+@keyframes vt-slide-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
 /* Scrollbar (webkit) — subtle, matches theme */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
