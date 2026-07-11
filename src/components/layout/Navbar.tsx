@@ -2,6 +2,7 @@ import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
 import { UserMenu } from "./UserMenu";
+import { ProviderIcon } from "./ProviderIcon";
 import { s } from "./layoutStyles";
 import type { FlashCard } from "../../types";
 
@@ -103,7 +104,7 @@ export function Navbar({
           className="btn-press"
           title="LLM Generation Settings"
         >
-          <span>{provider.logo}</span>
+          <ProviderIcon id={provider.id} />
           <span style={{ fontSize: 12 }}>
             {keySet ? (provider.id === "anthropic" ? "Claude" : provider.id === "gemini" ? "Gemini" : "Groq") : "AI Setup"}
           </span>

@@ -7,7 +7,7 @@ export type ProviderId = "anthropic" | "gemini" | "groq";
 export interface Provider {
   id: ProviderId;
   name: string;
-  logo: string;           // emoji stand-in
+  logo: string;           // legacy emoji (UI uses ProviderIcon SVGs instead)
   models: { id: string; label: string }[];
   keyPrefix: string;      // for basic validation
   keyPlaceholder: string;

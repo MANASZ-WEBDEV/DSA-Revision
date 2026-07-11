@@ -4,6 +4,7 @@ import type { ProviderId } from "../../lib/llm";
 import { initSM2 } from "../../lib/sm2";
 import type { FlashCard } from "../../types";
 import { checkDuplicateCard } from "../../lib/duplicateCheck";
+import { ProviderIcon } from "../layout/ProviderIcon";
 
 interface Props {
   cards: FlashCard[];
@@ -83,7 +84,7 @@ export function GenerateCard({ cards, providerId, model, apiKey, onCardCreated, 
         <h2 style={styles.heading}>Generate a card</h2>
         {/* Active provider badge */}
         <div style={styles.providerBadge}>
-          <span>{provider.logo}</span>
+          <ProviderIcon id={provider.id} />
           <span style={{ fontSize: 11, fontWeight: 600, color: "var(--ink-soft)" }}>{provider.name.split(" ")[0]}</span>
           <span style={{ fontSize: 10, color: "var(--caption)" }}>
             {provider.models.find((m) => m.id === model)?.label.split(" (")[0]}
