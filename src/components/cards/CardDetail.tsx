@@ -56,7 +56,7 @@ export function CardDetail({ card, onBack, onUpdate, onDelete }: Props) {
   const bigO = getBestBigO(card);
 
   return (
-    <div className="animate-fadeInUp" style={{ maxWidth: 720, margin: "0 auto", padding: "1.5rem 1rem" }}>
+    <div className="animate-fadeInUp" style={{ maxWidth: 720, margin: "0 auto", padding: "1.5rem 1rem", viewTransitionName: `card-${card.id}` as any }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
         <button onClick={onBack} style={s.backBtn}>← Library</button>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>

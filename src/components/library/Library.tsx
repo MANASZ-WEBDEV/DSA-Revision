@@ -207,7 +207,7 @@ export function Library({ cards, onSelectCard, onStartReview, onGenerate, onGoSt
               key={card.id}
               onClick={() => onSelectCard(card.id)}
               className="card-interactive"
-              style={{ ...s.cardItem, ...(due ? s.cardDue : {}), position: "relative", overflow: "hidden" }}
+              style={{ ...s.cardItem, ...(due ? s.cardDue : {}), position: "relative", overflow: "hidden", viewTransitionName: `card-${card.id}` as any }}
             >
               {/* O(n) Watermark */}
               {bigO && <span className="watermark">{bigO}</span>}
