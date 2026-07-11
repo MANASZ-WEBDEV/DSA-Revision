@@ -232,7 +232,8 @@ function AppContent() {
           )}
         </div>
 
-
+        {/* Subtle divider between nav and controls */}
+        <div style={{ width: 1, height: 20, background: "var(--border)", margin: "0 4px", flexShrink: 0 }} />
 
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <ThemeToggle theme={theme} onToggle={toggleTheme} />
