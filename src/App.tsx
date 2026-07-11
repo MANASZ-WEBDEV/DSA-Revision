@@ -186,7 +186,7 @@ function AppContent() {
                 ...(isActive ? s.navActive : {}),
               })}
             >
-              <span style={{ fontSize: 14 }}>{item.icon}</span>
+              {item.icon}
               {item.label}
               {item.path === "/library" && dueCount > 0 && (
                 <span className="pulse" style={s.pill}>{dueCount}</span>
@@ -524,11 +524,17 @@ function CardDetailRoute({
   return <CardDetail card={card} onBack={() => navigate("/library")} onUpdate={onUpdate} onDelete={onDelete} />;
 }
 
-// ─── Navigation items ───────────────────────────────────────────────────────
+// ─── Navigation icons (inline SVGs for cross-platform consistency) ───────────
+const NavIcon = ({ d }: { d: string }) => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d={d} />
+  </svg>
+);
+
 const NAV_ITEMS = [
-  { path: "/", label: "Dashboard", icon: "◈" },
-  { path: "/library", label: "Library", icon: "▤" },
-  { path: "/generate", label: "Generate", icon: "✦" },
+  { path: "/", label: "Dashboard", icon: <NavIcon d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10" /> },
+  { path: "/library", label: "Library", icon: <NavIcon d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20 M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z" /> },
+  { path: "/generate", label: "Generate", icon: <NavIcon d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z" /> },
 ];
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
