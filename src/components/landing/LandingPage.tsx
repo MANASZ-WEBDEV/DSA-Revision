@@ -92,7 +92,7 @@ export function LandingPage({ onStart }: Props) {
 
             {/* Step 2: Checklist and Grading */}
             {revealed && (
-              <div className="animate-fadeIn" style={{ marginTop: 16 }}>
+              <div className="animate-fadeInUp" style={{ marginTop: 16 }}>
                 <div style={s.label}>Verify Your Recall</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
                   {DEMO_APPROACHES.map((a) => {
