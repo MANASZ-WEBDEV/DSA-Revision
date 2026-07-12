@@ -3,7 +3,6 @@ import { useCardStore, useProviderStore } from "../../hooks/useStore";
 import { PROVIDERS } from "../../lib/llm";
 import type { ProviderId } from "../../lib/llm";
 import { initSM2 } from "../../lib/sm2";
-import blind75Data from "../../data/blind75.json";
 
 interface Props {
   onComplete: () => void;
@@ -13,22 +12,30 @@ export function Onboarding({ onComplete }: Props) {
   const [step, setStep] = useState(1);
   const { importCards, markDeckImported } = useCardStore();
   const { providerId, currentKey, keys, setProvider, setKey } = useProviderStore();
+  const [importingBlind75, setImportingBlind75] = useState(false);
 
   const currentProvider = PROVIDERS.find((p) => p.id === providerId)!;
 
-  const handleImportBlind75 = () => {
-    const cards = (blind75Data as any[]).map((card) => ({
-      ...card,
-      deck: "Blind 75",
-      source_text: "",
-      ...initSM2(),
-      id: `blind75-${card.title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")}`,
-      created_at: new Date().toISOString(),
-    }));
+  const handleImportBlind75 = async () => {
+    setImportingBlind75(true);
+    try {
+      const mod = await import("../../data/blind75.json");
+      const blind75Data = (mod.default ?? mod) as any[];
+      const cards = blind75Data.map((card) => ({
+        ...card,
+        deck: "Blind 75",
+        source_text: "",
+        ...initSM2(),
+        id: `blind75-${card.title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")}`,
+        created_at: new Date().toISOString(),
+      }));
 
-    importCards(cards);
-    markDeckImported("blind-75");
-    onComplete();
+      importCards(cards);
+      markDeckImported("blind-75");
+      onComplete();
+    } finally {
+      setImportingBlind75(false);
+    }
   };
 
   return (
@@ -134,8 +141,15 @@ export function Onboarding({ onComplete }: Props) {
             <p style={{ margin: "0 0 14px", fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.5 }}>
               75 essential problems curated for technical interviews (Arrays, Trees, Graphs, DP, Intervals, Greedy, and more).
             </p>
-            <button onClick={handleImportBlind75} style={s.importBtn} className="btn-press">
-              📥 Import Blind 75 & Start Free
+            <button onClick={handleImportBlind75} disabled={importingBlind75} style={s.importBtn} className="btn-press">
+              {importingBlind75 ? (
+                <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                  <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} />
+                  Importing…
+                </span>
+              ) : (
+                "📥 Import Blind 75 & Start Free"
+              )}
             </button>
           </div>
 

@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { FlashCard } from "../../types";
 import { initSM2 } from "../../lib/sm2";
-import blind75Data from "../../data/blind75.json";
 
 interface Props {
   existingCards: FlashCard[];
@@ -19,8 +18,8 @@ interface DeckInfo {
   getData: () => FlashCard[];
 }
 
-function prepareBlind75(): FlashCard[] {
-  return (blind75Data as any[]).map((card) => ({
+function prepareCards(rawData: any[]): FlashCard[] {
+  return rawData.map((card) => ({
     ...card,
     deck: "Blind 75",
     source_text: "",
@@ -30,22 +29,24 @@ function prepareBlind75(): FlashCard[] {
   }));
 }
 
-const AVAILABLE_DECKS: DeckInfo[] = [
-  {
-    id: "blind-75",
-    name: "Blind 75",
-    description: "The essential 75 LeetCode problems curated for FAANG interviews. Covers arrays, strings, trees, graphs, DP, and more. The minimum viable prep for any SWE interview.",
-    icon: "🎯",
-    cardCount: blind75Data.length,
-    categories: [
-      `Arrays & Hashing (${blind75Data.filter((c: any) => c.patterns?.includes("Hashing")).length})`,
-      `Two Pointers (${blind75Data.filter((c: any) => c.patterns?.includes("Two Pointers")).length})`,
-      `Trees & Graphs (${blind75Data.filter((c: any) => c.patterns?.some((p: string) => ["BFS", "DFS"].includes(p))).length})`,
-      `Dynamic Programming (${blind75Data.filter((c: any) => c.patterns?.some((p: string) => p.startsWith("DP"))).length})`,
-    ],
-    getData: prepareBlind75,
-  },
-];
+function buildDecks(rawData: any[]): DeckInfo[] {
+  return [
+    {
+      id: "blind-75",
+      name: "Blind 75",
+      description: "The essential 75 LeetCode problems curated for FAANG interviews. Covers arrays, strings, trees, graphs, DP, and more. The minimum viable prep for any SWE interview.",
+      icon: "🎯",
+      cardCount: rawData.length,
+      categories: [
+        `Arrays & Hashing (${rawData.filter((c: any) => c.patterns?.includes("Hashing")).length})`,
+        `Two Pointers (${rawData.filter((c: any) => c.patterns?.includes("Two Pointers")).length})`,
+        `Trees & Graphs (${rawData.filter((c: any) => c.patterns?.some((p: string) => ["BFS", "DFS"].includes(p))).length})`,
+        `Dynamic Programming (${rawData.filter((c: any) => c.patterns?.some((p: string) => p.startsWith("DP"))).length})`,
+      ],
+      getData: () => prepareCards(rawData),
+    },
+  ];
+}
 
 export function StarterPacks({ existingCards, onImportDeck, onGoLibrary }: Props) {
   const [importedDecks, setImportedDecks] = useState<Set<string>>(() => {
@@ -57,6 +58,19 @@ export function StarterPacks({ existingCards, onImportDeck, onGoLibrary }: Props
 
   const [importing, setImporting] = useState<string | null>(null);
   const [justImported, setJustImported] = useState<string | null>(null);
+  const [availableDecks, setAvailableDecks] = useState<DeckInfo[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    import("../../data/blind75.json").then((mod) => {
+      if (cancelled) return;
+      const data = (mod.default ?? mod) as any[];
+      setAvailableDecks(buildDecks(data));
+      setLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   function handleImport(deck: DeckInfo) {
     setImporting(deck.id);
@@ -84,7 +98,13 @@ export function StarterPacks({ existingCards, onImportDeck, onGoLibrary }: Props
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        {AVAILABLE_DECKS.map((deck) => {
+        {loading ? (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 0", gap: 10 }}>
+            <span className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }} />
+            <span style={{ fontSize: 13, color: "var(--caption)" }}>Loading decks…</span>
+          </div>
+        ) : (
+        availableDecks.map((deck) => {
           const imported = isImported(deck);
           const isImporting = importing === deck.id;
           const wasJustImported = justImported === deck.id;
@@ -143,7 +163,8 @@ export function StarterPacks({ existingCards, onImportDeck, onGoLibrary }: Props
               </div>
             </div>
           );
-        })}
+        })
+        )}
       </div>
 
       {/* Coming soon placeholder */}
