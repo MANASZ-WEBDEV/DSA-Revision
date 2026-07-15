@@ -35,7 +35,7 @@ import { Storage } from "./lib/storage";
 
 function AppContent() {
   const { cards, setCards, addCard, updateCard, deleteCard, importCards } = useCardStore();
-  const { providerId, model, currentKey, keys, setProvider, setModel, setKey } = useProviderStore();
+  const { providerId, model, currentKey, keys, codeLanguage, setProvider, setModel, setKey, setCodeLanguage } = useProviderStore();
   const { events, setEvents, streak, setStreak, recordReview } = useReviewHistory();
   const { sessionHistory, setSessionHistory, recordSession } = useSessionHistory();
   const { theme, toggleTheme } = useTheme();
@@ -231,6 +231,7 @@ function AppContent() {
                 providerId={providerId}
                 model={model}
                 apiKey={currentKey}
+                codeLanguage={codeLanguage}
                 onCardCreated={handleCardCreated}
                 onNeedApiKey={() => setShowSettings(true)}
               />
@@ -327,9 +328,11 @@ function AppContent() {
           providerId={providerId}
           model={model}
           keys={keys}
+          codeLanguage={codeLanguage}
           onSetProvider={setProvider}
           onSetModel={setModel}
           onSetKey={setKey}
+          onSetCodeLanguage={setCodeLanguage}
           onClose={() => setShowSettings(false)}
         />
       )}

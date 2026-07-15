@@ -1,25 +1,30 @@
 import { useState } from "react";
 import { PROVIDERS } from "../../lib/llm";
 import type { ProviderId } from "../../lib/llm";
+import { LanguageIcon, LANGUAGES } from "../layout/LanguageIcon";
+import type { CodeLanguage } from "../layout/LanguageIcon";
 
 interface Props {
   providerId: ProviderId;
   model: string;
   keys: Record<ProviderId, string>;
+  codeLanguage: CodeLanguage;
   onSetProvider: (id: ProviderId) => void;
   onSetModel: (m: string) => void;
   onSetKey: (id: ProviderId, key: string) => void;
+  onSetCodeLanguage: (lang: CodeLanguage) => void;
   onClose: () => void;
 }
 
 export function ApiKeyModal({
-  providerId, model, keys,
-  onSetProvider, onSetModel, onSetKey, onClose,
+  providerId, model, keys, codeLanguage,
+  onSetProvider, onSetModel, onSetKey, onSetCodeLanguage, onClose,
 }: Props) {
   // Local draft state — only commit on Save
   const [draftProvider, setDraftProvider] = useState<ProviderId>(providerId);
   const [draftModel,    setDraftModel]    = useState(model);
   const [draftKeys,     setDraftKeys]     = useState({ ...keys });
+  const [draftLang,     setDraftLang]     = useState<CodeLanguage>(codeLanguage);
 
   const provider = PROVIDERS.find((p) => p.id === draftProvider)!;
   const draftKey = draftKeys[draftProvider];
@@ -33,6 +38,7 @@ export function ApiKeyModal({
   function handleSave() {
     onSetProvider(draftProvider);
     onSetModel(draftModel);
+    onSetCodeLanguage(draftLang);
     // Save all keys (user may have typed into multiple tabs)
     (Object.keys(draftKeys) as ProviderId[]).forEach((id) => {
       if (draftKeys[id]) onSetKey(id, draftKeys[id]);
@@ -112,6 +118,31 @@ export function ApiKeyModal({
           )}
         </div>
 
+        {/* Code hint language preference */}
+        <div style={{ marginTop: 16 }}>
+          <label style={s.label}>Code hint language</label>
+          <div style={s.langGrid}>
+            {LANGUAGES.map((lang) => {
+              const active = draftLang === lang.id;
+              return (
+                <button
+                  key={lang.id}
+                  type="button"
+                  onClick={() => setDraftLang(lang.id)}
+                  style={{ ...s.langChip, ...(active ? s.langChipActive : {}) }}
+                  className="btn-press"
+                >
+                  <LanguageIcon id={lang.id} size={11} />
+                  <span>{lang.label}</span>
+                </button>
+              );
+            })}
+          </div>
+          <p style={{ fontSize: 11, color: "var(--caption)", margin: "6px 0 0", lineHeight: 1.4 }}>
+            Controls the syntax style of generated code hints. "Any" = pseudocode.
+          </p>
+        </div>
+
         <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 20 }}>
           <button onClick={onClose} style={s.cancelBtn}>Cancel</button>
           <button
@@ -141,4 +172,7 @@ const s: Record<string, React.CSSProperties> = {
   input:       { width: "100%", boxSizing: "border-box" as const, padding: "9px 11px", fontSize: 13, border: "1px solid var(--border-strong)", borderRadius: "var(--radius-sm)", fontFamily: "var(--font-mono)", outline: "none", marginTop: 2, background: "var(--bg-raised)", color: "var(--ink)" },
   cancelBtn:   { padding: "8px 16px", background: "var(--bg-raised)", border: "1px solid var(--border)", borderRadius: "var(--radius)", fontSize: 14, cursor: "pointer", color: "var(--ink-soft)" },
   saveBtn:     { padding: "8px 18px", background: "var(--ink)", border: "none", borderRadius: "var(--radius)", fontSize: 14, color: "var(--bg)", fontWeight: 500, cursor: "pointer" },
+  langGrid:    { display: "flex", flexWrap: "wrap" as const, gap: 6 },
+  langChip:    { display: "flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)", background: "var(--bg-raised)", color: "var(--ink-soft)", fontSize: 12, cursor: "pointer", transition: "all 0.12s ease" },
+  langChipActive: { borderColor: "var(--accent)", color: "var(--ink)", background: "color-mix(in srgb, var(--accent) 12%, transparent)" },
 };

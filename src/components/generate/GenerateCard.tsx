@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { generateFlashCard, PROVIDERS } from "../../lib/llm";
 import type { ProviderId } from "../../lib/llm";
+import type { CodeLanguage } from "../layout/LanguageIcon";
 import { initSM2 } from "../../lib/sm2";
 import type { FlashCard } from "../../types";
 import { checkDuplicateCard } from "../../lib/duplicateCheck";
@@ -11,11 +12,12 @@ interface Props {
   providerId: ProviderId;
   model: string;
   apiKey: string;
+  codeLanguage: CodeLanguage;
   onCardCreated: (card: FlashCard) => void;
   onNeedApiKey: () => void;
 }
 
-export function GenerateCard({ cards, providerId, model, apiKey, onCardCreated, onNeedApiKey }: Props) {
+export function GenerateCard({ cards, providerId, model, apiKey, codeLanguage, onCardCreated, onNeedApiKey }: Props) {
   const [text, setText]       = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState<string | null>(null);
@@ -41,7 +43,7 @@ export function GenerateCard({ cards, providerId, model, apiKey, onCardCreated, 
     setFuzzyMatch(null);
 
     try {
-      const partial = await generateFlashCard(text, providerId, apiKey, model);
+      const partial = await generateFlashCard(text, providerId, apiKey, model, codeLanguage);
       const card: FlashCard = {
         ...partial,
         id: crypto.randomUUID(),
@@ -164,7 +166,7 @@ export function GenerateCard({ cards, providerId, model, apiKey, onCardCreated, 
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 12 }}>
             <div style={{ display: "flex", gap: 12, marginTop: 0, alignItems: "center" }}>
               <button
-                onClick={handleGenerate}
+                onClick={() => handleGenerate()}
                 disabled={loading}
                 style={{
                   ...styles.btn,

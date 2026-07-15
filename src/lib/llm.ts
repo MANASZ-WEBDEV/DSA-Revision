@@ -1,4 +1,6 @@
 import type { FlashCard } from "../types";
+import type { CodeLanguage } from "../components/layout/LanguageIcon";
+import { LANGUAGES } from "../components/layout/LanguageIcon";
 
 // ─── Provider definitions ─────────────────────────────────────────────────────
 
@@ -120,7 +122,7 @@ type CardPartial = Omit<FlashCard,
   "ease_factor" | "repetitions" | "last_quality" | "source_text"
 >;
 
-async function callAnthropic(problemText: string, apiKey: string, model: string): Promise<CardPartial> {
+async function callAnthropic(problemText: string, apiKey: string, model: string, systemPrompt: string): Promise<CardPartial> {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -132,7 +134,7 @@ async function callAnthropic(problemText: string, apiKey: string, model: string)
     body: JSON.stringify({
       model,
       max_tokens: 1500,
-      system: SYSTEM_PROMPT,
+      system: systemPrompt,
       messages: [{ role: "user", content: `Problem:\n\n${problemText.trim()}` }],
     }),
   });
@@ -146,14 +148,14 @@ async function callAnthropic(problemText: string, apiKey: string, model: string)
   return parseJSON(data.content[0].text, "Anthropic");
 }
 
-async function callGemini(problemText: string, apiKey: string, model: string): Promise<CardPartial> {
+async function callGemini(problemText: string, apiKey: string, model: string, systemPrompt: string): Promise<CardPartial> {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+      system_instruction: { parts: [{ text: systemPrompt }] },
       contents: [{ parts: [{ text: `Problem:\n\n${problemText.trim()}` }] }],
       generationConfig: { maxOutputTokens: 1500, temperature: 0.2 },
     }),
@@ -170,7 +172,7 @@ async function callGemini(problemText: string, apiKey: string, model: string): P
   return parseJSON(text, "Gemini");
 }
 
-async function callGroq(problemText: string, apiKey: string, model: string): Promise<CardPartial> {
+async function callGroq(problemText: string, apiKey: string, model: string, systemPrompt: string): Promise<CardPartial> {
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -182,7 +184,7 @@ async function callGroq(problemText: string, apiKey: string, model: string): Pro
       max_tokens: 1500,
       temperature: 0.2,
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: systemPrompt },
         { role: "user", content: `Problem:\n\n${problemText.trim()}` },
       ],
     }),
@@ -217,11 +219,19 @@ export async function generateFlashCard(
   providerId: ProviderId,
   apiKey: string,
   model: string,
+  language: CodeLanguage = "any",
 ): Promise<CardPartial> {
+  // Build prompt — append language line when not pseudocode
+  let prompt = SYSTEM_PROMPT;
+  if (language !== "any") {
+    const langLabel = LANGUAGES.find((l) => l.id === language)?.label ?? language;
+    prompt += `\n\nIMPORTANT: Write all code_hint fields in ${langLabel} syntax, not pseudocode. Still keep it to 2-3 key lines only, never a full solution.`;
+  }
+
   switch (providerId) {
-    case "anthropic": return callAnthropic(problemText, apiKey, model);
-    case "gemini":    return callGemini(problemText, apiKey, model);
-    case "groq":      return callGroq(problemText, apiKey, model);
+    case "anthropic": return callAnthropic(problemText, apiKey, model, prompt);
+    case "gemini":    return callGemini(problemText, apiKey, model, prompt);
+    case "groq":      return callGroq(problemText, apiKey, model, prompt);
   }
 }
 

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { FlashCard, ReviewEvent, StreakData, ReviewQuality, SessionConfig, SessionAnalytics } from "../types";
 import type { ProviderId } from "../lib/llm";
+import type { CodeLanguage } from "../components/layout/LanguageIcon";
 import { PROVIDERS } from "../lib/llm";
 import { Storage } from "../lib/storage";
 import { supabase } from "../lib/supabaseClient";
@@ -9,6 +10,7 @@ import { getTitleHash } from "../lib/duplicateCheck";
 
 const PROVIDER_KEY = "dsa_provider";
 const MODEL_KEY = "dsa_model";
+const LANGUAGE_KEY = "dsa_code_language";
 const keyStorageId = (p: ProviderId) => `dsa_key_${p}`;
 
 // Local YYYY-MM-DD (not UTC) so streaks track the user's actual day
@@ -175,7 +177,16 @@ export function useProviderStore() {
     setKeys((prev) => ({ ...prev, [id]: trimmed }));
   }, []);
 
-  return { providerId, model, currentKey, keys, setProvider, setModel, setKey };
+  const [codeLanguage, setCodeLanguageState] = useState<CodeLanguage>(
+    () => (localStorage.getItem(LANGUAGE_KEY) as CodeLanguage) ?? "any"
+  );
+
+  const setCodeLanguage = useCallback((lang: CodeLanguage) => {
+    localStorage.setItem(LANGUAGE_KEY, lang);
+    setCodeLanguageState(lang);
+  }, []);
+
+  return { providerId, model, currentKey, keys, codeLanguage, setProvider, setModel, setKey, setCodeLanguage };
 }
 
 // ─── Review history + streak store ─────────────────────────────────────────────
