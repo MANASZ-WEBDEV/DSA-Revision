@@ -138,12 +138,12 @@ export function CardDetail({ card, onBack, onUpdate, onDelete }: Props) {
       </div>
 
       <div style={{ marginTop: 26 }}>
-        <div style={{ display: "flex", gap: 4, marginBottom: 16, borderBottom: "1px solid var(--border)", paddingBottom: 0 }}>
+        <div className="approach-tabs-pill">
           {card.approaches.map((a, i) => (
             <button
               key={i}
               onClick={() => { setActiveApproach(i); setShowHint(false); }}
-              style={{ ...s.tab, ...(i === activeApproach ? s.tabActive : {}) }}
+              className={`approach-tab-pill ${i === activeApproach ? "active" : ""}`}
             >
               {a.label}
             </button>
@@ -326,8 +326,7 @@ const s: Record<string, React.CSSProperties> = {
   card:            { background: "var(--bg-raised)", border: "1px solid var(--border)", borderRadius: "var(--radius-lg)", padding: "16px 18px", boxShadow: "var(--shadow-sm)" },
   badge:           { fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 20 },
   recallBox:       { marginTop: 16, padding: "14px 16px", background: "var(--medium-soft)", border: "1px solid color-mix(in srgb, var(--medium) 35%, transparent)", borderRadius: "var(--radius)" },
-  tab:             { padding: "8px 16px", fontSize: 13, fontWeight: 500, background: "none", border: "none", borderBottom: "2px solid transparent", cursor: "pointer", color: "var(--caption)", marginBottom: -1 },
-  tabActive:       { color: "var(--ink)", borderBottomColor: "var(--accent)" },
+
   approachCard:    { background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "16px 18px" },
   approachRow:     { display: "flex", gap: 16, flexWrap: "wrap" },
   approachBlock:   { flex: "1 1 240px" },
