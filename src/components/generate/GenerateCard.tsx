@@ -22,6 +22,7 @@ export function GenerateCard({ cards, providerId, model, apiKey, codeLanguage, o
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState<string | null>(null);
   const [hint, setHint]       = useState<string | null>(null);
+  const [lastText, setLastText] = useState<string | null>(null); // for Regenerate
   
   // State for fuzzy match warnings
   const [pendingCard, setPendingCard] = useState<FlashCard | null>(null);
@@ -29,8 +30,9 @@ export function GenerateCard({ cards, providerId, model, apiKey, codeLanguage, o
 
   const provider = PROVIDERS.find((p) => p.id === providerId)!;
 
-  async function handleGenerate() {
-    if (!text.trim()) {
+  async function handleGenerate(inputText?: string) {
+    const problem = inputText ?? text;
+    if (!problem.trim()) {
       setHint("Paste a problem description above to generate a card");
       return;
     }
@@ -43,17 +45,17 @@ export function GenerateCard({ cards, providerId, model, apiKey, codeLanguage, o
     setFuzzyMatch(null);
 
     try {
-      const partial = await generateFlashCard(text, providerId, apiKey, model, codeLanguage);
+      const partial = await generateFlashCard(problem, providerId, apiKey, model, codeLanguage);
       const card: FlashCard = {
         ...partial,
         id: crypto.randomUUID(),
-        source_text: text,
+        source_text: problem,
         created_at: new Date().toISOString(),
         ...initSM2(),
       };
 
       // Perform duplicate checking
-      const dupCheck = checkDuplicateCard({ ...card, source_text: text }, cards);
+      const dupCheck = checkDuplicateCard({ ...card, source_text: problem }, cards);
 
       if (dupCheck.isExact) {
         setError(`Exact duplicate blocked: "${dupCheck.matchedCard?.title}" already exists in your library.`);
@@ -72,6 +74,7 @@ export function GenerateCard({ cards, providerId, model, apiKey, codeLanguage, o
       }
 
       onCardCreated(card);
+      setLastText(problem); // save for regenerate
       setText("");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
@@ -176,6 +179,16 @@ export function GenerateCard({ cards, providerId, model, apiKey, codeLanguage, o
               >
                 {loading ? "Generating…" : "Generate card →"}
               </button>
+              {!loading && !text.trim() && lastText && (
+                <button
+                  onClick={() => handleGenerate(lastText)}
+                  style={styles.regenBtn}
+                  className="btn-press"
+                  title="Re-generate a card from the last problem"
+                >
+                  ↻ Regenerate
+                </button>
+              )}
               <span style={{ fontSize: 12, color: "var(--caption)" }}>{provider.freeNote}</span>
             </div>
             {hint && !text.trim() && (
@@ -215,6 +228,7 @@ const styles: Record<string, React.CSSProperties> = {
   providerBadge: { display: "flex", alignItems: "center", gap: 5, background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "5px 10px" },
   textarea:      { width: "100%", boxSizing: "border-box" as const, padding: "12px 14px", fontSize: 13, fontFamily: "var(--font-mono)", border: "1px solid var(--border-strong)", borderRadius: "var(--radius)", resize: "none" as const, outline: "none", lineHeight: 1.6, color: "var(--ink)", background: "var(--bg-raised)" },
   btn:           { padding: "10px 20px", background: "var(--ink)", color: "var(--bg-raised)", border: "none", borderRadius: "var(--radius)", fontSize: 14, fontWeight: 500, cursor: "pointer" },
+  regenBtn:      { padding: "10px 16px", background: "none", color: "var(--accent)", border: "1px solid var(--accent)", borderRadius: "var(--radius)", fontSize: 13, fontWeight: 500, cursor: "pointer" },
   error:         { marginTop: 12, padding: "10px 14px", background: "var(--hard-soft)", border: "1px solid var(--hard-soft)", borderRadius: "var(--radius)", color: "var(--urgent)", fontSize: 14 },
   tip:           { marginTop: 16, padding: "14px 16px", background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: "var(--radius)", fontSize: 13, color: "var(--ink-soft)" },
   warningContainer: { display: "flex", flexDirection: "column", gap: 12, background: "var(--bg-raised)", border: "1px solid var(--medium)", borderRadius: "var(--radius-lg)", padding: "20px", margin: "12px 0", boxShadow: "var(--shadow-lg)" },
