@@ -102,8 +102,10 @@ export function ApiKeyModal({
           </select>
 
           {/* API key input */}
-          <label style={{ ...s.label, marginTop: 14 }}>API key</label>
+          <label htmlFor={`api-key-${draftProvider}`} style={{ ...s.label, marginTop: 14 }}>API key</label>
           <input
+            id={`api-key-${draftProvider}`}
+            name={`api_key_${draftProvider}`}
             type="password"
             value={draftKeys[draftProvider]}
             onChange={(e) => setDraftKeys((prev) => ({ ...prev, [draftProvider]: e.target.value }))}

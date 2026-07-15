@@ -239,10 +239,12 @@ export function CardDetail({ card, onBack, onUpdate, onDelete }: Props) {
         <div style={s.structuredFieldsGrid}>
           {NOTE_FIELDS.map(({ key, label, placeholder, icon }) => (
             <div key={key} style={s.structuredField}>
-              <label style={s.structuredLabel}>
+              <label htmlFor={`note-${key}`} style={s.structuredLabel}>
                 <span>{icon}</span> {label}
               </label>
               <input
+                id={`note-${key}`}
+                name={`note_${key}`}
                 type="text"
                 value={(noteFields[key] as string) ?? ""}
                 onChange={(e) => handleFieldChange(key, e.target.value)}
@@ -255,11 +257,13 @@ export function CardDetail({ card, onBack, onUpdate, onDelete }: Props) {
 
         {/* Freeform / Additional notes with markdown rendering */}
         <div style={s.freeformSection}>
-          <label style={s.structuredLabel}>
+          <label htmlFor="note-additional" style={s.structuredLabel}>
             <span>📄</span> Additional Notes
           </label>
           {freeformFocused ? (
             <textarea
+              id="note-additional"
+              name="note_additional"
               autoFocus
               value={freeformText}
               onChange={(e) => handleFreeformChange(e.target.value)}

@@ -369,8 +369,10 @@ export function ReviewSession({ cards, onUpdate, onRecordReview, onRecordSession
       {/* Self-Explanation Textarea */}
       {!revealed && (
         <div style={{ marginTop: 20 }}>
-          <div style={s.activeRecallLabel}>Active Recall Helper (Optional)</div>
+          <label htmlFor="review-recall-helper" style={s.activeRecallLabel}>Active Recall Helper (Optional)</label>
           <textarea
+            id="review-recall-helper"
+            name="review_recall_helper"
             value={selfExplanationText}
             onChange={(e) => setSelfExplanationText(e.target.value)}
             placeholder="Before revealing the approaches, briefly draft your optimal strategy or key intuition here..."
@@ -420,14 +422,19 @@ export function ReviewSession({ cards, onUpdate, onRecordReview, onRecordSession
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4, alignItems: "center" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <input
+                        id={`review-approach-${i}-${a.label.toLowerCase().replace(/\s+/g, "-")}`}
+                        name={`review_approach_${i}_${a.label.toLowerCase().replace(/\s+/g, "_")}`}
                         type="checkbox"
                         checked={isChecked}
                         readOnly
                         style={{ cursor: "pointer" }}
                       />
-                      <span style={{ fontSize: 12, fontWeight: 600, color: isChecked ? "var(--accent-ink)" : "var(--accent)" }}>
+                      <label
+                        htmlFor={`review-approach-${i}-${a.label.toLowerCase().replace(/\s+/g, "-")}`}
+                        style={{ fontSize: 12, fontWeight: 600, color: isChecked ? "var(--accent-ink)" : "var(--accent)", cursor: "pointer" }}
+                      >
                         {a.label}
-                      </span>
+                      </label>
                     </div>
                     <span className="numeral" style={{ fontSize: 12, color: isChecked ? "var(--accent-ink)" : "var(--ink-soft)" }}>
                       {a.complexity.time} · {a.complexity.space}

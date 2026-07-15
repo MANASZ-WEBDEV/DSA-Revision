@@ -95,8 +95,10 @@ export function Onboarding({ onComplete }: Props) {
             </div>
 
             <div style={{ marginBottom: 12 }}>
-              <div style={s.label}>API Key for {currentProvider.name}</div>
+              <label htmlFor={`onboarding-api-key-${providerId}`} style={s.label}>API Key for {currentProvider.name}</label>
               <input
+                id={`onboarding-api-key-${providerId}`}
+                name={`onboarding_api_key_${providerId}`}
                 type="password"
                 value={keys[providerId]}
                 onChange={(e) => setKey(providerId, e.target.value)}

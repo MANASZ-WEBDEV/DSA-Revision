@@ -139,8 +139,10 @@ export function GenerateCard({ cards, providerId, model, apiKey, codeLanguage, o
           <div style={styles.previewForm}>
             {/* Title */}
             <div style={styles.fieldRow}>
-              <label style={styles.fieldLabel}>Problem Title</label>
+              <label htmlFor="preview-title" style={styles.fieldLabel}>Problem Title</label>
               <input
+                id="preview-title"
+                name="preview_title"
                 type="text"
                 value={pendingCard.title}
                 onChange={(e) => handleUpdatePendingField("title", e.target.value)}
@@ -234,8 +236,10 @@ export function GenerateCard({ cards, providerId, model, apiKey, codeLanguage, o
 
             {/* Recall Trigger */}
             <div style={styles.fieldRow}>
-              <label style={styles.fieldLabel}>Recall Trigger</label>
+              <label htmlFor="preview-trigger" style={styles.fieldLabel}>Recall Trigger</label>
               <input
+                id="preview-trigger"
+                name="preview_trigger"
                 type="text"
                 value={pendingCard.recall_trigger}
                 onChange={(e) => handleUpdatePendingField("recall_trigger", e.target.value)}
@@ -246,8 +250,10 @@ export function GenerateCard({ cards, providerId, model, apiKey, codeLanguage, o
 
             {/* Summary */}
             <div style={styles.fieldRow}>
-              <label style={styles.fieldLabel}>Problem Summary</label>
+              <label htmlFor="preview-summary" style={styles.fieldLabel}>Problem Summary</label>
               <textarea
+                id="preview-summary"
+                name="preview_summary"
                 value={pendingCard.problem_summary}
                 onChange={(e) => handleUpdatePendingField("problem_summary", e.target.value)}
                 rows={3}
@@ -286,6 +292,8 @@ export function GenerateCard({ cards, providerId, model, apiKey, codeLanguage, o
 
           <div style={{ position: "relative" }}>
             <textarea
+              id="problem-description"
+              name="problem_description"
               value={text}
               onChange={(e) => { setText(e.target.value); if (hint) setHint(null); }}
               placeholder={PLACEHOLDER}

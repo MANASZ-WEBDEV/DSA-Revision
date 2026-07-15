@@ -84,9 +84,11 @@ export function LoginModal({ onClose }: Props) {
 
         {/* Magic Link Form */}
         <form onSubmit={handleMagicLinkSubmit} style={{ marginTop: 16 }}>
-          <label style={s.label}>Email Address</label>
+          <label htmlFor="login-email-address" style={s.label}>Email Address</label>
           <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
             <input
+              id="login-email-address"
+              name="login_email_address"
               type="email"
               required
               disabled={loading}

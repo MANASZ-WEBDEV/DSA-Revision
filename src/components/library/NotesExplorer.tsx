@@ -131,13 +131,17 @@ export function NotesExplorer({ cards, onSelectCard, onBack }: Props) {
 
       {/* Search bar */}
       <div style={s.searchContainer}>
+        <label htmlFor="notes-search-query" style={{ display: "none" }}>Search notes</label>
         <span style={s.searchIcon}>🔍</span>
         <input
+          id="notes-search-query"
+          name="notes_search_query"
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search across all notes — title, pattern, insight, mistake…"
           style={s.searchInput}
+          aria-label="Search notes"
         />
         {searchQuery && (
           <button onClick={() => setSearchQuery("")} style={s.clearBtn}>×</button>

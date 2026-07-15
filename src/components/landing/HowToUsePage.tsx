@@ -83,8 +83,10 @@ export function HowToUsePage() {
             {/* Step 1: Self explanation */}
             {!revealed && (
               <div className="animate-fadeIn" style={{ marginTop: 12 }}>
-                <div style={s.label}>Active Recall Helper</div>
+                <label htmlFor="howtouse-demo-recall" style={s.label}>Active Recall Helper</label>
                 <textarea
+                  id="howtouse-demo-recall"
+                  name="howtouse_demo_recall"
                   value={selfExplanation}
                   onChange={(e) => setSelfExplanation(e.target.value)}
                   placeholder="Outline the optimal strategy in your own words before revealing..."
@@ -104,6 +106,7 @@ export function HowToUsePage() {
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
                   {DEMO_APPROACHES.map((a) => {
                     const isChecked = recalled.includes(a.label);
+                    const safeId = `howtouse-approach-${a.label.toLowerCase().replace(/\s+/g, "-")}`;
                     return (
                       <div
                         key={a.label}
@@ -115,8 +118,20 @@ export function HowToUsePage() {
                       >
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <input type="checkbox" checked={isChecked} readOnly style={{ cursor: "pointer" }} />
-                            <span style={{ fontWeight: 600, fontSize: 12 }}>{a.label}</span>
+                            <input
+                              id={safeId}
+                              name={`howtouse_approach_${a.label.toLowerCase().replace(/\s+/g, "_")}`}
+                              type="checkbox"
+                              checked={isChecked}
+                              readOnly
+                              style={{ cursor: "pointer" }}
+                            />
+                            <label
+                              htmlFor={safeId}
+                              style={{ fontWeight: 600, fontSize: 12, cursor: "pointer" }}
+                            >
+                              {a.label}
+                            </label>
                           </div>
                           <span className="numeral" style={{ fontSize: 11, opacity: 0.8 }}>{a.complexity}</span>
                         </div>

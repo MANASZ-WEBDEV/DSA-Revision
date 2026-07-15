@@ -226,8 +226,10 @@ export function ReviewConfig({ cards, initialConfig, onStartReview, onCancel }: 
                   Ensures pattern-staleness check-ins and drip-feeds brand new cards so no techniques go cold. Capped at session size.
                 </p>
               </div>
-              <label style={s.toggleSwitch}>
+              <label style={s.toggleSwitch} htmlFor="config-smart-session">
                 <input
+                  id="config-smart-session"
+                  name="config_smart_session"
                   type="checkbox"
                   checked={config.useSmartSession}
                   onChange={(e) => setConfig((p) => ({ ...p, useSmartSession: e.target.checked }))}
@@ -241,7 +243,7 @@ export function ReviewConfig({ cards, initialConfig, onStartReview, onCancel }: 
               </label>
             </div>
           </div>
-
+ 
           {/* Session Size */}
           <div style={s.cardSection}>
             <h3 style={s.sectionTitle}>Session Size</h3>
@@ -264,7 +266,7 @@ export function ReviewConfig({ cards, initialConfig, onStartReview, onCancel }: 
               })}
             </div>
           </div>
-
+ 
           {/* Timer controls */}
           <div style={s.cardSection}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
@@ -272,8 +274,10 @@ export function ReviewConfig({ cards, initialConfig, onStartReview, onCancel }: 
                 <h3 style={s.sectionTitle}>Recall Timer</h3>
                 <p style={s.sectionSubtitle}>Adds a visual countdown per card to simulate high-pressure interviews.</p>
               </div>
-              <label style={s.toggleSwitch}>
+              <label style={s.toggleSwitch} htmlFor="config-timer-enabled">
                 <input
+                  id="config-timer-enabled"
+                  name="config_timer_enabled"
                   type="checkbox"
                   checked={config.timerEnabled}
                   onChange={(e) => setConfig((p) => ({ ...p, timerEnabled: e.target.checked }))}
@@ -286,16 +290,18 @@ export function ReviewConfig({ cards, initialConfig, onStartReview, onCancel }: 
                 }} className="toggle-switch-slider" />
               </label>
             </div>
-
+ 
             {config.timerEnabled && (
               <div className="animate-fadeIn" style={{ marginTop: 14 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: "var(--caption)" }}>Seconds per card</span>
+                  <label htmlFor="config-timer-seconds" style={{ fontSize: 12, fontWeight: 600, color: "var(--caption)" }}>Seconds per card</label>
                   <span className="numeral" style={{ fontSize: 13, fontWeight: 600, color: "var(--accent)" }}>
                     {config.timerSeconds}s
                   </span>
                 </div>
                 <input
+                  id="config-timer-seconds"
+                  name="config_timer_seconds"
                   type="range"
                   min="15"
                   max="180"
