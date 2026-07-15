@@ -11,6 +11,36 @@ export interface Approach {
   trade_off: string;         // Why you'd reject this for the next tier
 }
 
+// ─── Structured personal study notes ─────────────────────────────────────────
+export interface StudyNote {
+  keyInsight?: string;       // "the trick I'd forget"
+  stuckPoint?: string;       // where reasoning broke down
+  mistakeToAvoid?: string;   // specific trap for this problem
+  freeform?: string;         // anything else, markdown-capable
+  updatedAt: string;         // ISO timestamp
+}
+
+/** Safely upgrade legacy string notes → structured StudyNote on read */
+export function migrateNote(
+  raw: string | StudyNote | undefined,
+  fallbackTimestamp?: string
+): StudyNote | undefined {
+  if (!raw) return undefined;
+  if (typeof raw === "object" && "updatedAt" in raw) return raw; // already migrated
+  // Legacy string → wrap into freeform
+  return {
+    freeform: raw as string,
+    updatedAt: fallbackTimestamp || new Date().toISOString(),
+  };
+}
+
+/** Check if a StudyNote has any actual content */
+export function hasNoteContent(note: string | StudyNote | undefined): boolean {
+  if (!note) return false;
+  if (typeof note === "string") return note.trim().length > 0;
+  return !!(note.keyInsight?.trim() || note.stuckPoint?.trim() || note.mistakeToAvoid?.trim() || note.freeform?.trim());
+}
+
 // ─── The full flashcard ──────────────────────────────────────────────────────
 export interface FlashCard {
   id: string;
@@ -36,8 +66,8 @@ export interface FlashCard {
   ease_factor: number;       // EF, starts at 2.5
   repetitions: number;       // How many times reviewed
   last_quality: number | null; // 0–5 last rating
-  notes?: string;            // User's personal notes on this card
-  notes_updated_at?: string; // Last edited timestamp of notes
+  notes?: string | StudyNote; // User's personal notes — string = legacy, StudyNote = structured
+  notes_updated_at?: string; // Last edited timestamp of notes (legacy, kept for compat)
   dirty?: boolean;           // Local change dirty flag for syncing
 }
 

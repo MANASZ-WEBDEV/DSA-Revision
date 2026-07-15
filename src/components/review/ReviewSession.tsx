@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import type { FlashCard, ReviewQuality, SessionConfig, SessionAnalytics } from "../../types";
+import type { FlashCard, ReviewQuality, SessionConfig, SessionAnalytics, StudyNote } from "../../types";
+import { migrateNote, hasNoteContent } from "../../types";
+import Markdown from "react-markdown";
 import { sm2, getDailySession, getDueCards, getBestBigO } from "../../lib/sm2";
 import { PATTERN_COLORS, PATTERN_TEXT_COLORS } from "../../lib/llm";
 import { ReviewConfig } from "./ReviewConfig";
@@ -439,18 +441,70 @@ export function ReviewSession({ cards, onUpdate, onRecordReview, onRecordSession
             })}
           </div>
 
-          {currentCard.notes && (
-            <div style={{ marginTop: 16, marginBottom: 18 }}>
-              <details style={s.notesDetails}>
-                <summary style={s.notesSummary}>
-                  <span>📝 View your personal notes on this problem</span>
-                </summary>
-                <div style={s.notesContent}>
-                  {currentCard.notes}
-                </div>
-              </details>
-            </div>
-          )}
+          {/* ─── Personal Notes (auto-expanded, prominent) ─────────────── */}
+          {hasNoteContent(currentCard.notes) && (() => {
+            const note: StudyNote | undefined = migrateNote(currentCard.notes, currentCard.notes_updated_at);
+            if (!note) return null;
+            const hasStructured = !!(note.keyInsight?.trim() || note.stuckPoint?.trim() || note.mistakeToAvoid?.trim());
+            return (
+              <div style={s.reviewNotesBox}>
+                <div style={s.activeRecallLabel}>📝 Your Notes on This Problem</div>
+                {hasStructured && (
+                  <div style={s.reviewNoteFields}>
+                    {note.keyInsight?.trim() && (
+                      <div style={s.reviewNoteField}>
+                        <span style={s.reviewNoteIcon}>💡</span>
+                        <div>
+                          <div style={s.reviewNoteFieldLabel}>Key Insight</div>
+                          <div style={s.reviewNoteFieldText}>{note.keyInsight}</div>
+                        </div>
+                      </div>
+                    )}
+                    {note.mistakeToAvoid?.trim() && (
+                      <div style={s.reviewNoteField}>
+                        <span style={s.reviewNoteIcon}>⚠️</span>
+                        <div>
+                          <div style={s.reviewNoteFieldLabel}>Mistake to Avoid</div>
+                          <div style={s.reviewNoteFieldText}>{note.mistakeToAvoid}</div>
+                        </div>
+                      </div>
+                    )}
+                    {note.stuckPoint?.trim() && (
+                      <div style={s.reviewNoteField}>
+                        <span style={s.reviewNoteIcon}>🧱</span>
+                        <div>
+                          <div style={s.reviewNoteFieldLabel}>Where I Got Stuck</div>
+                          <div style={s.reviewNoteFieldText}>{note.stuckPoint}</div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {note.freeform?.trim() && (
+                  <div style={s.reviewNoteFreeform}>
+                    <Markdown
+                      components={{
+                        p: ({ children }) => <p style={{ margin: "0 0 6px", lineHeight: 1.55 }}>{children}</p>,
+                        code: ({ children, className }) => {
+                          const isBlock = className?.includes("language-");
+                          return isBlock
+                            ? <pre style={{ margin: 0, fontSize: 12, fontFamily: "var(--font-mono)", color: "var(--ink)", whiteSpace: "pre-wrap" as const, lineHeight: 1.7, background: "var(--bg-sunken)", padding: "8px 10px", borderRadius: "var(--radius-sm)" }}><code>{children}</code></pre>
+                            : <code style={{ fontFamily: "var(--font-mono)", fontSize: 12, background: "var(--bg-raised)", border: "1px solid var(--border)", borderRadius: 4, padding: "1px 5px", color: "var(--accent)" }}>{children}</code>;
+                        },
+                        ul: ({ children }) => <ul style={{ margin: "4px 0", paddingLeft: "1.2rem" }}>{children}</ul>,
+                        ol: ({ children }) => <ol style={{ margin: "4px 0", paddingLeft: "1.2rem" }}>{children}</ol>,
+                        li: ({ children }) => <li style={{ marginBottom: 2, fontSize: 13 }}>{children}</li>,
+                        strong: ({ children }) => <strong style={{ color: "var(--ink)", fontWeight: 600 }}>{children}</strong>,
+                        em: ({ children }) => <em style={{ color: "var(--accent)" }}>{children}</em>,
+                      }}
+                    >
+                      {note.freeform}
+                    </Markdown>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Quality buttons */}
           <div style={s.qualityLabel}>How well did you recall this?</div>
@@ -495,7 +549,50 @@ const s: Record<string, React.CSSProperties> = {
   activeRecallLabel: { fontSize: 11, fontWeight: 600, color: "var(--caption)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: 6 },
   explanationTextarea: { width: "100%", background: "var(--bg-raised)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", padding: "10px 12px", fontSize: 14, color: "var(--ink)", outline: "none", resize: "none" },
   recallAttemptBox: { background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", padding: "12px 14px", fontSize: 13.5, color: "var(--ink-soft)", whiteSpace: "pre-wrap" as const, lineHeight: 1.5, fontStyle: "italic" },
-  notesDetails: { background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", overflow: "hidden" },
-  notesSummary: { padding: "10px 14px", fontSize: 12, fontWeight: 600, color: "var(--accent)", cursor: "pointer", userSelect: "none" as const },
-  notesContent: { padding: "0 14px 12px", fontSize: 13, color: "var(--ink-soft)", whiteSpace: "pre-wrap" as const, lineHeight: 1.5, fontStyle: "italic" },
+  reviewNotesBox: {
+    marginTop: 16,
+    marginBottom: 18,
+    background: "var(--bg-sunken)",
+    border: "1.5px solid var(--accent)",
+    borderRadius: "var(--radius-sm)",
+    padding: "14px 16px",
+    animation: "fadeIn 0.3s ease both",
+  },
+  reviewNoteFields: {
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: 10,
+    marginTop: 8,
+  },
+  reviewNoteField: {
+    display: "flex",
+    gap: 10,
+    alignItems: "flex-start",
+  },
+  reviewNoteIcon: {
+    fontSize: 14,
+    lineHeight: 1.6,
+    flexShrink: 0,
+  },
+  reviewNoteFieldLabel: {
+    fontSize: 11,
+    fontWeight: 600,
+    color: "var(--accent)",
+    textTransform: "uppercase" as const,
+    letterSpacing: "0.04em",
+    marginBottom: 1,
+  },
+  reviewNoteFieldText: {
+    fontSize: 13,
+    color: "var(--ink-soft)",
+    lineHeight: 1.5,
+  },
+  reviewNoteFreeform: {
+    marginTop: 10,
+    paddingTop: 10,
+    borderTop: "1px solid var(--border)",
+    fontSize: 13,
+    color: "var(--ink-soft)",
+    lineHeight: 1.5,
+  },
 };

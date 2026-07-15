@@ -1,4 +1,5 @@
 import type { FlashCard } from "../../types";
+import { hasNoteContent } from "../../types";
 import { PATTERN_COLORS, PATTERN_TEXT_COLORS } from "../../lib/llm";
 import { isDue, nextReviewLabel, getStats, getBestBigO } from "../../lib/sm2";
 import { useState, useEffect } from "react";
@@ -10,6 +11,7 @@ interface Props {
   onStartReview: () => void;
   onGenerate: () => void;
   onGoStarterPacks: () => void;
+  onGoNotes: () => void;
 }
 
 const DIFF_VARS = {
@@ -20,7 +22,7 @@ const DIFF_VARS = {
 
 type DeckFilter = "all" | "my-cards" | string; // string = specific deck name
 
-export function Library({ cards, onSelectCard, onStartReview, onGenerate, onGoStarterPacks }: Props) {
+export function Library({ cards, onSelectCard, onStartReview, onGenerate, onGoStarterPacks, onGoNotes }: Props) {
   const [searchParams, setSearchParams] = useSearchParams();
   const patternParam = searchParams.get("pattern");
 
@@ -127,6 +129,9 @@ export function Library({ cards, onSelectCard, onStartReview, onGenerate, onGoSt
           {stats.due > 0 && (
             <button onClick={onStartReview} style={s.reviewBtn} className="btn-press">Review {stats.due} →</button>
           )}
+          {cards.some(c => hasNoteContent(c.notes)) && (
+            <button onClick={onGoNotes} style={s.notesBtn} className="btn-press">📝 My Notes</button>
+          )}
           <button onClick={onGenerate} style={s.addBtn} className="btn-press">+ Add card</button>
         </div>
       </div>
@@ -222,7 +227,7 @@ export function Library({ cards, onSelectCard, onStartReview, onGenerate, onGoSt
                 <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
                   <span style={{ ...s.diffBadge, background: diff.bg, color: diff.text }}>{card.difficulty}</span>
                   {card.deck && <span style={s.deckBadge}>{card.deck}</span>}
-                  {card.notes && <span style={{ fontSize: 11, marginLeft: 2 }} title="Has personal study notes">📝</span>}
+                  {hasNoteContent(card.notes) && <span style={{ fontSize: 11, marginLeft: 2 }} title="Has personal study notes">📝</span>}
                 </div>
                 <span className="numeral" style={{ fontSize: 11, color: due ? "var(--urgent)" : "var(--caption)", fontWeight: due ? 600 : 400 }}>
                   {nextReviewLabel(card)}
@@ -261,6 +266,7 @@ const s: Record<string, React.CSSProperties> = {
   statBox:    { display: "flex", flexDirection: "column", alignItems: "center" },
   statLabel:  { fontSize: 11, color: "var(--caption)", marginTop: 2 },
   reviewBtn:  { padding: "8px 16px", background: "var(--urgent)", color: "#fff", border: "none", borderRadius: "var(--radius)", fontSize: 13, fontWeight: 600, cursor: "pointer" },
+  notesBtn:   { padding: "8px 14px", background: "var(--accent-soft)", color: "var(--accent)", border: "1px solid var(--accent)", borderRadius: "var(--radius)", fontSize: 13, fontWeight: 500, cursor: "pointer" },
   addBtn:     { padding: "8px 14px", background: "var(--bg-raised)", color: "var(--ink-soft)", border: "1px solid var(--border-strong)", borderRadius: "var(--radius)", fontSize: 13, cursor: "pointer" },
   filterChip: { fontSize: 11, fontWeight: 500, padding: "4px 10px", borderRadius: 20, border: "1px solid", cursor: "pointer", background: "var(--bg-sunken)" },
   grid:       { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 12 },

@@ -9,6 +9,7 @@ import { CardDetail } from "./components/cards/CardDetail";
 import { ReviewSession } from "./components/review/ReviewSession";
 import { ApiKeyModal } from "./components/settings/ApiKeyModal";
 import { StarterPacks } from "./components/library/StarterPacks";
+import { NotesExplorer } from "./components/library/NotesExplorer";
 import { Navbar } from "./components/layout/Navbar";
 import { Footer } from "./components/layout/Footer";
 import { LandingPage } from "./components/landing/LandingPage";
@@ -60,7 +61,7 @@ function AppContent() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const knownPaths = ["/", "/welcome", "/onboarding", "/library", "/review", "/history", "/starter-packs"];
+  const knownPaths = ["/", "/welcome", "/onboarding", "/library", "/review", "/history", "/starter-packs", "/notes"];
   const isKnownPath = knownPaths.includes(location.pathname);
   const cardIdMatch = location.pathname.match(/^\/card\/([^/]+)$/);
   const cardExists = cardIdMatch ? !!cards.find((c) => c.id === cardIdMatch[1]) : true;
@@ -218,6 +219,7 @@ function AppContent() {
                 onStartReview={() => navigate("/review")}
                 onGenerate={() => navigate("/generate")}
                 onGoStarterPacks={() => navigate("/starter-packs")}
+                onGoNotes={() => navigate("/notes")}
               />
             }
           />
@@ -272,6 +274,16 @@ function AppContent() {
                 existingCards={cards}
                 onImportDeck={importCards}
                 onGoLibrary={() => navigate("/library")}
+              />
+            }
+          />
+          <Route
+            path="/notes"
+            element={
+              <NotesExplorer
+                cards={cards}
+                onSelectCard={(id) => navigate(`/card/${id}`)}
+                onBack={() => navigate("/library")}
               />
             }
           />

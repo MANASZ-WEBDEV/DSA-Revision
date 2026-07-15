@@ -1,7 +1,9 @@
-import { useState, useEffect, useRef } from "react";
-import type { FlashCard, Approach } from "../../types";
+import { useState, useEffect, useRef, useCallback } from "react";
+import type { FlashCard, Approach, StudyNote } from "../../types";
+import { migrateNote } from "../../types";
 import { PATTERN_COLORS, PATTERN_TEXT_COLORS } from "../../lib/llm";
 import { nextReviewLabel, getBestBigO, formatRelativeTime } from "../../lib/sm2";
+import Markdown from "react-markdown";
 
 interface Props {
   card: FlashCard;
@@ -16,44 +18,80 @@ const DIFFICULTY_VARS: Record<string, { bg: string; text: string }> = {
   Hard:   { bg: "var(--hard-soft)",   text: "var(--urgent-ink)" },
 };
 
+// ─── Structured Note Fields Config ──────────────────────────────────────────
+const NOTE_FIELDS: { key: keyof Omit<StudyNote, "updatedAt">; label: string; placeholder: string; icon: string }[] = [
+  { key: "keyInsight",     label: "Key Insight",        placeholder: "The trick I'd forget — the single 'aha' that unlocks this problem…", icon: "💡" },
+  { key: "stuckPoint",     label: "Where I Got Stuck",  placeholder: "I kept trying to… / My reasoning broke down when…",                  icon: "🧱" },
+  { key: "mistakeToAvoid", label: "Mistake to Avoid",   placeholder: "Don't forget to handle… / Watch out for…",                           icon: "⚠️" },
+];
+
 export function CardDetail({ card, onBack, onUpdate, onDelete }: Props) {
   const [activeApproach, setActiveApproach] = useState(0);
   const [showHint, setShowHint] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  // Notes state
-  const [notesText, setNotesText] = useState(card.notes || "");
+  // ─── Structured notes state ───────────────────────────────────────────────
+  const migrated = migrateNote(card.notes, card.notes_updated_at);
+  const [noteFields, setNoteFields] = useState<Partial<StudyNote>>(() => migrated ?? {});
+  const [freeformText, setFreeformText] = useState(migrated?.freeform ?? "");
+  const [freeformFocused, setFreeformFocused] = useState(false);
   const [saveStatus, setSaveStatus] = useState("All changes saved locally");
   const saveTimeoutRef = useRef<any>(null);
 
+  // Reset notes when card changes
   useEffect(() => {
-    setNotesText(card.notes || "");
+    const m = migrateNote(card.notes, card.notes_updated_at);
+    setNoteFields(m ?? {});
+    setFreeformText(m?.freeform ?? "");
     setSaveStatus("All changes saved locally");
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
   }, [card.id]);
 
-  const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const val = e.target.value;
-    setNotesText(val);
-    setSaveStatus("Saving...");
-
+  // Persist a merged StudyNote to storage
+  const persistNote = useCallback((fields: Partial<StudyNote>, freeform: string) => {
+    setSaveStatus("Saving…");
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+
     saveTimeoutRef.current = setTimeout(() => {
+      const now = new Date().toISOString();
+      const note: StudyNote = {
+        keyInsight: fields.keyInsight || undefined,
+        stuckPoint: fields.stuckPoint || undefined,
+        mistakeToAvoid: fields.mistakeToAvoid || undefined,
+        freeform: freeform || undefined,
+        updatedAt: now,
+      };
+
+      // Check if note is entirely empty
+      const isEmpty = !note.keyInsight && !note.stuckPoint && !note.mistakeToAvoid && !note.freeform;
+
       const success = onUpdate(card.id, {
-        notes: val || undefined,
-        notes_updated_at: new Date().toISOString()
+        notes: isEmpty ? undefined : note,
+        notes_updated_at: now,
       });
-      if (success) {
-        setSaveStatus("Saved ✔");
-      } else {
-        setSaveStatus("Failed to save — storage full ⚠");
-      }
+      setSaveStatus(success ? "Saved ✔" : "Failed to save — storage full ⚠");
     }, 600);
+  }, [card.id, onUpdate]);
+
+  const handleFieldChange = (key: keyof Omit<StudyNote, "updatedAt">, value: string) => {
+    const updated = { ...noteFields, [key]: value };
+    setNoteFields(updated);
+    persistNote(updated, freeformText);
+  };
+
+  const handleFreeformChange = (value: string) => {
+    setFreeformText(value);
+    persistNote(noteFields, value);
   };
 
   const approach: Approach = card.approaches[activeApproach];
   const diff = DIFFICULTY_VARS[card.difficulty] ?? DIFFICULTY_VARS.Medium;
   const bigO = getBestBigO(card);
+
+  // Get the latest updatedAt from the note
+  const noteUpdatedAt = (typeof card.notes === "object" && card.notes?.updatedAt) 
+    ? card.notes.updatedAt 
+    : card.notes_updated_at;
 
   return (
     <div className="animate-fadeInUp" style={{ 
@@ -173,20 +211,87 @@ export function CardDetail({ card, onBack, onUpdate, onDelete }: Props) {
           </div>
         </div>
       )}
-      {/* 📝 Personal Notes Section */}
-      <div style={{ marginTop: 28, borderTop: "1px solid var(--border)", paddingTop: 20 }}>
-        <div style={s.fieldLabel}>📝 Personal Study Notes</div>
-        <textarea
-          value={notesText}
-          onChange={handleNotesChange}
-          placeholder="Write your personal notes, base cases, similar problem links, or key warnings about this question here (autosaves)..."
-          style={s.notesTextarea}
-          rows={4}
-        />
-        <div style={{ fontSize: 11, color: "var(--caption)", marginTop: 6, fontStyle: "italic", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+
+      {/* ─── Structured Personal Study Notes ─────────────────────────────────── */}
+      <div style={s.notesSection}>
+        <div style={s.notesSectionHeader}>
+          <div style={s.fieldLabel}>📝 Personal Study Notes</div>
+        </div>
+
+        {/* Structured fields: Key Insight, Stuck Point, Mistake to Avoid */}
+        <div style={s.structuredFieldsGrid}>
+          {NOTE_FIELDS.map(({ key, label, placeholder, icon }) => (
+            <div key={key} style={s.structuredField}>
+              <label style={s.structuredLabel}>
+                <span>{icon}</span> {label}
+              </label>
+              <input
+                type="text"
+                value={(noteFields[key] as string) ?? ""}
+                onChange={(e) => handleFieldChange(key, e.target.value)}
+                placeholder={placeholder}
+                style={s.structuredInput}
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* Freeform / Additional notes with markdown rendering */}
+        <div style={s.freeformSection}>
+          <label style={s.structuredLabel}>
+            <span>📄</span> Additional Notes
+          </label>
+          {freeformFocused ? (
+            <textarea
+              autoFocus
+              value={freeformText}
+              onChange={(e) => handleFreeformChange(e.target.value)}
+              onBlur={() => setFreeformFocused(false)}
+              placeholder="Anything else — formulas, code snippets, related links… (supports markdown)"
+              style={s.notesTextarea}
+              rows={5}
+            />
+          ) : freeformText.trim() ? (
+            <div
+              onClick={() => setFreeformFocused(true)}
+              style={s.markdownPreview}
+              title="Click to edit"
+            >
+              <Markdown
+                components={{
+                  p: ({ children }) => <p style={{ margin: "0 0 8px", lineHeight: 1.6 }}>{children}</p>,
+                  code: ({ children, className }) => {
+                    const isBlock = className?.includes("language-");
+                    return isBlock
+                      ? <pre style={s.codeHint}><code>{children}</code></pre>
+                      : <code style={s.inlineCode}>{children}</code>;
+                  },
+                  ul: ({ children }) => <ul style={{ margin: "4px 0", paddingLeft: "1.2rem" }}>{children}</ul>,
+                  ol: ({ children }) => <ol style={{ margin: "4px 0", paddingLeft: "1.2rem" }}>{children}</ol>,
+                  li: ({ children }) => <li style={{ marginBottom: 2, fontSize: 13 }}>{children}</li>,
+                  strong: ({ children }) => <strong style={{ color: "var(--ink)", fontWeight: 600 }}>{children}</strong>,
+                  em: ({ children }) => <em style={{ color: "var(--accent)" }}>{children}</em>,
+                  a: ({ children, href }) => <a href={href} target="_blank" rel="noopener" style={{ color: "var(--accent)", textDecoration: "underline" }}>{children}</a>,
+                }}
+              >
+                {freeformText}
+              </Markdown>
+            </div>
+          ) : (
+            <div
+              onClick={() => setFreeformFocused(true)}
+              style={{ ...s.markdownPreview, color: "var(--caption)", fontStyle: "italic", cursor: "text" }}
+            >
+              Click to add additional notes (supports markdown)…
+            </div>
+          )}
+        </div>
+
+        {/* Save status + timestamp */}
+        <div style={s.notesFooter}>
           <span>{saveStatus}</span>
-          {card.notes_updated_at && (
-            <span>Last edited {formatRelativeTime(new Date(card.notes_updated_at))}</span>
+          {noteUpdatedAt && (
+            <span>Last edited {formatRelativeTime(new Date(noteUpdatedAt))}</span>
           )}
         </div>
       </div>
@@ -213,6 +318,53 @@ const s: Record<string, React.CSSProperties> = {
   hintSection:     { marginTop: 16, padding: "12px 14px", background: "var(--bg-raised)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)" },
   revealBtn:       { fontSize: 12, color: "var(--accent)", background: "none", border: "none", cursor: "pointer", fontWeight: 500 },
   codeHint:        { margin: 0, fontSize: 12, fontFamily: "var(--font-mono)", color: "var(--ink)", whiteSpace: "pre-wrap", lineHeight: 1.7, background: "var(--bg-sunken)", padding: "10px 12px", borderRadius: "var(--radius-sm)" },
+
+  // ─── Structured Notes Styles ──────────────────────────────────────────────
+  notesSection: {
+    marginTop: 28,
+    borderTop: "1px solid var(--border)",
+    paddingTop: 20,
+  },
+  notesSectionHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 14,
+  },
+  structuredFieldsGrid: {
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: 10,
+    marginBottom: 14,
+  },
+  structuredField: {
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: 4,
+  },
+  structuredLabel: {
+    fontSize: 12,
+    fontWeight: 600,
+    color: "var(--ink-soft)",
+    display: "flex",
+    alignItems: "center",
+    gap: 5,
+  },
+  structuredInput: {
+    width: "100%",
+    background: "var(--bg-sunken)",
+    border: "1px solid var(--border)",
+    borderRadius: "var(--radius-sm)",
+    padding: "8px 12px",
+    fontSize: 13,
+    color: "var(--ink)",
+    outline: "none",
+    fontFamily: "inherit",
+    transition: "border-color 0.15s ease, box-shadow 0.15s ease",
+  },
+  freeformSection: {
+    marginTop: 4,
+  },
   notesTextarea: {
     width: "100%",
     background: "var(--bg-sunken)",
@@ -223,8 +375,39 @@ const s: Record<string, React.CSSProperties> = {
     color: "var(--ink)",
     outline: "none",
     resize: "vertical" as const,
-    marginTop: 10,
+    marginTop: 6,
     fontFamily: "inherit",
     lineHeight: 1.5,
+  },
+  markdownPreview: {
+    background: "var(--bg-sunken)",
+    border: "1px solid var(--border)",
+    borderRadius: "var(--radius-sm)",
+    padding: "10px 12px",
+    fontSize: 13,
+    color: "var(--ink-soft)",
+    lineHeight: 1.5,
+    cursor: "pointer",
+    marginTop: 6,
+    minHeight: 42,
+    transition: "border-color 0.15s ease",
+  },
+  inlineCode: {
+    fontFamily: "var(--font-mono)",
+    fontSize: 12,
+    background: "var(--bg-raised)",
+    border: "1px solid var(--border)",
+    borderRadius: 4,
+    padding: "1px 5px",
+    color: "var(--accent)",
+  },
+  notesFooter: {
+    fontSize: 11,
+    color: "var(--caption)",
+    marginTop: 8,
+    fontStyle: "italic",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
 };
