@@ -180,7 +180,24 @@ export function CardDetail({ card, onBack, onUpdate, onDelete }: Props) {
                 {showHint ? "Hide" : "Reveal pseudocode"}
               </button>
             </div>
-            {showHint && <pre style={s.codeHint}>{approach.code_hint}</pre>}
+            {showHint && (
+              <div style={{ marginTop: 8 }}>
+                <Markdown
+                  components={{
+                    p: ({ children }) => <p style={{ margin: 0 }}>{children}</p>,
+                    code: ({ children, className }) => {
+                      const isBlock = className?.includes("language-") || !className;
+                      return isBlock
+                        ? <pre style={s.codeHint}><code>{children}</code></pre>
+                        : <code style={s.inlineCode}>{children}</code>;
+                    },
+                    pre: ({ children }) => <>{children}</>
+                  }}
+                >
+                  {approach.code_hint.startsWith("```") ? approach.code_hint : `\`\`\`\n${approach.code_hint}\n\`\`\``}
+                </Markdown>
+              </div>
+            )}
           </div>
 
           <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--border)" }}>
