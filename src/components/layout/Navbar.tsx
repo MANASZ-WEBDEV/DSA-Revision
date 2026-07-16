@@ -112,13 +112,18 @@ export function Navbar({
           title="LLM Generation Settings"
         >
           <ProviderIcon id={provider.id} />
-          <span style={{ fontSize: 12 }}>
-            {keySet ? (provider.id === "anthropic" ? "Claude" : provider.id === "gemini" ? "Gemini" : "Groq") : "AI Setup"}
-          </span>
           {keySet ? (
-            <span style={{ fontSize: 10, color: "var(--accent)", fontWeight: 600 }}>✓</span>
+            <>
+              <span style={{ fontSize: 12 }}>
+                {provider.id === "anthropic" ? "Claude" : provider.id === "gemini" ? "Gemini" : "Groq"}
+              </span>
+              <span style={{ fontSize: 10, color: "var(--accent)", fontWeight: 600 }}>✓</span>
+            </>
           ) : (
-            <span style={{ fontSize: 10, color: "var(--medium)", fontWeight: 600 }}>Setup</span>
+            <>
+              <span style={{ fontSize: 12 }}>AI Setup</span>
+              <span style={{ fontSize: 10, color: "var(--medium)", fontWeight: 600 }}>Configure</span>
+            </>
           )}
         </button>
 
