@@ -82,6 +82,7 @@ Given a problem description, produce a structured flashcard that teaches the PRO
 - recall_trigger must be ≤15 words. It's the back of a physical flashcard.
 - patterns must use ONLY tags from the canonical list — no custom tags.
 - Return ONLY valid JSON. No preamble, no markdown fences, no explanation.
+- MANDATORY: Always aim for exactly 3 approaches — "Brute Force", "Better", and "Optimal". Only omit "Better" if absolutely no meaningful intermediate tier exists (rare). Most problems have 3 tiers. Examples of "Better" approaches: Sort + Two Pointer for Two Sum, Sorting for Contains Duplicate, Heap for Top K. If you return only 2 approaches when a valid 3rd exists, that is an ERROR.
 
 ## Canonical pattern tags (use only these, 1–3 per card)
 Two Pointers, Sliding Window, Binary Search, BFS, DFS, Backtracking,
@@ -110,11 +111,6 @@ Prefix Sum, Bit Manipulation, Hashing
   "edge_cases": ["string", ...],
   "similar_problems": ["string", ...]
 }
-
-Always include at least 2 approaches (Brute Force + Optimal).
-Include a "Better" intermediate approach whenever a well-known, meaningfully distinct middle tier exists — regardless of difficulty.
-For example, Two Sum has 3 approaches: Brute Force O(n²), Sort + Two Pointer O(n log n), and Hash Map O(n).
-When in doubt, include it — students benefit from seeing the full progression of thinking.
 `.trim();
 
 // ─── Provider-specific fetch logic ────────────────────────────────────────────
@@ -135,7 +131,7 @@ async function callAnthropic(problemText: string, apiKey: string, model: string,
     },
     body: JSON.stringify({
       model,
-      max_tokens: 1500,
+      max_tokens: 2048,
       system: systemPrompt,
       messages: [{ role: "user", content: `Problem:\n\n${problemText.trim()}` }],
     }),
@@ -159,7 +155,7 @@ async function callGemini(problemText: string, apiKey: string, model: string, sy
     body: JSON.stringify({
       system_instruction: { parts: [{ text: systemPrompt }] },
       contents: [{ parts: [{ text: `Problem:\n\n${problemText.trim()}` }] }],
-      generationConfig: { maxOutputTokens: 1500, temperature: 0.2 },
+      generationConfig: { maxOutputTokens: 2048, temperature: 0.2 },
     }),
   });
 
@@ -183,7 +179,7 @@ async function callGroq(problemText: string, apiKey: string, model: string, syst
     },
     body: JSON.stringify({
       model,
-      max_tokens: 1500,
+      max_tokens: 2048,
       temperature: 0.2,
       messages: [
         { role: "system", content: systemPrompt },
