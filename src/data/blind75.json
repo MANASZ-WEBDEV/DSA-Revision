@@ -15,6 +15,14 @@
         "trade_off": "O(n²) is too slow for large inputs."
       },
       {
+        "label": "Better",
+        "intuition": "Sort the array, then use two pointers from both ends to find the pair.",
+        "key_observation": "After sorting, if sum < target move left pointer right; if sum > target move right pointer left.",
+        "complexity": { "time": "O(n log n)", "space": "O(n)" },
+        "code_hint": "pairs = sorted(enumerate(nums), key=lambda x: x[1])\nlo, hi = 0, n-1\nwhile lo < hi:\n  s = pairs[lo][1]+pairs[hi][1]\n  if s == target: return [pairs[lo][0], pairs[hi][0]]\n  if s < target: lo++ else: hi--",
+        "trade_off": "Sorting costs O(n log n) and we need O(n) extra space to preserve original indices. Hash map avoids both."
+      },
+      {
         "label": "Optimal",
         "intuition": "A hashmap lets you check 'have I seen the complement?' in O(1).",
         "key_observation": "For each num, target - num is the complement. Store seen values in a map.",

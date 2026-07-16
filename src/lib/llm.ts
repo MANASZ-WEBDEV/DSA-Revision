@@ -111,8 +111,10 @@ Prefix Sum, Bit Manipulation, Hashing
   "similar_problems": ["string", ...]
 }
 
-Always include at least 2 approaches. Include "Better" only if a meaningful intermediate exists.
-For Easy problems, 2 approaches suffice. For Medium/Hard, aim for 3.
+Always include at least 2 approaches (Brute Force + Optimal).
+Include a "Better" intermediate approach whenever a well-known, meaningfully distinct middle tier exists — regardless of difficulty.
+For example, Two Sum has 3 approaches: Brute Force O(n²), Sort + Two Pointer O(n log n), and Hash Map O(n).
+When in doubt, include it — students benefit from seeing the full progression of thinking.
 `.trim();
 
 // ─── Provider-specific fetch logic ────────────────────────────────────────────
