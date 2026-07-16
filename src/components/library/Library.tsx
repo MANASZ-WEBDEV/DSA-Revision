@@ -82,8 +82,20 @@ export function Library({ cards, onSelectCard, onStartReview, onGenerate, onGoSt
             Start with the Blind 75 deck or paste a problem description to generate your first flashcard.
           </p>
           <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
-            <button onClick={onGoStarterPacks} style={s.primaryBtn} className="btn-press">📦 Get Blind 75</button>
-            <button onClick={onGenerate} style={s.addBtn} className="btn-press">✦ Generate card</button>
+            <button onClick={onGoStarterPacks} style={s.primaryBtn} className="btn-press">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                <line x1="12" y1="22.08" x2="12" y2="12" />
+              </svg>
+              Get Blind 75
+            </button>
+            <button onClick={onGenerate} style={s.addBtn} className="btn-press">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z" />
+              </svg>
+              Generate card
+            </button>
           </div>
         </div>
 
@@ -267,14 +279,14 @@ const s: Record<string, React.CSSProperties> = {
   statLabel:  { fontSize: 11, color: "var(--caption)", marginTop: 2 },
   reviewBtn:  { padding: "8px 16px", background: "var(--urgent)", color: "#fff", border: "none", borderRadius: "var(--radius)", fontSize: 13, fontWeight: 600, cursor: "pointer" },
   notesBtn:   { padding: "8px 14px", background: "var(--accent-soft)", color: "var(--accent)", border: "1px solid var(--accent)", borderRadius: "var(--radius)", fontSize: 13, fontWeight: 500, cursor: "pointer" },
-  addBtn:     { padding: "8px 14px", background: "var(--bg-raised)", color: "var(--ink-soft)", border: "1px solid var(--border-strong)", borderRadius: "var(--radius)", fontSize: 13, cursor: "pointer" },
+  addBtn:     { display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", background: "var(--bg-raised)", color: "var(--ink-soft)", border: "1px solid var(--border-strong)", borderRadius: "var(--radius)", fontSize: 13, cursor: "pointer" },
   filterChip: { fontSize: 11, fontWeight: 500, padding: "4px 10px", borderRadius: 20, border: "1px solid", cursor: "pointer", background: "var(--bg-sunken)" },
   grid:       { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 12 },
   cardItem:   { background: "var(--bg-raised)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "14px", cursor: "pointer" },
   cardDue:    { borderColor: "var(--medium)", background: "color-mix(in srgb, var(--medium-soft) 50%, var(--bg-raised))" },
   diffBadge:  { fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 20 },
   deckBadge:  { fontSize: 9, fontWeight: 600, padding: "2px 7px", borderRadius: 20, background: "var(--accent-soft)", color: "var(--accent)", letterSpacing: "0.02em" },
-  primaryBtn: { padding: "10px 20px", background: "var(--accent)", color: "#fff", border: "none", borderRadius: "var(--radius)", fontSize: 14, fontWeight: 500, cursor: "pointer" },
+  primaryBtn: { display: "inline-flex", alignItems: "center", gap: 6, padding: "10px 20px", background: "var(--accent)", color: "#fff", border: "none", borderRadius: "var(--radius)", fontSize: 14, fontWeight: 500, cursor: "pointer" },
   deckTab:    { fontSize: 12, fontWeight: 500, padding: "5px 12px", borderRadius: "var(--radius-sm)", border: "none", background: "transparent", color: "var(--ink-soft)", cursor: "pointer", transition: "background 0.15s ease, color 0.15s ease" },
   deckTabActive: { background: "var(--bg-raised)", color: "var(--ink)", boxShadow: "var(--shadow-sm)", fontWeight: 600 },
 };
