@@ -77,7 +77,7 @@ Given a problem description, produce a structured flashcard that teaches the PRO
 ## Rules
 - Be terse. Every word must survive a review pass.
 - Never restate the problem verbatim — reframe it.
-- code_hint must be pseudocode or key 2-3 lines only. Never a full solution.
+- code_hint must show the key algorithmic pattern only — 2-3 lines for pseudocode/Python, up to 5-6 for verbose languages (C++/Java). Never a full solution. Never cut off mid-statement.
 - trade_off for the Optimal approach should explain why no better tier exists.
 - recall_trigger must be ≤15 words. It's the back of a physical flashcard.
 - patterns must use ONLY tags from the canonical list — no custom tags.
@@ -223,7 +223,7 @@ export async function generateFlashCard(
   let prompt = SYSTEM_PROMPT;
   if (language !== "any") {
     const langLabel = LANGUAGES.find((l) => l.id === language)?.label ?? language;
-    prompt += `\n\nIMPORTANT: Write all code_hint fields in ${langLabel} syntax, not pseudocode. Still keep it to 2-3 key lines only, never a full solution.`;
+    prompt += `\n\nIMPORTANT: Write all code_hint fields in ${langLabel} syntax, not pseudocode. For verbose languages (C++, Java), you may use up to 5-6 lines to show the key logic pattern clearly — include enough to show the complete algorithmic structure (loops, conditions, return), but never a full production solution. Do NOT cut off mid-statement.`;
   }
 
   switch (providerId) {
