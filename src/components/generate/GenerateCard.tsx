@@ -115,8 +115,7 @@ export function GenerateCard({ cards, providerId, model, apiKey, codeLanguage, o
         {!pendingCard && (
           <div style={styles.providerBadge}>
             <ProviderIcon id={provider.id} />
-            <span style={{ fontSize: 11, fontWeight: 600, color: "var(--ink-soft)" }}>{provider.name.split(" ")[0]}</span>
-            <span style={{ fontSize: 10, color: "var(--caption)" }}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: "var(--ink-soft)" }}>
               {provider.models.find((m) => m.id === model)?.label.split(" (")[0]}
             </span>
           </div>
