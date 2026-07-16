@@ -77,7 +77,7 @@ Given a problem description, produce a structured flashcard that teaches the PRO
 ## Rules
 - Be terse. Every word must survive a review pass.
 - Never restate the problem verbatim — reframe it.
-- code_hint must show the key algorithmic pattern only — 2-3 lines for pseudocode/Python, up to 5-6 for verbose languages (C++/Java). Never a full solution. Never cut off mid-statement.
+- code_hint must be a properly formatted, multi-line code snippet inside the JSON string. Use \n for line breaks and \n followed by spaces for indentation. NEVER put all code on a single line. Each statement must be on its own line. Show the key algorithmic pattern — 3-6 lines depending on language verbosity. Never a full solution.
 - trade_off for the Optimal approach should explain why no better tier exists.
 - recall_trigger must be ≤15 words. It's the back of a physical flashcard.
 - patterns must use ONLY tags from the canonical list — no custom tags.
@@ -104,7 +104,7 @@ Prefix Sum, Bit Manipulation, Hashing
       "intuition": "string — why does this approach work at all?",
       "key_observation": "string — the insight that enables this tier",
       "complexity": { "time": "string", "space": "string" },
-      "code_hint": "string — pseudocode or 2-3 key lines only",
+      "code_hint": "string — multi-line code using \\n for newlines, e.g. 'for (int i = 0; i < n; i++) {\\n  for (int j = i+1; j < n; j++) {\\n    if (nums[i]+nums[j]==target) return {i,j};\\n  }\\n}'",
       "trade_off": "string — why reject this / why this is the ceiling"
     }
   ],
@@ -223,7 +223,7 @@ export async function generateFlashCard(
   let prompt = SYSTEM_PROMPT;
   if (language !== "any") {
     const langLabel = LANGUAGES.find((l) => l.id === language)?.label ?? language;
-    prompt += `\n\nIMPORTANT: Write all code_hint fields in ${langLabel} syntax, not pseudocode. For verbose languages (C++, Java), you may use up to 5-6 lines to show the key logic pattern clearly — include enough to show the complete algorithmic structure (loops, conditions, return), but never a full production solution. Do NOT cut off mid-statement.`;
+    prompt += `\n\nIMPORTANT: Write all code_hint fields in ${langLabel} syntax, not pseudocode. Format code_hint as a multi-line string using \\n for line breaks and proper indentation. Each statement MUST be on its own line — NEVER put multiple statements on one line separated by semicolons. Example for C++:\n"for (int i = 0; i < n; i++) {\\n  for (int j = i+1; j < n; j++) {\\n    if (nums[i]+nums[j]==target)\\n      return {i,j};\\n  }\\n}"\nShow the complete algorithmic structure (loops, conditions, return) but never a full production solution.`;
   }
 
   switch (providerId) {
