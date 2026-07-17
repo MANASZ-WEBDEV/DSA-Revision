@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import type { FlashCard, ReviewQuality, SessionConfig, SessionAnalytics, StudyNote } from "../../types";
+import type { FlashCard, ReviewQuality, SessionConfig, SessionAnalytics, StudyNote, GradeInput, ApproachRecall, ImplementationRecall } from "../../types";
 import { migrateNote, hasNoteContent } from "../../types";
 import Markdown from "react-markdown";
-import { sm2, getDailySession, getDueCards, getBestBigO } from "../../lib/sm2";
+import { sm2, getDailySession, getDueCards, getBestBigO, gradeReview } from "../../lib/sm2";
 import { PATTERN_COLORS, PATTERN_TEXT_COLORS } from "../../lib/llm";
 import { ReviewConfig } from "./ReviewConfig";
 import { ReviewAnalyticsComponent } from "./ReviewAnalytics";
@@ -51,6 +51,7 @@ export function ReviewSession({ cards, onUpdate, onRecordReview, onRecordSession
   // For active recall helpers:
   const [selfExplanationText, setSelfExplanationText] = useState("");
   const [recalledApproaches, setRecalledApproaches] = useState<string[]>([]);
+  const [approachRecall, setApproachRecall] = useState<ApproachRecall | null>(null);
   
   // Timer state:
   const [secondsLeft, setSecondsLeft] = useState(0);
@@ -155,6 +156,7 @@ export function ReviewSession({ cards, onUpdate, onRecordReview, onRecordSession
     setRevealed(false);
     setSelfExplanationText("");
     setRecalledApproaches([]);
+    setApproachRecall(null);
     setSessionResults([]);
     sessionStartTimeRef.current = new Date().toISOString();
     setStep("session");
@@ -173,29 +175,42 @@ export function ReviewSession({ cards, onUpdate, onRecordReview, onRecordSession
     );
   };
 
-  const submitQuality = (q: ReviewQuality) => {
+  const submitGrade = (input: GradeInput) => {
     // 1. Calculate time taken
     const timeMs = Date.now() - cardStartTimeRef.current;
 
-    // 2. Update storage & state
-    const updates = sm2(currentCard, q);
-    onUpdate(currentCard.id, updates);
-    onRecordReview(currentCard, q);
+    // 2. Perform grading calculation
+    const result = gradeReview(currentCard, input);
 
-    // 3. Save result for analytics
+    // 3. Update core SM-2 interval/repetitions
+    const updates = sm2(currentCard, result.quality as ReviewQuality);
+
+    // 4. Trigger state update with leech & axis logs
+    onUpdate(currentCard.id, {
+      ...updates,
+      leech_count: result.leech_count,
+      is_leech: result.is_leech,
+      last_approach_recall: input.approachRecall,
+      last_implementation_recall: input.implementationRecall,
+    });
+    onRecordReview(currentCard, result.quality as ReviewQuality);
+
+    // 5. Save result for analytics
     const newResult = {
       cardId: currentCard.id,
       cardTitle: currentCard.title,
-      quality: q,
+      quality: result.quality as ReviewQuality,
       timeMs,
       recalledApproaches: [...recalledApproaches],
       isSelfExplained: selfExplanationText.trim().length > 0,
+      approachRecall: input.approachRecall,
+      implementationRecall: input.implementationRecall,
     };
 
     const updatedResults = [...sessionResults, newResult];
     setSessionResults(updatedResults);
 
-    // 4. Check if finished
+    // 6. Check if finished
     if (index + 1 >= activeCards.length) {
       if (timerRef.current) clearInterval(timerRef.current);
       
@@ -212,6 +227,7 @@ export function ReviewSession({ cards, onUpdate, onRecordReview, onRecordSession
       setRevealed(false);
       setSelfExplanationText("");
       setRecalledApproaches([]);
+      setApproachRecall(null); // Reset local state
     }
   };
 
@@ -375,9 +391,13 @@ export function ReviewSession({ cards, onUpdate, onRecordReview, onRecordSession
             name="review_recall_helper"
             value={selfExplanationText}
             onChange={(e) => setSelfExplanationText(e.target.value)}
+            onInput={(e) => {
+              const el = e.currentTarget;
+              el.style.height = "auto";
+              el.style.height = Math.min(el.scrollHeight, 200) + "px";
+            }}
             placeholder="Before revealing the approaches, briefly draft your optimal strategy or key intuition here..."
             style={s.explanationTextarea}
-            rows={3}
           />
         </div>
       )}
@@ -513,34 +533,83 @@ export function ReviewSession({ cards, onUpdate, onRecordReview, onRecordSession
             );
           })()}
 
-          {/* Quality buttons */}
-          <div style={s.qualityLabel}>How well did you recall this?</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: 8, marginTop: 10 }}>
-            {QUALITY_OPTIONS.map(({ q, label, sub, color }) => (
-              <button
-                key={q}
-                onClick={() => submitQuality(q as ReviewQuality)}
-                style={{ ...s.qualityBtn, borderColor: color, color }}
-                className="btn-press"
-              >
-                <span style={{ fontSize: 13, fontWeight: 600 }}>{label}</span>
-                <span style={{ fontSize: 10, color: "var(--caption)", marginTop: 2, textAlign: "center" }}>{sub}</span>
-              </button>
-            ))}
+          {/* Two-Axis Grading Prompt */}
+          <div style={{ marginTop: 22, borderTop: "1px solid var(--border)", paddingTop: 18 }}>
+            {approachRecall === null ? (
+              <div className="animate-fadeIn">
+                <div style={s.qualityLabel}>Step 1: Did you identify the approach?</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginTop: 12 }}>
+                  <button
+                    onClick={() => setApproachRecall("yes")}
+                    style={{ ...s.qualityBtn, borderColor: "var(--accent)", color: "var(--accent)" }}
+                    className="btn-press"
+                  >
+                    <span style={{ fontSize: 13, fontWeight: 600 }}>Yes</span>
+                    <span style={{ fontSize: 10, color: "var(--caption)", marginTop: 2 }}>Knew optimal</span>
+                  </button>
+                  <button
+                    onClick={() => setApproachRecall("partial")}
+                    style={{ ...s.qualityBtn, borderColor: "var(--medium)", color: "var(--medium)" }}
+                    className="btn-press"
+                  >
+                    <span style={{ fontSize: 13, fontWeight: 600 }}>Partial</span>
+                    <span style={{ fontSize: 10, color: "var(--caption)", marginTop: 2 }}>Knew brute/better</span>
+                  </button>
+                  <button
+                    onClick={() => submitGrade({ approachRecall: "no", implementationRecall: null })}
+                    style={{ ...s.qualityBtn, borderColor: "var(--hard)", color: "var(--hard)" }}
+                    className="btn-press"
+                  >
+                    <span style={{ fontSize: 13, fontWeight: 600 }}>No</span>
+                    <span style={{ fontSize: 10, color: "var(--caption)", marginTop: 2 }}>Blank/Wrong</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="animate-fadeIn">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <div style={s.qualityLabel}>Step 2: Could you code it cleanly?</div>
+                  <button
+                    onClick={() => setApproachRecall(null)}
+                    style={{ background: "none", border: "none", fontSize: 11, color: "var(--caption)", cursor: "pointer", textDecoration: "underline" }}
+                  >
+                    ← Back to Step 1
+                  </button>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+                  <button
+                    onClick={() => submitGrade({ approachRecall, implementationRecall: "yes" })}
+                    style={{ ...s.qualityBtn, borderColor: "var(--accent)", color: "var(--accent)" }}
+                    className="btn-press"
+                  >
+                    <span style={{ fontSize: 13, fontWeight: 600 }}>Yes</span>
+                    <span style={{ fontSize: 10, color: "var(--caption)", marginTop: 2 }}>Instant/Clean</span>
+                  </button>
+                  <button
+                    onClick={() => submitGrade({ approachRecall, implementationRecall: "partial" })}
+                    style={{ ...s.qualityBtn, borderColor: "var(--medium)", color: "var(--medium)" }}
+                    className="btn-press"
+                  >
+                    <span style={{ fontSize: 13, fontWeight: 600 }}>Partial</span>
+                    <span style={{ fontSize: 10, color: "var(--caption)", marginTop: 2 }}>Buggy/Slow</span>
+                  </button>
+                  <button
+                    onClick={() => submitGrade({ approachRecall, implementationRecall: "no" })}
+                    style={{ ...s.qualityBtn, borderColor: "var(--hard)", color: "var(--hard)" }}
+                    className="btn-press"
+                  >
+                    <span style={{ fontSize: 13, fontWeight: 600 }}>No</span>
+                    <span style={{ fontSize: 10, color: "var(--caption)", marginTop: 2 }}>Syntax block/Fail</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
     </div>
   );
 }
-
-const QUALITY_OPTIONS = [
-  { q: 0, label: "Forgot", sub: "Blank",           color: "var(--hard)" },
-  { q: 1, label: "Vague",  sub: "Recognized",      color: "var(--hard)" },
-  { q: 3, label: "Hard",   sub: "Barely",          color: "var(--medium)" },
-  { q: 4, label: "Good",   sub: "Hesitated",       color: "#3b6ea0" },
-  { q: 5, label: "Easy",   sub: "Instant",         color: "var(--accent)" },
-];
 
 const s: Record<string, React.CSSProperties> = {
   empty:        { maxWidth: 420, margin: "4rem auto", textAlign: "center", padding: "0 1rem" },
@@ -554,7 +623,7 @@ const s: Record<string, React.CSSProperties> = {
   qualityLabel: { fontSize: 11, fontWeight: 600, color: "var(--caption)", textTransform: "uppercase" as const, letterSpacing: "0.06em" },
   qualityBtn:   { display: "flex", flexDirection: "column" as const, alignItems: "center", padding: "10px 4px", background: "var(--bg-raised)", border: "1.5px solid", borderRadius: "var(--radius)", cursor: "pointer" },
   activeRecallLabel: { fontSize: 11, fontWeight: 600, color: "var(--caption)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: 6 },
-  explanationTextarea: { width: "100%", background: "var(--bg-raised)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", padding: "10px 12px", fontSize: 14, color: "var(--ink)", outline: "none", resize: "none" },
+  explanationTextarea: { width: "100%", background: "var(--bg-raised)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", padding: "10px 12px", fontSize: 14, color: "var(--ink)", outline: "none", resize: "none", overflow: "hidden", minHeight: 72, boxSizing: "border-box" as any },
   recallAttemptBox: { background: "var(--bg-sunken)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", padding: "12px 14px", fontSize: 13.5, color: "var(--ink-soft)", whiteSpace: "pre-wrap" as const, lineHeight: 1.5, fontStyle: "italic" },
   reviewNotesBox: {
     marginTop: 16,
