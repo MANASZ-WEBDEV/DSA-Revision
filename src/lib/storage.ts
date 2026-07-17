@@ -10,7 +10,14 @@ export const Storage = {
   getCards(): FlashCard[] {
     try {
       const raw = localStorage.getItem(CARDS_KEY);
-      return raw ? JSON.parse(raw) : [];
+      const cards = raw ? JSON.parse(raw) as FlashCard[] : [];
+      return cards.map(c => ({
+        ...c,
+        leech_count: c.leech_count ?? 0,
+        is_leech: c.is_leech ?? false,
+        last_approach_recall: c.last_approach_recall ?? null,
+        last_implementation_recall: c.last_implementation_recall ?? null,
+      }));
     } catch {
       return [];
     }
@@ -178,6 +185,10 @@ export const Storage = {
               next_review: c.next_review,
               last_quality: c.last_quality,
               notes: c.notes,
+              leech_count: c.leech_count,
+              is_leech: c.is_leech,
+              last_approach_recall: c.last_approach_recall,
+              last_implementation_recall: c.last_implementation_recall,
               created_at: c.created_at,
               updated_at: c.updated_at || c.created_at,
             })),
@@ -429,6 +440,10 @@ function mapLocalToRemote(local: FlashCard, userId: string) {
     last_quality: local.last_quality,
     notes: local.notes,
     notes_updated_at: local.notes_updated_at,
+    leech_count: local.leech_count,
+    is_leech: local.is_leech,
+    last_approach_recall: local.last_approach_recall,
+    last_implementation_recall: local.last_implementation_recall,
     created_at: local.created_at,
     updated_at: local.updated_at || local.created_at,
   };
@@ -454,6 +469,10 @@ function mapRemoteToLocal(remote: any): FlashCard {
     last_quality: remote.last_quality,
     notes: remote.notes,
     notes_updated_at: remote.notes_updated_at,
+    leech_count: remote.leech_count ?? 0,
+    is_leech: remote.is_leech ?? false,
+    last_approach_recall: remote.last_approach_recall ?? null,
+    last_implementation_recall: remote.last_implementation_recall ?? null,
     created_at: remote.created_at,
     updated_at: remote.updated_at,
   };
