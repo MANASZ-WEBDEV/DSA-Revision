@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import type { FlashCard, Approach, StudyNote } from "../../types";
+import type { FlashCard, Approach, StudyNote, PatternTag } from "../../types";
 import { migrateNote } from "../../types";
 import { PATTERN_COLORS, PATTERN_TEXT_COLORS } from "../../lib/llm";
 import { nextReviewLabel, getBestBigO, formatRelativeTime } from "../../lib/sm2";
 import Markdown from "react-markdown";
+import { PatternSelector } from "../shared/PatternSelector";
 
 interface Props {
   card: FlashCard;
@@ -29,6 +30,7 @@ export function CardDetail({ card, onBack, onUpdate, onDelete }: Props) {
   const [activeApproach, setActiveApproach] = useState(0);
   const [showHint, setShowHint] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [editingPatterns, setEditingPatterns] = useState(false);
 
   // ─── Structured notes state ───────────────────────────────────────────────
   const migrated = migrateNote(card.notes, card.notes_updated_at);
@@ -136,10 +138,44 @@ export function CardDetail({ card, onBack, onUpdate, onDelete }: Props) {
             </span>
           )}
           {card.deck && <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 20, background: "var(--accent-soft)", color: "var(--accent)" }}>{card.deck}</span>}
-          {card.patterns.map((p) => (
-            <span key={p} style={{ ...s.badge, background: PATTERN_COLORS[p] ?? "var(--bg-sunken)", color: PATTERN_TEXT_COLORS[p] ?? "var(--ink-soft)" }}>{p}</span>
-          ))}
+          {!editingPatterns && (
+            <>
+              {card.patterns.map((p) => (
+                <span key={p} style={{ ...s.badge, background: PATTERN_COLORS[p] ?? "var(--bg-sunken)", color: PATTERN_TEXT_COLORS[p] ?? "var(--ink-soft)" }}>{p}</span>
+              ))}
+              <button
+                onClick={() => setEditingPatterns(true)}
+                style={s.editPatternsBtn}
+                className="btn-press"
+                title="Edit patterns"
+              >
+                ✎
+              </button>
+            </>
+          )}
         </div>
+        {editingPatterns && (
+          <div style={{ marginBottom: 10 }}>
+            <PatternSelector
+              selectedPatterns={[...card.patterns]}
+              onToggle={(pattern: string) => {
+                const current = card.patterns || [];
+                const updated = current.includes(pattern as PatternTag)
+                  ? current.filter(p => p !== pattern)
+                  : [...current, pattern as PatternTag];
+                onUpdate(card.id, { patterns: updated });
+              }}
+              showGridByDefault={true}
+            />
+            <button
+              onClick={() => setEditingPatterns(false)}
+              style={s.doneEditingBtn}
+              className="btn-press"
+            >
+              Done
+            </button>
+          </div>
+        )}
         <h1 style={{ fontSize: 21, fontWeight: 600, margin: "0 0 10px", color: "var(--ink)", fontFamily: "var(--font-display)" }}>{card.title}</h1>
         <p style={{ fontSize: 14, color: "var(--ink-soft)", margin: 0, lineHeight: 1.65 }}>{card.problem_summary}</p>
         {(card.last_approach_recall || card.last_implementation_recall) && (
@@ -476,5 +512,27 @@ const s: Record<string, React.CSSProperties> = {
     alignItems: "center",
     gap: 4,
     transition: "transform 0.1s ease",
+  },
+  editPatternsBtn: {
+    background: "none",
+    border: "1px solid var(--border)",
+    borderRadius: "var(--radius-sm)",
+    padding: "2px 8px",
+    fontSize: 12,
+    color: "var(--caption)",
+    cursor: "pointer",
+    lineHeight: 1,
+    transition: "color 0.15s ease, border-color 0.15s ease",
+  },
+  doneEditingBtn: {
+    marginTop: 8,
+    padding: "6px 14px",
+    fontSize: 12,
+    fontWeight: 600,
+    background: "var(--accent)",
+    color: "#fff",
+    border: "none",
+    borderRadius: "var(--radius-sm)",
+    cursor: "pointer",
   },
 };

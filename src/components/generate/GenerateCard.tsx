@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { generateFlashCard, PROVIDERS, PATTERN_COLORS, PATTERN_TEXT_COLORS } from "../../lib/llm";
+import { generateFlashCard, PROVIDERS } from "../../lib/llm";
 import type { ProviderId, ComplexityCorrection } from "../../lib/llm";
 import type { CodeLanguage } from "../layout/LanguageIcon";
 import { initSM2 } from "../../lib/sm2";
 import type { FlashCard, PatternTag } from "../../types";
 import { checkDuplicateCard } from "../../lib/duplicateCheck";
 import { ProviderIcon } from "../layout/ProviderIcon";
+import { PatternSelector } from "../shared/PatternSelector";
 
 interface Props {
   cards: FlashCard[];
@@ -29,7 +30,6 @@ export function GenerateCard({ cards, providerId, model, apiKey, codeLanguage, o
   // Preview and customization state
   const [pendingCard, setPendingCard] = useState<FlashCard | null>(null);
   const [fuzzyMatch, setFuzzyMatch] = useState<{ similarity: number; title: string } | null>(null);
-  const [showPatternSelector, setShowPatternSelector] = useState(false);
   const [complexityCorrections, setComplexityCorrections] = useState<ComplexityCorrection[]>([]);
 
   const provider = PROVIDERS.find((p) => p.id === providerId)!;
@@ -198,62 +198,10 @@ export function GenerateCard({ cards, providerId, model, apiKey, codeLanguage, o
 
             {/* Pattern Tags */}
             <div style={styles.fieldRow}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                <label style={styles.fieldLabel}>Patterns</label>
-                <button
-                  type="button"
-                  onClick={() => setShowPatternSelector(!showPatternSelector)}
-                  style={styles.toggleTagsBtn}
-                >
-                  {showPatternSelector ? "Hide All Patterns" : "+ Manage Patterns"}
-                </button>
-              </div>
-
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
-                {pendingCard.patterns.map((p) => (
-                  <span
-                    key={p}
-                    onClick={() => handleTogglePattern(p)}
-                    style={{
-                      ...styles.patternBadge,
-                      background: PATTERN_COLORS[p] ?? "var(--bg-sunken)",
-                      color: PATTERN_TEXT_COLORS[p] ?? "var(--ink-soft)",
-                      cursor: "pointer"
-                    }}
-                    title="Click to remove"
-                  >
-                    {p} ✕
-                  </span>
-                ))}
-                {pendingCard.patterns.length === 0 && (
-                  <span style={{ fontSize: 12, color: "var(--caption)", fontStyle: "italic" }}>No patterns selected</span>
-                )}
-              </div>
-
-              {showPatternSelector && (
-                <div style={styles.patternGrid}>
-                  {Object.keys(PATTERN_COLORS).map((p) => {
-                    const selected = pendingCard.patterns.includes(p as PatternTag);
-                    return (
-                      <button
-                        key={p}
-                        type="button"
-                        onClick={() => handleTogglePattern(p)}
-                        style={{
-                          ...styles.gridPatternBadge,
-                          ...(selected ? {
-                            background: PATTERN_COLORS[p],
-                            color: PATTERN_TEXT_COLORS[p],
-                            borderColor: PATTERN_TEXT_COLORS[p]
-                          } : {})
-                        }}
-                      >
-                        {p}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
+              <PatternSelector
+                selectedPatterns={pendingCard.patterns}
+                onToggle={handleTogglePattern}
+              />
             </div>
 
             {/* Recall Trigger */}
@@ -422,8 +370,4 @@ const styles: Record<string, any> = {
     Medium: { background: "var(--medium-soft)", color: "var(--medium)", borderColor: "var(--medium)" },
     Hard: { background: "var(--hard-soft)", color: "var(--urgent-ink)", borderColor: "var(--urgent)" }
   },
-  toggleTagsBtn: { fontSize: 11, fontWeight: 600, color: "var(--accent)", background: "none", border: "none", cursor: "pointer" },
-  patternBadge: { fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 20, display: "inline-flex", alignItems: "center", gap: 4 },
-  patternGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: 6, maxHeight: 180, overflowY: "auto" as const, padding: 8, background: "var(--bg-sunken)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)" },
-  gridPatternBadge: { fontSize: 11, fontWeight: 500, padding: "5px 8px", borderRadius: 4, border: "1px solid var(--border)", background: "var(--bg-raised)", color: "var(--ink-soft)", cursor: "pointer", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" as const, textAlign: "left" as const, transition: "all 0.12s ease" }
 };
