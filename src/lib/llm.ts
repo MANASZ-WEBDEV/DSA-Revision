@@ -78,6 +78,9 @@ Given a problem description, produce a structured flashcard that teaches the PRO
 - Be terse. Every word must survive a review pass.
 - Never restate the problem verbatim — reframe it.
 - code_hint must be a properly formatted, multi-line code snippet inside the JSON string. Use \n for line breaks and \n followed by spaces for indentation. NEVER put all code on a single line. Each statement must be on its own line. Show the key algorithmic pattern — 3-6 lines depending on language verbosity. Never a full solution.
+- Ensure all algorithm logic and code hints are correct and sound. Avoid assuming pre-calculated helper variables (such as sorting a non-existent 'prefixGcd' array) without showing how they are constructed. Show the complete code flow in 'code_hint', including any necessary array constructions.
+- Always prefer in-place modifications to optimize space complexity. If the input array can be mutated to store intermediate values (e.g., in-place element updates or in-place sorting), do it in-place on the input array (e.g. mutating the input array directly instead of declaring a new array) to achieve O(1) auxiliary space complexity.
+- In-place modifications to input arguments (such as modifying the input array in-place, or sorting it in-place) use O(1) auxiliary space. The space complexity for these approaches MUST be written as O(1).
 - trade_off for the Optimal approach should explain why no better tier exists.
 - recall_trigger must be ≤15 words. It's the back of a physical flashcard.
 - patterns must use ONLY tags from the canonical list — no custom tags.
@@ -229,7 +232,8 @@ const VALIDATION_PROMPT = `You are a complexity analysis validator. Given code a
 
 Rules:
 - Analyze the actual code, not the description.
-- In-place sorting (e.g. sort()) is O(n log n) time, O(1) extra space (or O(log n) for stack space — report O(1) for practical purposes).
+- In-place sorting (such as sorting the input array, e.g. sort()) is O(n log n) time, O(1) extra space.
+- If the code modifies the input array/vector/arguments directly in-place (e.g. \`nums[i] = ...\` or sorting \`nums\`), the extra space complexity is O(1). If the stated space complexity is O(n) but the code does it in-place or only sorts in-place, correct it to O(1).
 - Only using scalar variables (counters, pointers, accumulators) is O(1) space.
 - Creating a new array/map/set that scales with input is O(n) space.
 - Return ONLY valid JSON, no markdown fences, no explanation.
