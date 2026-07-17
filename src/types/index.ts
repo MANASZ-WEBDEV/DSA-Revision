@@ -127,6 +127,8 @@ export const PATTERN_TAGS = [
   "Prefix Sum",
   "Bit Manipulation",
   "Hashing",
+  "Sorting",
+  "Math / Number Theory",
 ] as const;
 
 export type PatternTag = (typeof PATTERN_TAGS)[number];
