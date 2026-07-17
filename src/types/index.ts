@@ -41,6 +41,15 @@ export function hasNoteContent(note: string | StudyNote | undefined): boolean {
   return !!(note.keyInsight?.trim() || note.stuckPoint?.trim() || note.mistakeToAvoid?.trim() || note.freeform?.trim());
 }
 
+// ─── DSA-aware grading types ─────────────────────────────────────────────────
+export type ApproachRecall = "yes" | "partial" | "no";
+export type ImplementationRecall = "yes" | "partial" | "no" | null;
+
+export interface GradeInput {
+  approachRecall: ApproachRecall;
+  implementationRecall: ImplementationRecall;
+}
+
 // ─── The full flashcard ──────────────────────────────────────────────────────
 export interface FlashCard {
   id: string;
@@ -69,6 +78,12 @@ export interface FlashCard {
   notes?: string | StudyNote; // User's personal notes — string = legacy, StudyNote = structured
   notes_updated_at?: string; // Last edited timestamp of notes (legacy, kept for compat)
   dirty?: boolean;           // Local change dirty flag for syncing
+
+  // ─── DSA-aware grading + leech fields ──────────────────────────────────
+  leech_count: number;
+  is_leech: boolean;
+  last_approach_recall: ApproachRecall | null;
+  last_implementation_recall: ImplementationRecall;
 }
 
 // ─── Deck metadata ──────────────────────────────────────────────────────────
@@ -161,6 +176,8 @@ export interface SessionAnalytics {
     timeMs: number;
     recalledApproaches: string[];
     isSelfExplained: boolean;
+    approachRecall?: ApproachRecall;
+    implementationRecall?: ImplementationRecall;
   }[];
   startedAt: string;
   completedAt: string;

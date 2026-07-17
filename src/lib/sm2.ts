@@ -1,4 +1,4 @@
-import type { FlashCard, ReviewQuality } from "../types";
+import type { FlashCard, ReviewQuality, ApproachRecall, ImplementationRecall, GradeInput } from "../types";
 
 // ─── SM-2 Algorithm ───────────────────────────────────────────────────────────
 //
@@ -24,7 +24,9 @@ export function sm2(card: FlashCard, quality: ReviewQuality): Partial<FlashCard>
     if (repetitions === 0) {
       interval_days = 1;
     } else if (repetitions === 1) {
-      interval_days = 6;
+      interval_days = 4;
+    } else if (repetitions === 2) {
+      interval_days = 7;
     } else {
       interval_days = Math.round(interval_days * ease_factor);
     }
@@ -55,7 +57,7 @@ export function sm2(card: FlashCard, quality: ReviewQuality): Partial<FlashCard>
 }
 
 // ─── Initialize a new card's SM-2 fields ────────────────────────────────────
-export function initSM2(): Pick<FlashCard, "next_review" | "interval_days" | "ease_factor" | "repetitions" | "last_quality"> {
+export function initSM2(): Pick<FlashCard, "next_review" | "interval_days" | "ease_factor" | "repetitions" | "last_quality" | "leech_count" | "is_leech" | "last_approach_recall" | "last_implementation_recall"> {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   return {
@@ -64,6 +66,10 @@ export function initSM2(): Pick<FlashCard, "next_review" | "interval_days" | "ea
     ease_factor: 2.5,
     repetitions: 0,
     last_quality: null,
+    leech_count: 0,
+    is_leech: false,
+    last_approach_recall: null,
+    last_implementation_recall: null,
   };
 }
 
@@ -79,7 +85,7 @@ export function isDue(card: FlashCard): boolean {
 // ─── Get all due cards sorted by most overdue first ─────────────────────────
 export function getDueCards(cards: FlashCard[]): FlashCard[] {
   return cards
-    .filter(isDue)
+    .filter((c) => isDue(c) && !c.is_leech)
     .sort(
       (a, b) =>
         new Date(a.next_review).getTime() - new Date(b.next_review).getTime()
@@ -114,7 +120,8 @@ export function getStats(cards: FlashCard[]) {
   const due = cards.filter(isDue).length;
   const mastered = cards.filter((c) => c.interval_days >= 21).length;
   const new_cards = cards.filter((c) => c.repetitions === 0).length;
-  return { due, mastered, new_cards, total: cards.length };
+  const leeches = cards.filter((c) => c.is_leech).length;
+  return { due, mastered, new_cards, leeches, total: cards.length };
 }
 
 // ─── Daily Revision Plan ──────────────────────────────────────────────────────
@@ -191,19 +198,23 @@ export function getDailySession(cards: FlashCard[]): DailySessionResult {
     for (const [pattern, patternCards] of patternToCards) {
       if (staleTopUps.length >= MAX_STALENESS_TOPUPS || remaining <= 0) break;
 
+      // Filter out leeches from this pattern's candidate cards
+      const nonLeechPatternCards = patternCards.filter((c) => !c.is_leech);
+      if (nonLeechPatternCards.length === 0) continue;
+
       // Pattern already represented in today's session via a due card — covered, skip
-      const alreadyCovered = patternCards.some((c) => dueIds.has(c.id));
+      const alreadyCovered = nonLeechPatternCards.some((c) => dueIds.has(c.id));
       if (alreadyCovered) continue;
 
       // Find the most recent "touch" for this pattern: latest updated_at or created_at across its cards
       const mostRecentTouch = Math.max(
-        ...patternCards.map((c) => new Date(c.updated_at || c.created_at).getTime())
+        ...nonLeechPatternCards.map((c) => new Date(c.updated_at || c.created_at).getTime())
       );
       const isStale = now - mostRecentTouch > staleThresholdMs;
       if (!isStale) continue;
 
       // Pull the single most-overdue (or soonest-due) card for this pattern
-      const candidate = [...patternCards].sort(
+      const candidate = [...nonLeechPatternCards].sort(
         (a, b) => new Date(a.next_review).getTime() - new Date(b.next_review).getTime()
       )[0];
 
@@ -220,7 +231,7 @@ export function getDailySession(cards: FlashCard[]): DailySessionResult {
   const newCards: FlashCard[] = [];
   if (remaining > 0) {
     const unseen = cards
-      .filter((c) => c.repetitions === 0 && !sessionIds.has(c.id))
+      .filter((c) => c.repetitions === 0 && !c.is_leech && !sessionIds.has(c.id))
       .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
     for (const c of unseen) {
@@ -279,4 +290,61 @@ export function isSubstantiveReflection(reflection?: string): boolean {
   const fillerWords = ["ok", "okay", "good", "fine", "nice", "done", "yes", "none", "null", "none."];
   if (fillerWords.includes(trimmed)) return false;
   return true;
+}
+
+// ─── DSA Recall Additions ───────────────────────────────────────────────────
+
+export interface GradeResult {
+  quality: number;
+  leech_count: number;
+  is_leech: boolean;
+}
+
+export function mapToSM2Quality(input: GradeInput): number {
+  const { approachRecall } = input;
+  const implementationRecall = input.implementationRecall ?? "partial";
+
+  if (approachRecall === "no") return 0; // Forgot
+
+  if (approachRecall === "partial") {
+    return implementationRecall === "no" ? 1 : 2;
+  }
+
+  // approachRecall === "yes"
+  switch (implementationRecall) {
+    case "yes":
+      return 5; // Easy
+    case "partial":
+      return 4; // Good
+    case "no":
+      return 3; // Hard
+    default:
+      return 4;
+  }
+}
+
+export function updateLeechStatus(
+  current_leech_count: number,
+  quality: number
+): { leech_count: number; is_leech: boolean } {
+  const leech_count = quality === 0 ? current_leech_count + 1 : current_leech_count;
+  return { leech_count, is_leech: leech_count >= 3 };
+}
+
+export function gradeReview(
+  card: { leech_count: number },
+  input: GradeInput
+): GradeResult {
+  const quality = mapToSM2Quality(input);
+  const { leech_count, is_leech } = updateLeechStatus(card.leech_count, quality);
+  return { quality, leech_count, is_leech };
+}
+
+export function getLeechReason(
+  lastApproach: ApproachRecall | null,
+  lastImplementation: ImplementationRecall
+): string {
+  if (lastApproach === "no") return "Can't identify the pattern";
+  if (lastImplementation === "no") return "Knows the approach, fails on implementation";
+  return "Inconsistent recall across reviews";
 }
