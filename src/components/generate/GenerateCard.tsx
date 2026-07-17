@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { generateFlashCard, PROVIDERS, PATTERN_COLORS, PATTERN_TEXT_COLORS } from "../../lib/llm";
-import type { ProviderId } from "../../lib/llm";
+import type { ProviderId, ComplexityCorrection } from "../../lib/llm";
 import type { CodeLanguage } from "../layout/LanguageIcon";
 import { initSM2 } from "../../lib/sm2";
 import type { FlashCard, PatternTag } from "../../types";
@@ -30,6 +30,7 @@ export function GenerateCard({ cards, providerId, model, apiKey, codeLanguage, o
   const [pendingCard, setPendingCard] = useState<FlashCard | null>(null);
   const [fuzzyMatch, setFuzzyMatch] = useState<{ similarity: number; title: string } | null>(null);
   const [showPatternSelector, setShowPatternSelector] = useState(false);
+  const [complexityCorrections, setComplexityCorrections] = useState<ComplexityCorrection[]>([]);
 
   const provider = PROVIDERS.find((p) => p.id === providerId)!;
 
@@ -48,7 +49,7 @@ export function GenerateCard({ cards, providerId, model, apiKey, codeLanguage, o
     setFuzzyMatch(null);
 
     try {
-      const partial = await generateFlashCard(problem, providerId, apiKey, model, codeLanguage);
+      const { card: partial, corrections } = await generateFlashCard(problem, providerId, apiKey, model, codeLanguage);
       const card: FlashCard = {
         ...partial,
         id: crypto.randomUUID(),
@@ -56,6 +57,8 @@ export function GenerateCard({ cards, providerId, model, apiKey, codeLanguage, o
         created_at: new Date().toISOString(),
         ...initSM2(),
       } as FlashCard;
+
+      setComplexityCorrections(corrections);
 
       // Perform duplicate checking
       const dupCheck = checkDuplicateCard({ ...card, source_text: problem }, cards);
@@ -139,6 +142,19 @@ export function GenerateCard({ cards, providerId, model, apiKey, codeLanguage, o
           ) : (
             <div style={styles.successBanner}>
               <strong>🎉 Generation complete!</strong> Verify details and customize tags/difficulty before saving.
+            </div>
+          )}
+
+          {complexityCorrections.length > 0 && (
+            <div style={styles.correctionBanner}>
+              <strong>⚡ Complexity corrected:</strong>
+              <ul style={{ margin: "4px 0 0", paddingLeft: "1.2rem", lineHeight: 1.6 }}>
+                {complexityCorrections.map((c, i) => (
+                  <li key={i}>
+                    {c.approachLabel} {c.field}: <span style={{ textDecoration: "line-through", opacity: 0.6 }}>{c.original}</span> → <strong>{c.corrected}</strong>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
 
@@ -395,6 +411,7 @@ const styles: Record<string, any> = {
   previewContainer: { display: "flex", flexDirection: "column", gap: 16, background: "var(--bg-raised)", border: "1px solid var(--border)", borderRadius: "var(--radius-lg)", padding: "20px", margin: "12px 0", boxShadow: "var(--shadow-lg)" },
   warningBanner: { padding: "10px 14px", background: "var(--hard-soft)", border: "1px solid color-mix(in srgb, var(--urgent) 30%, transparent)", borderRadius: "var(--radius-sm)", color: "var(--urgent)", fontSize: 13.5, lineHeight: 1.5 },
   successBanner: { padding: "10px 14px", background: "var(--easy-soft)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)", borderRadius: "var(--radius-sm)", color: "var(--accent-ink)", fontSize: 13.5, lineHeight: 1.5 },
+  correctionBanner: { padding: "10px 14px", background: "#eff6ff", border: "1px solid #93c5fd", borderRadius: "var(--radius-sm)", color: "#1e40af", fontSize: 13, lineHeight: 1.5 },
   previewForm: { display: "flex", flexDirection: "column", gap: 14 },
   fieldRow: { display: "flex", flexDirection: "column" as const, gap: 5 },
   fieldLabel: { fontSize: 11, fontWeight: 600, color: "var(--caption)", textTransform: "uppercase" as const, letterSpacing: "0.05em" },

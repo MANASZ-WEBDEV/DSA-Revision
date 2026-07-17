@@ -116,10 +116,22 @@ Math / Number Theory
 
 // ─── Provider-specific fetch logic ────────────────────────────────────────────
 
-type CardPartial = Omit<FlashCard,
+export type CardPartial = Omit<FlashCard,
   "id" | "created_at" | "next_review" | "interval_days" |
   "ease_factor" | "repetitions" | "last_quality" | "source_text"
 >;
+
+export interface ComplexityCorrection {
+  approachLabel: string;
+  field: "time" | "space";
+  original: string;
+  corrected: string;
+}
+
+export interface GenerationResult {
+  card: CardPartial;
+  corrections: ComplexityCorrection[];
+}
 
 async function callAnthropic(problemText: string, apiKey: string, model: string, systemPrompt: string): Promise<CardPartial> {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -211,6 +223,133 @@ function parseJSON(raw: string, providerName: string): CardPartial {
   }
 }
 
+// ─── Post-generation complexity validation ────────────────────────────────────
+
+const VALIDATION_PROMPT = `You are a complexity analysis validator. Given code and its stated time/space complexity, check if they are correct.
+
+Rules:
+- Analyze the actual code, not the description.
+- In-place sorting (e.g. sort()) is O(n log n) time, O(1) extra space (or O(log n) for stack space — report O(1) for practical purposes).
+- Only using scalar variables (counters, pointers, accumulators) is O(1) space.
+- Creating a new array/map/set that scales with input is O(n) space.
+- Return ONLY valid JSON, no markdown fences, no explanation.
+
+Output format:
+{ "corrections": [ { "approach_index": 0, "field": "time" | "space", "corrected_value": "O(...)" } ] }
+Return { "corrections": [] } if all complexities are correct.`;
+
+async function callProviderRaw(
+  message: string,
+  providerId: ProviderId,
+  apiKey: string,
+  model: string,
+  systemPrompt: string,
+): Promise<string> {
+  switch (providerId) {
+    case "anthropic": {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true",
+        },
+        body: JSON.stringify({
+          model, max_tokens: 256, system: systemPrompt,
+          messages: [{ role: "user", content: message }],
+        }),
+      });
+      if (!res.ok) return "";
+      const data = await res.json();
+      return data.content?.[0]?.text ?? "";
+    }
+    case "gemini": {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemPrompt }] },
+          contents: [{ parts: [{ text: message }] }],
+          generationConfig: { maxOutputTokens: 256, temperature: 0 },
+        }),
+      });
+      if (!res.ok) return "";
+      const data = await res.json();
+      return data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+    }
+    case "groq": {
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model, max_tokens: 256, temperature: 0,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: message },
+          ],
+        }),
+      });
+      if (!res.ok) return "";
+      const data = await res.json();
+      return data?.choices?.[0]?.message?.content ?? "";
+    }
+  }
+}
+
+async function validateComplexity(
+  card: CardPartial,
+  providerId: ProviderId,
+  apiKey: string,
+  model: string,
+): Promise<ComplexityCorrection[]> {
+  try {
+    // Build a concise message with each approach's code + stated complexity
+    const approachSummaries = card.approaches.map((a, i) =>
+      `Approach ${i} (${a.label}):\nCode: ${a.code_hint}\nStated time: ${a.complexity.time}\nStated space: ${a.complexity.space}`
+    ).join("\n\n");
+
+    const raw = await callProviderRaw(
+      `Verify these complexities:\n\n${approachSummaries}`,
+      providerId, apiKey, model, VALIDATION_PROMPT,
+    );
+
+    if (!raw) return [];
+
+    const clean = raw.replace(/```json\n?|```/g, "").trim();
+    const parsed = JSON.parse(clean) as {
+      corrections: { approach_index: number; field: "time" | "space"; corrected_value: string }[];
+    };
+
+    if (!Array.isArray(parsed.corrections)) return [];
+
+    const results: ComplexityCorrection[] = [];
+    for (const c of parsed.corrections) {
+      const approach = card.approaches[c.approach_index];
+      if (!approach) continue;
+      const original = approach.complexity[c.field];
+      if (original !== c.corrected_value) {
+        results.push({
+          approachLabel: approach.label,
+          field: c.field,
+          original,
+          corrected: c.corrected_value,
+        });
+        // Apply the correction
+        approach.complexity[c.field] = c.corrected_value;
+      }
+    }
+    return results;
+  } catch {
+    // Validation is best-effort — don't block card generation
+    return [];
+  }
+}
+
 // ─── Main export ──────────────────────────────────────────────────────────────
 
 export async function generateFlashCard(
@@ -219,7 +358,7 @@ export async function generateFlashCard(
   apiKey: string,
   model: string,
   language: CodeLanguage = "any",
-): Promise<CardPartial> {
+): Promise<GenerationResult> {
   // Build prompt — append language line when not pseudocode
   let prompt = SYSTEM_PROMPT;
   if (language !== "any") {
@@ -227,11 +366,17 @@ export async function generateFlashCard(
     prompt += `\n\nIMPORTANT: Write all code_hint fields in ${langLabel} syntax, not pseudocode. Format code_hint as a multi-line string using \\n for line breaks and proper indentation. Each statement MUST be on its own line — NEVER put multiple statements on one line separated by semicolons. Example for C++:\n"for (int i = 0; i < n; i++) {\\n  for (int j = i+1; j < n; j++) {\\n    if (nums[i]+nums[j]==target)\\n      return {i,j};\\n  }\\n}"\nShow the complete algorithmic structure (loops, conditions, return) but never a full production solution.`;
   }
 
+  let card: CardPartial;
   switch (providerId) {
-    case "anthropic": return callAnthropic(problemText, apiKey, model, prompt);
-    case "gemini":    return callGemini(problemText, apiKey, model, prompt);
-    case "groq":      return callGroq(problemText, apiKey, model, prompt);
+    case "anthropic": card = await callAnthropic(problemText, apiKey, model, prompt); break;
+    case "gemini":    card = await callGemini(problemText, apiKey, model, prompt); break;
+    case "groq":      card = await callGroq(problemText, apiKey, model, prompt); break;
   }
+
+  // Lightweight validation pass — cross-check complexity against actual code
+  const corrections = await validateComplexity(card, providerId, apiKey, model);
+
+  return { card, corrections };
 }
 
 // ─── Pattern tag color map (unchanged) ───────────────────────────────────────
