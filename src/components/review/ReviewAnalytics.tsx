@@ -122,7 +122,7 @@ export function ReviewAnalyticsComponent({ analytics, onDone }: Props) {
                 <div key={i} style={s.cardRow}>
                   <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
                     <span style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)" }}>{r.cardTitle}</span>
-                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                    <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
                       <span className="numeral" style={{ fontSize: 11, color: "var(--caption)" }}>
                         {Math.round(r.timeMs / 1000)}s
                       </span>
@@ -131,6 +131,48 @@ export function ReviewAnalyticsComponent({ analytics, onDone }: Props) {
                       )}
                       {r.recalledApproaches.length > 0 && (
                         <span style={s.badge}>Recalled {r.recalledApproaches.length} approaches</span>
+                      )}
+                      {r.approachRecall && (
+                        <span
+                          style={{
+                            ...s.badge,
+                            background:
+                              r.approachRecall === "yes"
+                                ? "var(--easy-soft)"
+                                : r.approachRecall === "partial"
+                                ? "var(--medium-soft)"
+                                : "var(--hard-soft)",
+                            color:
+                              r.approachRecall === "yes"
+                                ? "var(--easy)"
+                                : r.approachRecall === "partial"
+                                ? "var(--medium)"
+                                : "var(--hard)",
+                          }}
+                        >
+                          Approach: {r.approachRecall === "yes" ? "Yes" : r.approachRecall === "partial" ? "Partial" : "No"}
+                        </span>
+                      )}
+                      {r.implementationRecall && (
+                        <span
+                          style={{
+                            ...s.badge,
+                            background:
+                              r.implementationRecall === "yes"
+                                ? "var(--easy-soft)"
+                                : r.implementationRecall === "partial"
+                                ? "var(--medium-soft)"
+                                : "var(--hard-soft)",
+                            color:
+                              r.implementationRecall === "yes"
+                                ? "var(--easy)"
+                                : r.implementationRecall === "partial"
+                                ? "var(--medium)"
+                                : "var(--hard)",
+                          }}
+                        >
+                          Impl: {r.implementationRecall === "yes" ? "Yes" : r.implementationRecall === "partial" ? "Partial" : "No"}
+                        </span>
                       )}
                     </div>
                   </div>
@@ -168,7 +210,7 @@ export function ReviewAnalyticsComponent({ analytics, onDone }: Props) {
 const QUALITY_LABELS: Record<number, string> = {
   0: "Forgot",
   1: "Vague",
-  2: "Wrong",
+  2: "Weak",
   3: "Hard",
   4: "Good",
   5: "Easy"
@@ -177,7 +219,7 @@ const QUALITY_LABELS: Record<number, string> = {
 const QUALITY_COLORS: Record<number, string> = {
   0: "var(--hard)",
   1: "var(--hard)",
-  2: "var(--medium)",
+  2: "#d97706",
   3: "var(--medium)",
   4: "#3b6ea0",
   5: "var(--accent)"
