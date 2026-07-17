@@ -50,6 +50,7 @@ function AppContent() {
   const isHowToUsePage = location.pathname === "/how-to-use";
   const isFeedbackPage = location.pathname === "/feedback";
   const isLibraryPage = location.pathname === "/library";
+  const isHistoryPage = location.pathname === "/history";
   const isLibraryEmpty = isLibraryPage && cards.length === 0;
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
@@ -67,7 +68,7 @@ function AppContent() {
   const cardExists = cardIdMatch ? !!cards.find((c) => c.id === cardIdMatch[1]) : true;
   const is404 = !isKnownPath && (!cardIdMatch || !cardExists);
 
-  const shouldLockViewport = (isPrivacyPage || isGeneratePage || isAboutPage || isContactPage || isSupportPage || isHowToUsePage || isFeedbackPage || isLibraryEmpty || is404) && !isMobile;
+  const shouldLockViewport = (isPrivacyPage || isGeneratePage || isAboutPage || isContactPage || isSupportPage || isHowToUsePage || isFeedbackPage || isHistoryPage || isLibraryEmpty || is404) && !isMobile;
   const [showSettings, setShowSettings] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [syncStatus, setSyncStatus] = useState<"synced" | "syncing" | "offline" | "local">("local");

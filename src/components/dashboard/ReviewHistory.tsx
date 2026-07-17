@@ -8,6 +8,21 @@ interface Props {
 }
 
 export function ReviewHistory({ sessionHistory, onBack }: Props) {
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+
+    const isDesktop = window.innerWidth > 768;
+    const originalOverflow = document.body.style.overflow;
+    
+    if (isDesktop) {
+      document.body.style.overflow = "hidden";
+    }
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, []);
+
   // Sort reverse-chronologically
   const sortedSessions = [...sessionHistory].sort(
     (a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime()
@@ -38,87 +53,91 @@ export function ReviewHistory({ sessionHistory, onBack }: Props) {
   }, [sessionHistory]);
 
   return (
-    <div className="animate-fadeInUp" style={s.container}>
-      <button onClick={onBack} style={s.backLink} className="btn-press">
-        ← Back to dashboard
-      </button>
-
-      <div style={{ marginBottom: 24, marginTop: 12 }}>
+    <div className="animate-fadeInUp privacy-container">
+      <div style={s.header}>
+        <button onClick={onBack} style={s.backLink} className="btn-press">
+          ← Back to dashboard
+        </button>
         <span className="font-mono" style={s.eyebrow}>Revision Archives</span>
+      </div>
+
+      <div style={{ marginBottom: 12 }}>
         <h1 style={s.h1}>Session History</h1>
         <p style={{ fontSize: 14, color: "var(--ink-soft)", margin: "4px 0 0", lineHeight: 1.55 }}>
           A detailed log of all your revision sessions, duration, and recall performance.
         </p>
       </div>
 
-      {totalSessions > 0 ? (
-        <>
-          {/* History overview cards */}
-          <div style={s.statsGrid}>
-            <div style={s.statBox}>
-              <span className="bigstat" style={{ fontSize: 24, color: "var(--ink)" }}>{totalSessions}</span>
-              <span style={s.statLabel}>sessions</span>
+      <div className="privacy-card">
+        {totalSessions > 0 ? (
+          <>
+            {/* History overview cards */}
+            <div style={s.statsGrid}>
+              <div style={s.statBox}>
+                <span className="bigstat" style={{ fontSize: 24, color: "var(--ink)" }}>{totalSessions}</span>
+                <span style={s.statLabel}>sessions</span>
+              </div>
+              <div style={s.statBox}>
+                <span className="bigstat" style={{ fontSize: 24, color: "var(--ink)" }}>{totalCardsReviewed}</span>
+                <span style={s.statLabel}>reviews</span>
+              </div>
+              <div style={s.statBox}>
+                <span className="bigstat" style={{ fontSize: 24, color: "var(--accent)" }}>{overallRecallRate}%</span>
+                <span style={s.statLabel}>avg recall</span>
+              </div>
+              <div style={s.statBox}>
+                <span className="bigstat" style={{ fontSize: 24, color: "var(--ink)" }}>{overallAvgTime}s</span>
+                <span style={s.statLabel}>avg speed</span>
+              </div>
             </div>
-            <div style={s.statBox}>
-              <span className="bigstat" style={{ fontSize: 24, color: "var(--ink)" }}>{totalCardsReviewed}</span>
-              <span style={s.statLabel}>reviews</span>
-            </div>
-            <div style={s.statBox}>
-              <span className="bigstat" style={{ fontSize: 24, color: "var(--accent)" }}>{overallRecallRate}%</span>
-              <span style={s.statLabel}>avg recall</span>
-            </div>
-            <div style={s.statBox}>
-              <span className="bigstat" style={{ fontSize: 24, color: "var(--ink)" }}>{overallAvgTime}s</span>
-              <span style={s.statLabel}>avg speed</span>
-            </div>
-          </div>
 
-          {/* List of all sessions */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {sortedSessions.map((session, sIdx) => {
-              const durationMs = new Date(session.completedAt).getTime() - new Date(session.startedAt).getTime();
-              const mins = Math.floor(durationMs / 60000);
-              const secs = Math.floor((durationMs % 60000) / 1000);
-              const passed = session.results.filter(r => r.quality >= 3).length;
-              const rate = session.totalCards > 0 ? Math.round((passed / session.totalCards) * 100) : 0;
-              const avgTime = session.totalCards > 0 ? Math.round((session.results.reduce((acc, c) => acc + c.timeMs, 0) / session.totalCards) / 1000) : 0;
+            {/* List of all sessions */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {sortedSessions.map((session, sIdx) => {
+                const durationMs = new Date(session.completedAt).getTime() - new Date(session.startedAt).getTime();
+                const mins = Math.floor(durationMs / 60000);
+                const secs = Math.floor((durationMs % 60000) / 1000);
+                const passed = session.results.filter(r => r.quality >= 3).length;
+                const rate = session.totalCards > 0 ? Math.round((passed / session.totalCards) * 100) : 0;
+                const avgTime = session.totalCards > 0 ? Math.round((session.results.reduce((acc, c) => acc + c.timeMs, 0) / session.totalCards) / 1000) : 0;
 
-              return (
-                <div key={sIdx} style={s.sessionCard}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                      <span style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)", textTransform: "capitalize" }}>
-                        {formatSessionDate(session.completedAt)}
-                      </span>
-                      <span className="numeral" style={{ fontSize: 11, color: "var(--caption)" }}>
-                        {session.totalCards} cards · {mins > 0 ? `${mins}m ` : ""}{secs}s · {avgTime}s avg/card
-                      </span>
+                return (
+                  <div key={sIdx} style={s.sessionCard}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                        <span style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)", textTransform: "capitalize" }}>
+                          {formatSessionDate(session.completedAt)}
+                        </span>
+                        <span className="numeral" style={{ fontSize: 11, color: "var(--caption)" }}>
+                          {session.totalCards} cards · {mins > 0 ? `${mins}m ` : ""}{secs}s · {avgTime}s avg/card
+                        </span>
+                      </div>
+                      <div className="bigstat" style={{
+                        fontSize: 18,
+                        color: rate >= 90 ? "var(--success)" : rate >= 70 ? "var(--accent)" : "var(--medium)"
+                      }}>
+                        {rate}% Recall
+                      </div>
                     </div>
-                    <div className="bigstat" style={{
-                      fontSize: 18,
-                      color: rate >= 90 ? "var(--success)" : rate >= 70 ? "var(--accent)" : "var(--medium)"
-                    }}>
-                      {rate}% Recall
-                    </div>
+                    {isSubstantiveReflection(session.reflection) && (
+                      <div style={s.reflectionBox}>
+                        "{session.reflection}"
+                      </div>
+                    )}
                   </div>
-                  {isSubstantiveReflection(session.reflection) && (
-                    <div style={s.reflectionBox}>
-                      "{session.reflection}"
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+          </>
+        ) : (
+          <div style={s.emptyHint}>
+            <span className="bigstat" style={{ fontSize: 18, color: "var(--caption)", marginRight: 10 }}>O(0)</span>
+            <span style={{ fontSize: 13, color: "var(--caption)", lineHeight: 1.6 }}>
+              No sessions recorded yet. Complete a review session to save progress history.
+            </span>
           </div>
-        </>
-      ) : (
-        <div style={s.emptyHint}>
-          <span className="bigstat" style={{ fontSize: 18, color: "var(--caption)", marginRight: 10 }}>O(0)</span>
-          <span style={{ fontSize: 13, color: "var(--caption)", lineHeight: 1.6 }}>
-            No sessions recorded yet. Complete a review session to save progress history.
-          </span>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
@@ -129,10 +148,11 @@ function useMemo<T>(fn: () => T, deps: any[]): T {
 }
 
 const s: Record<string, React.CSSProperties> = {
-  container: {
-    maxWidth: 680,
-    margin: "0 auto",
-    padding: "1.5rem 1rem 3rem",
+  header: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
   },
   backLink: {
     background: "none",
