@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import type { FlashCard, ReviewEvent, StreakData, PatternTag, SessionAnalytics } from "../../types";
 import { PATTERN_TAGS } from "../../types";
 import { PATTERN_COLORS, PATTERN_TEXT_COLORS } from "../../lib/llm";
-import { getDueCards, getStats, formatRelativeTime, formatSessionDate, isSubstantiveReflection } from "../../lib/sm2";
+import { getDueCards, getStats, formatRelativeTime, formatSessionDate, isSubstantiveReflection, getLeechReason } from "../../lib/sm2";
 import { Heatmap } from "./Heatmap";
 import { SyncBanner } from "../landing/SyncBanner";
 
@@ -32,6 +32,7 @@ export function Dashboard({ cards, events, streak, sessionHistory, syncStatus, l
 
   const stats = getStats(cards);
   const dueCount = getDueCards(cards).length;
+  const leechCards = cards.filter((c) => c.is_leech);
 
   const last7 = events.filter(
     (e) => Date.now() - new Date(e.reviewed_at).getTime() < 7 * 24 * 60 * 60 * 1000
@@ -126,6 +127,13 @@ export function Dashboard({ cards, events, streak, sessionHistory, syncStatus, l
           unit="≥21 day interval"
           accent
           tooltip="Cards you've reviewed successfully with a 21+ day gap"
+        />
+        <StatRow
+          label="Leeches"
+          value={stats.leeches}
+          unit="need re-learning"
+          urgent={stats.leeches > 0}
+          tooltip="Cards forgotten 3+ times, temporarily pulled from normal rotation"
         />
         <StatRow
           label="7-day accuracy"
@@ -223,6 +231,25 @@ export function Dashboard({ cards, events, streak, sessionHistory, syncStatus, l
           <EmptyHint text="Review a few cards across different patterns to see your mastery breakdown here." />
         )}
       </Section>
+
+      {/* Needs re-learning (Leeches) */}
+      {leechCards.length > 0 && (
+        <Section title="Needs re-learning" sub={`${leechCards.length} card${leechCards.length > 1 ? "s" : ""} forgotten 3+ times`}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {leechCards.map(card => (
+              <div key={card.id} style={s.leechRow}>
+                <div style={s.leechInfo}>
+                  <span style={s.leechTitle}>{card.title}</span>
+                  <span style={s.leechReason}>
+                    {getLeechReason(card.last_approach_recall, card.last_implementation_recall)}
+                  </span>
+                </div>
+                <span style={s.leechBadge}>Forgotten {card.leech_count}×</span>
+              </div>
+            ))}
+          </div>
+        </Section>
+      )}
 
       {/* Recent Sessions */}
       <Section title="Recent sessions" sub="Recall performance and trends over time">
@@ -397,5 +424,46 @@ const s: Record<string, React.CSSProperties> = {
     transition: "transform 0.1s ease",
     display: "inline-flex",
     alignItems: "center",
+  },
+  leechRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    background: "var(--bg-raised)",
+    border: "1px solid var(--border)",
+    borderRadius: "var(--radius)",
+    padding: "12px 18px",
+    boxShadow: "var(--shadow-sm)",
+  },
+  leechInfo: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 4,
+  },
+  leechTitle: {
+    fontSize: 14,
+    fontWeight: 600,
+    color: "var(--ink)",
+  },
+  leechReason: {
+    fontSize: 11,
+    color: "var(--urgent-ink)",
+    background: "var(--urgent-soft)",
+    padding: "2px 8px",
+    borderRadius: 12,
+    alignSelf: "flex-start",
+    marginTop: 4,
+    fontWeight: 500,
+    display: "inline-block",
+  },
+  leechBadge: {
+    fontSize: 11,
+    fontWeight: 600,
+    padding: "4px 10px",
+    borderRadius: 20,
+    background: "var(--hard-soft)",
+    color: "var(--hard)",
+    border: "1px solid var(--hard)",
+    flexShrink: 0,
   },
 };
