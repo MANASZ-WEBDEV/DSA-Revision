@@ -104,6 +104,17 @@ export function CardDetail({ card, onBack, onUpdate, onDelete }: Props) {
         <button onClick={onBack} style={s.backBtn}>← Library</button>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <span className="numeral" style={{ fontSize: 12, color: "var(--caption)" }}>{nextReviewLabel(card)}</span>
+          {card.is_leech && (
+            <button
+              onClick={() => {
+                onUpdate(card.id, { leech_count: 0, is_leech: false });
+              }}
+              style={s.unleechBtn}
+              className="btn-press"
+            >
+              🔄 Un-leech
+            </button>
+          )}
           {!confirmDelete ? (
             <button onClick={() => setConfirmDelete(true)} style={s.deleteBtn}>Delete</button>
           ) : (
@@ -119,6 +130,11 @@ export function CardDetail({ card, onBack, onUpdate, onDelete }: Props) {
         {bigO && <span className="watermark" style={{ fontSize: 80, top: -12 }}>{bigO}</span>}
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10, alignItems: "center" }}>
           <span style={{ ...s.badge, background: diff.bg, color: diff.text }}>{card.difficulty}</span>
+          {card.is_leech && (
+            <span style={{ ...s.badge, background: "var(--hard-soft)", color: "var(--hard)", border: "1px solid var(--hard)" }}>
+              ⚠️ Leech (Needs Re-learning)
+            </span>
+          )}
           {card.deck && <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 20, background: "var(--accent-soft)", color: "var(--accent)" }}>{card.deck}</span>}
           {card.patterns.map((p) => (
             <span key={p} style={{ ...s.badge, background: PATTERN_COLORS[p] ?? "var(--bg-sunken)", color: PATTERN_TEXT_COLORS[p] ?? "var(--ink-soft)" }}>{p}</span>
@@ -126,6 +142,23 @@ export function CardDetail({ card, onBack, onUpdate, onDelete }: Props) {
         </div>
         <h1 style={{ fontSize: 21, fontWeight: 600, margin: "0 0 10px", color: "var(--ink)", fontFamily: "var(--font-display)" }}>{card.title}</h1>
         <p style={{ fontSize: 14, color: "var(--ink-soft)", margin: 0, lineHeight: 1.65 }}>{card.problem_summary}</p>
+        {(card.last_approach_recall || card.last_implementation_recall) && (
+          <div style={{ display: "flex", gap: 12, marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--border)", flexWrap: "wrap", alignItems: "center" }}>
+            <span style={{ fontSize: 11, color: "var(--caption)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              Last Review:
+            </span>
+            {card.last_approach_recall && (
+              <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>
+                Approach: <strong style={{ textTransform: "capitalize", color: card.last_approach_recall === "yes" ? "var(--easy)" : card.last_approach_recall === "partial" ? "var(--medium)" : "var(--hard)" }}>{card.last_approach_recall}</strong>
+              </span>
+            )}
+            {card.last_implementation_recall && (
+              <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>
+                Implementation: <strong style={{ textTransform: "capitalize", color: card.last_implementation_recall === "yes" ? "var(--easy)" : card.last_implementation_recall === "partial" ? "var(--medium)" : "var(--hard)" }}>{card.last_implementation_recall}</strong>
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       <div style={s.recallBox}>
@@ -429,5 +462,19 @@ const s: Record<string, React.CSSProperties> = {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
+  },
+  unleechBtn: {
+    background: "var(--easy-soft)",
+    border: "1px solid var(--easy)",
+    borderRadius: "var(--radius-sm)",
+    padding: "6px 12px",
+    fontSize: 12,
+    color: "var(--easy)",
+    cursor: "pointer",
+    fontWeight: 600,
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 4,
+    transition: "transform 0.1s ease",
   },
 };
