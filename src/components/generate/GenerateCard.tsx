@@ -116,7 +116,14 @@ export function GenerateCard({ cards, providerId, model, apiKey, codeLanguage, o
           <div style={styles.providerBadge}>
             <ProviderIcon id={provider.id} />
             <span style={{ fontSize: 11, fontWeight: 600, color: "var(--ink-soft)" }}>
-              {provider.models.find((m) => m.id === model)?.label.split(" (")[0]}
+              {(() => {
+                const providerShortName = provider.name.split(" ")[0]; // e.g. "Claude", "Gemini", "Groq"
+                const modelLabel = provider.models.find((m) => m.id === model)?.label.split(" (")[0] || "";
+                if (modelLabel.toLowerCase().startsWith(providerShortName.toLowerCase())) {
+                  return modelLabel;
+                }
+                return `${providerShortName} ${modelLabel}`;
+              })()}
             </span>
           </div>
         )}
