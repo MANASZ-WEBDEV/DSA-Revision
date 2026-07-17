@@ -403,7 +403,7 @@ export const PATTERN_COLORS: Record<string, string> = {
   "Bit Manipulation":      "#fdf2f8",
   "Hashing":               "#f0f9ff",
   "Sorting":               "#e2e8f0",
-  "Math / Number Theory":  "#fef9c3",
+  "Math / Number Theory":  "#ccfbf1",
 };
 
 export const PATTERN_TEXT_COLORS: Record<string, string> = {
@@ -428,5 +428,5 @@ export const PATTERN_TEXT_COLORS: Record<string, string> = {
   "Bit Manipulation":      "#831843",
   "Hashing":               "#0c4a6e",
   "Sorting":               "#334155",
-  "Math / Number Theory":  "#854d0e",
+  "Math / Number Theory":  "#0f766e",
 };
