@@ -84,6 +84,14 @@ export interface FlashCard {
   is_leech: boolean;
   last_approach_recall: ApproachRecall | null;
   last_implementation_recall: ImplementationRecall;
+
+  // ─── Complexity auto-correction audit trail ─────────────────────────
+  complexity_corrections?: {
+    approachLabel: string;
+    field: "time" | "space";
+    original: string;
+    corrected: string;
+  }[];
 }
 
 // ─── Deck metadata ──────────────────────────────────────────────────────────

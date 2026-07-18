@@ -29,6 +29,7 @@ const NOTE_FIELDS: { key: keyof Omit<StudyNote, "updatedAt">; label: string; pla
 export function CardDetail({ card, onBack, onUpdate, onDelete }: Props) {
   const [activeApproach, setActiveApproach] = useState(0);
   const [showHint, setShowHint] = useState(false);
+  const [showCorrections, setShowCorrections] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [editingPatterns, setEditingPatterns] = useState(false);
 
@@ -480,6 +481,34 @@ export function CardDetail({ card, onBack, onUpdate, onDelete }: Props) {
                 </div>
               </div>
 
+              {/* Complexity auto-correction notice */}
+              {(() => {
+                const approachCorrections = (card.complexity_corrections ?? []).filter(
+                  (c) => c.approachLabel === approach.label
+                );
+                if (approachCorrections.length === 0) return null;
+                return (
+                  <div style={s.correctionNotice}>
+                    <button
+                      onClick={() => setShowCorrections(!showCorrections)}
+                      style={s.correctionToggle}
+                    >
+                      <span>⚡ Complexity auto-corrected ({approachCorrections.length})</span>
+                      <span style={{ fontSize: 10 }}>{showCorrections ? "▲" : "▼"}</span>
+                    </button>
+                    {showCorrections && (
+                      <ul style={{ margin: "6px 0 0", paddingLeft: "1.2rem", lineHeight: 1.7, fontSize: 12.5 }}>
+                        {approachCorrections.map((c, i) => (
+                          <li key={i} style={{ color: "var(--ink-soft)" }}>
+                            {c.field}: <span style={{ textDecoration: "line-through", opacity: 0.5 }}>{c.original}</span> → <strong style={{ color: "var(--accent)" }}>{c.corrected}</strong>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                );
+              })()}
+
               <div style={s.hintSection}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: showHint ? 10 : 0 }}>
                   <div style={s.fieldLabel}>Code hint</div>
@@ -645,6 +674,8 @@ const s: Record<string, React.CSSProperties> = {
   complexityLabel: { fontSize: 11, color: "var(--caption)", fontWeight: 600 },
   complexityValue: { fontSize: 13, color: "var(--ink)", fontWeight: 600 },
   hintSection:     { marginTop: 16, padding: "12px 14px", background: "var(--bg-raised)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)" },
+  correctionNotice: { marginTop: 4, padding: "6px 10px", background: "color-mix(in srgb, var(--accent) 8%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)", borderRadius: "var(--radius-sm)", fontSize: 12 },
+  correctionToggle: { display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", background: "none", border: "none", cursor: "pointer", color: "var(--accent)", fontWeight: 600, fontSize: 12, padding: 0 },
   revealBtn:       { fontSize: 12, color: "var(--accent)", background: "none", border: "none", cursor: "pointer", fontWeight: 500 },
   codeHint:        { margin: 0, fontSize: 12, fontFamily: "var(--font-mono)", color: "var(--ink)", whiteSpace: "pre-wrap", lineHeight: 1.7, background: "var(--bg-sunken)", padding: "10px 12px", borderRadius: "var(--radius-sm)" },
 

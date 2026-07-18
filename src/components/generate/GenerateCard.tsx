@@ -55,6 +55,7 @@ export function GenerateCard({ cards, providerId, model, apiKey, codeLanguage, o
         id: crypto.randomUUID(),
         source_text: problem,
         created_at: new Date().toISOString(),
+        complexity_corrections: corrections.length > 0 ? corrections : undefined,
         ...initSM2(),
       } as FlashCard;
 
