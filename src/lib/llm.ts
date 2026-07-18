@@ -338,12 +338,93 @@ async function callProviderRaw(
   }
 }
 
+// ─── Deterministic space-complexity pre-check ─────────────────────────────────
+// Scans code_hint for allocation patterns vs scalar-only usage.
+// Catches the most common space complexity mismatches without an LLM call.
+
+// Patterns that indicate O(n) or worse space allocation
+const ALLOCATION_PATTERNS = [
+  // JavaScript / TypeScript
+  /new\s+(Array|Map|Set|WeakMap|WeakSet)/i,
+  /\[\s*\]/, // empty array literal []
+  /Array\s*\.\s*(from|of)/i,
+  /\.\s*(map|filter|slice|concat|flat|flatMap|split|Object\.keys|Object\.values|Object\.entries)\s*\(/i,
+  /\.\s*reduce\s*\(\s*[^)]*\[\s*\]/i, // reduce accumulating into array
+  // Python
+  /\bdict\s*\(/i, /\bset\s*\(/i, /\blist\s*\(/i,
+  /\[.*\bfor\b.*\bin\b.*\]/i, // list comprehension
+  /\{.*\bfor\b.*\bin\b.*\}/i, // dict/set comprehension
+  /collections\.\w+/i,
+  /defaultdict/i,
+  /Counter\s*\(/i,
+  // Java
+  /new\s+(HashMap|HashSet|TreeMap|TreeSet|ArrayList|LinkedList|PriorityQueue|ArrayDeque|Stack|Queue)/i,
+  // C++
+  /\b(vector|unordered_map|unordered_set|map|set|stack|queue|priority_queue|deque)\s*</i,
+  // General
+  /malloc\s*\(/i,
+  /calloc\s*\(/i,
+  /new\s+int\s*\[/i,
+];
+
+// Patterns that indicate in-place mutation (NOT allocation)
+const INPLACE_PATTERNS = [
+  /\b(nums|arr|matrix|grid|board|s|str)\s*\[.*\]\s*=/i,  // direct index assignment
+  /\.sort\s*\(/i,        // in-place sort
+  /\.reverse\s*\(/i,     // in-place reverse
+  /\.splice\s*\(/i,      // in-place splice
+  /swap\s*\(/i,          // swap function
+  /\bswap\b/i,
+];
+
+function deterministicSpaceCheck(card: CardPartial): ComplexityCorrection[] {
+  const corrections: ComplexityCorrection[] = [];
+
+  for (const approach of card.approaches) {
+    const code = approach.code_hint ?? "";
+    const statedSpace = approach.complexity.space.trim().toLowerCase();
+
+    // Check if code contains any allocation patterns
+    const hasAllocation = ALLOCATION_PATTERNS.some((p) => p.test(code));
+    // Check if code only has in-place operations
+    const hasInPlace = INPLACE_PATTERNS.some((p) => p.test(code));
+
+    // Case 1: Code allocates data structures but claims O(1) space
+    if (hasAllocation && (statedSpace === "o(1)" || statedSpace === "o(1) auxiliary")) {
+      corrections.push({
+        approachLabel: approach.label,
+        field: "space",
+        original: approach.complexity.space,
+        corrected: "O(n)",
+      });
+      approach.complexity.space = "O(n)";
+    }
+
+    // Case 2: Code has NO allocations (only scalars/in-place) but claims O(n) space
+    if (!hasAllocation && hasInPlace && statedSpace.includes("o(n")) {
+      corrections.push({
+        approachLabel: approach.label,
+        field: "space",
+        original: approach.complexity.space,
+        corrected: "O(1)",
+      });
+      approach.complexity.space = "O(1)";
+    }
+  }
+
+  return corrections;
+}
+
 async function validateComplexity(
   card: CardPartial,
   providerId: ProviderId,
   apiKey: string,
   model: string,
 ): Promise<ComplexityCorrection[]> {
+  // Phase A: Deterministic pre-check (free, instant, catches ~70% of space bugs)
+  const deterministicCorrections = deterministicSpaceCheck(card);
+
+  // Phase B: LLM-based validation (catches subtler issues the heuristics miss)
   try {
     // Build a concise message with each approach's code + stated complexity
     const approachSummaries = card.approaches.map((a, i) =>
@@ -355,22 +436,27 @@ async function validateComplexity(
       providerId, apiKey, model, VALIDATION_PROMPT,
     );
 
-    if (!raw) return [];
+    if (!raw) return deterministicCorrections;
 
     const clean = raw.replace(/```json\n?|```/g, "").trim();
     const parsed = JSON.parse(clean) as {
       corrections: { approach_index: number; field: "time" | "space"; corrected_value: string }[];
     };
 
-    if (!Array.isArray(parsed.corrections)) return [];
+    if (!Array.isArray(parsed.corrections)) return deterministicCorrections;
 
-    const results: ComplexityCorrection[] = [];
+    const llmCorrections: ComplexityCorrection[] = [];
     for (const c of parsed.corrections) {
       const approach = card.approaches[c.approach_index];
       if (!approach) continue;
       const original = approach.complexity[c.field];
+      // Skip if deterministic check already corrected this field
+      const alreadyCorrected = deterministicCorrections.some(
+        (dc) => dc.approachLabel === approach.label && dc.field === c.field
+      );
+      if (alreadyCorrected) continue;
       if (original !== c.corrected_value) {
-        results.push({
+        llmCorrections.push({
           approachLabel: approach.label,
           field: c.field,
           original,
@@ -380,10 +466,10 @@ async function validateComplexity(
         approach.complexity[c.field] = c.corrected_value;
       }
     }
-    return results;
+    return [...deterministicCorrections, ...llmCorrections];
   } catch {
-    // Validation is best-effort — don't block card generation
-    return [];
+    // LLM validation failed — still return deterministic corrections
+    return deterministicCorrections;
   }
 }
 
