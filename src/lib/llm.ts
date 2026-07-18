@@ -85,7 +85,7 @@ Given a problem description, produce a structured flashcard that teaches the PRO
 - recall_trigger must be ≤15 words. It's the back of a physical flashcard.
 - patterns must use ONLY tags from the canonical list — no custom tags.
 - Return ONLY valid JSON. No preamble, no markdown fences, no explanation.
-- MANDATORY: Always aim for exactly 3 approaches — "Brute Force", "Better", and "Optimal". Only omit "Better" if absolutely no meaningful intermediate tier exists (rare). Most problems have 3 tiers. Examples of "Better" approaches: Sort + Two Pointer for Two Sum, Sorting for Contains Duplicate, Heap for Top K. If you return only 2 approaches when a valid 3rd exists, that is an ERROR.
+- Generate EXACTLY 2 approaches: "Brute Force" and "Optimal". Do NOT include a "Better" tier — that will be evaluated separately. The approaches array must contain exactly 2 objects.
 
 ## Canonical pattern tags (use only these, 1–3 per card)
 Two Pointers, Sliding Window, Binary Search, BFS, DFS, Backtracking,
@@ -114,6 +114,39 @@ Math / Number Theory
   ],
   "edge_cases": ["string", ...],
   "similar_problems": ["string", ...]
+}
+`.trim();
+
+// ─── Separate prompt for conditional "Better" tier ────────────────────────────
+
+const BETTER_TIER_PROMPT = `You are a DSA algorithm analyst. You will be given a problem description along with a "Brute Force" and "Optimal" approach (with their complexities and code hints).
+
+Your ONLY job: decide whether a genuinely DISTINCT intermediate ("Better") approach exists between them.
+
+A valid "Better" tier MUST satisfy ALL of these:
+1. It has a DIFFERENT time complexity than both Brute Force and Optimal (e.g., O(n log n) between O(n²) and O(n)), OR it uses a fundamentally different technique/data structure than Optimal.
+2. It represents a real, well-known algorithmic idea — not a minor variation of Optimal or a rephrasing.
+3. A student learning this problem would lose a genuinely distinct insight if it were omitted.
+
+Examples of VALID "Better" tiers:
+- Two Sum: Sort + Two Pointers (O(n log n)) between nested loops (O(n²)) and hash map (O(n))
+- Top K Elements: Sorting (O(n log n)) between brute max-scan (O(nk)) and heap (O(n log k))
+
+Examples of INVALID "Better" tiers (DO NOT produce these):
+- Same complexity as Optimal but described differently
+- Same algorithm as Optimal but with a minor implementation tweak
+- An invented approach that doesn't correspond to a real algorithm
+
+If NO valid "Better" approach exists, respond with EXACTLY the word: NONE
+
+If a valid "Better" approach DOES exist, respond with ONLY valid JSON (no markdown fences, no explanation):
+{
+  "label": "Better",
+  "intuition": "string — why does this approach work?",
+  "key_observation": "string — the insight that enables this tier",
+  "complexity": { "time": "string", "space": "string" },
+  "code_hint": "string — multi-line code using \\\\n for newlines",
+  "trade_off": "string — why reject this in favor of Optimal"
 }
 `.trim();
 
@@ -260,7 +293,7 @@ async function callProviderRaw(
           "anthropic-dangerous-direct-browser-access": "true",
         },
         body: JSON.stringify({
-          model, max_tokens: 256, system: systemPrompt,
+          model, max_tokens: 512, system: systemPrompt,
           messages: [{ role: "user", content: message }],
         }),
       });
@@ -276,7 +309,7 @@ async function callProviderRaw(
         body: JSON.stringify({
           system_instruction: { parts: [{ text: systemPrompt }] },
           contents: [{ parts: [{ text: message }] }],
-          generationConfig: { maxOutputTokens: 256, temperature: 0 },
+          generationConfig: { maxOutputTokens: 512, temperature: 0 },
         }),
       });
       if (!res.ok) return "";
@@ -291,7 +324,7 @@ async function callProviderRaw(
           "Authorization": `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model, max_tokens: 256, temperature: 0,
+          model, max_tokens: 512, temperature: 0,
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: message },
@@ -354,6 +387,65 @@ async function validateComplexity(
   }
 }
 
+// ─── Phase 2: Conditional "Better" tier check ────────────────────────────────
+
+async function checkForBetterTier(
+  problemText: string,
+  card: CardPartial,
+  providerId: ProviderId,
+  apiKey: string,
+  model: string,
+  languageSuffix: string,
+): Promise<void> {
+  try {
+    const bruteForce = card.approaches.find((a) => a.label === "Brute Force");
+    const optimal = card.approaches.find((a) => a.label === "Optimal");
+    if (!bruteForce || !optimal) return;
+
+    // Build the context message for the Better tier evaluator
+    const contextMessage = `Problem:\n${problemText.trim()}\n\nBrute Force (${bruteForce.complexity.time} time, ${bruteForce.complexity.space} space):\n${bruteForce.code_hint}\n\nOptimal (${optimal.complexity.time} time, ${optimal.complexity.space} space):\n${optimal.code_hint}${languageSuffix}`;
+
+    const raw = await callProviderRaw(
+      contextMessage,
+      providerId, apiKey, model, BETTER_TIER_PROMPT,
+    );
+
+    if (!raw) return;
+
+    const trimmed = raw.trim();
+
+    // If the model says NONE, no Better tier — we're done
+    if (trimmed.toUpperCase() === "NONE") return;
+
+    // Try to parse a valid Better approach
+    const clean = trimmed.replace(/```json\n?|```/g, "").trim();
+    const better = JSON.parse(clean) as {
+      label: string;
+      intuition: string;
+      key_observation: string;
+      complexity: { time: string; space: string };
+      code_hint: string;
+      trade_off: string;
+    };
+
+    // Validate: must have different time complexity than both Brute Force and Optimal
+    // If its time complexity matches Optimal, it's not genuinely distinct
+    if (
+      better.complexity.time === optimal.complexity.time &&
+      better.complexity.space === optimal.complexity.space
+    ) {
+      return; // Same complexity as Optimal — reject this phantom tier
+    }
+
+    // Insert Better between Brute Force and Optimal
+    better.label = "Better"; // Ensure label is correct
+    const bruteIndex = card.approaches.findIndex((a) => a.label === "Brute Force");
+    card.approaches.splice(bruteIndex + 1, 0, better as CardPartial["approaches"][0]);
+  } catch {
+    // Better tier check is best-effort — don't block card generation
+  }
+}
+
 // ─── Main export ──────────────────────────────────────────────────────────────
 
 export async function generateFlashCard(
@@ -365,11 +457,15 @@ export async function generateFlashCard(
 ): Promise<GenerationResult> {
   // Build prompt — append language line when not pseudocode
   let prompt = SYSTEM_PROMPT;
+  let languageSuffix = "";
   if (language !== "any") {
     const langLabel = LANGUAGES.find((l) => l.id === language)?.label ?? language;
-    prompt += `\n\nIMPORTANT: Write all code_hint fields in ${langLabel} syntax, not pseudocode. Format code_hint as a multi-line string using \\n for line breaks and proper indentation. Each statement MUST be on its own line — NEVER put multiple statements on one line separated by semicolons. Example for C++:\n"for (int i = 0; i < n; i++) {\\n  for (int j = i+1; j < n; j++) {\\n    if (nums[i]+nums[j]==target)\\n      return {i,j};\\n  }\\n}"\nShow the complete algorithmic structure (loops, conditions, return) but never a full production solution.`;
+    const langLine = `\n\nIMPORTANT: Write all code_hint fields in ${langLabel} syntax, not pseudocode. Format code_hint as a multi-line string using \\n for line breaks and proper indentation. Each statement MUST be on its own line — NEVER put multiple statements on one line separated by semicolons. Example for C++:\n"for (int i = 0; i < n; i++) {\\n  for (int j = i+1; j < n; j++) {\\n    if (nums[i]+nums[j]==target)\\n      return {i,j};\\n  }\\n}"\nShow the complete algorithmic structure (loops, conditions, return) but never a full production solution.`;
+    prompt += langLine;
+    languageSuffix = `\n\nIMPORTANT: Write the code_hint in ${langLabel} syntax.`;
   }
 
+  // Phase 1: Generate Brute Force + Optimal only
   let card: CardPartial;
   switch (providerId) {
     case "anthropic": card = await callAnthropic(problemText, apiKey, model, prompt); break;
@@ -377,7 +473,10 @@ export async function generateFlashCard(
     case "groq":      card = await callGroq(problemText, apiKey, model, prompt); break;
   }
 
-  // Lightweight validation pass — cross-check complexity against actual code
+  // Phase 2: Conditionally add "Better" tier via separate evaluation
+  await checkForBetterTier(problemText, card, providerId, apiKey, model, languageSuffix);
+
+  // Phase 3: Validate complexity against actual code
   const corrections = await validateComplexity(card, providerId, apiKey, model);
 
   return { card, corrections };
