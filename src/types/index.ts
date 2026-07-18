@@ -91,6 +91,7 @@ export interface FlashCard {
     field: "time" | "space";
     original: string;
     corrected: string;
+    derivation?: string;
   }[];
 }
 

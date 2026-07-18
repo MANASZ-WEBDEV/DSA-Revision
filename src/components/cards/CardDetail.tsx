@@ -499,8 +499,13 @@ export function CardDetail({ card, onBack, onUpdate, onDelete }: Props) {
                     {showCorrections && (
                       <ul style={{ margin: "6px 0 0", paddingLeft: "1.2rem", lineHeight: 1.7, fontSize: 12.5 }}>
                         {approachCorrections.map((c, i) => (
-                          <li key={i} style={{ color: "var(--ink-soft)" }}>
+                          <li key={i} style={{ color: "var(--ink-soft)", marginBottom: c.derivation ? 6 : 0 }}>
                             {c.field}: <span style={{ textDecoration: "line-through", opacity: 0.5 }}>{c.original}</span> → <strong style={{ color: "var(--accent)" }}>{c.corrected}</strong>
+                            {c.derivation && (
+                              <div style={{ fontSize: 11.5, color: "var(--caption)", fontStyle: "italic", marginTop: 2, lineHeight: 1.5 }}>
+                                {c.derivation}
+                              </div>
+                            )}
                           </li>
                         ))}
                       </ul>

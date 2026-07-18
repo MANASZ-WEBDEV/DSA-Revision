@@ -162,6 +162,7 @@ export interface ComplexityCorrection {
   field: "time" | "space";
   original: string;
   corrected: string;
+  derivation?: string; // why the correction was made — the model's execution trace
 }
 
 export interface GenerationResult {
@@ -261,19 +262,33 @@ function parseJSON(raw: string, providerName: string): CardPartial {
 
 // ─── Post-generation complexity validation ────────────────────────────────────
 
-const VALIDATION_PROMPT = `You are a complexity analysis validator. Given code and its stated time/space complexity, check if they are correct.
+const VALIDATION_PROMPT = `You are a complexity analysis validator. For EACH approach given, you must derive complexity from the code before you're allowed to state or correct it. Do not pattern-match against the stated label — trace execution.
+
+For each approach, work through this derivation silently but report the summary:
+1. Identify every loop and its bound (does it scale with input size N/M, or is it fixed/nested-constant?).
+2. Identify every allocation: new arrays, maps, sets, sorted copies, recursion stack depth. Note whether each one scales with input size.
+3. Determine if the input itself is mutated in-place (e.g. \`nums[i] = ...\`, in-place \`sort()\`, swapping elements within the given array). In-place mutation of the input does NOT count as extra space — extra/auxiliary space only counts NEW memory the algorithm allocates beyond the input and a constant number of scalar variables.
+4. From steps 1-3, state the time complexity (driven by loop/recursion bounds) and space complexity (driven ONLY by new allocations, not input mutation) as a short derivation sentence, e.g. "single pass over m rows with pointer j walking n cols, each cell visited once → O(m+n) time; only scalar counters (i, j, count), no new structures → O(1) space."
+5. Compare your derived complexity to the STATED complexity. Only emit a correction if they genuinely differ — do not "correct" a value that's already right just to have something to say.
 
 Rules:
-- Analyze the actual code, not the description.
-- In-place sorting (such as sorting the input array, e.g. sort()) is O(n log n) time, O(1) extra space.
-- If the code modifies the input array/vector/arguments directly in-place (e.g. \`nums[i] = ...\` or sorting \`nums\`), the extra space complexity is O(1). If the stated space complexity is O(n) but the code does it in-place or only sorts in-place, correct it to O(1).
-- Only using scalar variables (counters, pointers, accumulators) is O(1) space.
-- Creating a new array/map/set that scales with input is O(n) space.
-- Return ONLY valid JSON, no markdown fences, no explanation.
+- Base every judgment on the derivation, not on surface pattern-matching to phrases like "sorted" or "matrix."
+- Only using scalar variables (counters, pointers, accumulators, fixed-size variables) is O(1) space.
+- Creating a new array/map/set/string that scales with input size is O(n) (or relevant variable) space.
+- Return ONLY valid JSON, no markdown fences, no explanation outside the JSON fields.
 
 Output format:
-{ "corrections": [ { "approach_index": 0, "field": "time" | "space", "corrected_value": "O(...)" } ] }
-Return { "corrections": [] } if all complexities are correct.`;
+{
+  "corrections": [
+    {
+      "approach_index": 0,
+      "field": "time" | "space",
+      "corrected_value": "O(...)",
+      "derivation": "string — the 1-sentence trace from step 4 that justifies this correction"
+    }
+  ]
+}
+Return { "corrections": [] } if all complexities are correct after derivation.`;
 
 async function callProviderRaw(
   message: string,
@@ -440,7 +455,7 @@ async function validateComplexity(
 
     const clean = raw.replace(/```json\n?|```/g, "").trim();
     const parsed = JSON.parse(clean) as {
-      corrections: { approach_index: number; field: "time" | "space"; corrected_value: string }[];
+      corrections: { approach_index: number; field: "time" | "space"; corrected_value: string; derivation?: string }[];
     };
 
     if (!Array.isArray(parsed.corrections)) return deterministicCorrections;
@@ -449,6 +464,10 @@ async function validateComplexity(
     for (const c of parsed.corrections) {
       const approach = card.approaches[c.approach_index];
       if (!approach) continue;
+      // Require a derivation — a "correction" with no trace of *why* is more likely
+      // to be the same kind of ungrounded pattern-match we're trying to eliminate,
+      // so discard it rather than silently applying an unjustified change.
+      if (!c.derivation || c.derivation.trim().length < 10) continue;
       const original = approach.complexity[c.field];
       // Skip if deterministic check already corrected this field
       const alreadyCorrected = deterministicCorrections.some(
@@ -461,6 +480,7 @@ async function validateComplexity(
           field: c.field,
           original,
           corrected: c.corrected_value,
+          derivation: c.derivation,
         });
         // Apply the correction
         approach.complexity[c.field] = c.corrected_value;

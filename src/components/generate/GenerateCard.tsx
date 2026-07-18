@@ -153,6 +153,11 @@ export function GenerateCard({ cards, providerId, model, apiKey, codeLanguage, o
                 {complexityCorrections.map((c, i) => (
                   <li key={i}>
                     {c.approachLabel} {c.field}: <span style={{ textDecoration: "line-through", opacity: 0.6 }}>{c.original}</span> → <strong>{c.corrected}</strong>
+                    {c.derivation && (
+                      <div style={{ fontSize: 12, color: "#3b82f6", fontStyle: "italic", marginTop: 2 }}>
+                        {c.derivation}
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
