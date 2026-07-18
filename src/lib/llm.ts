@@ -554,12 +554,18 @@ async function checkForBetterTier(
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 
+export type GenerationPhase = 
+  | "generating_base" 
+  | "checking_better" 
+  | "validating_complexity";
+
 export async function generateFlashCard(
   problemText: string,
   providerId: ProviderId,
   apiKey: string,
   model: string,
   language: CodeLanguage = "any",
+  onProgress?: (phase: GenerationPhase) => void,
 ): Promise<GenerationResult> {
   // Build prompt — append language line when not pseudocode
   let prompt = SYSTEM_PROMPT;
@@ -572,6 +578,7 @@ export async function generateFlashCard(
   }
 
   // Phase 1: Generate Brute Force + Optimal only
+  if (onProgress) onProgress("generating_base");
   let card: CardPartial;
   switch (providerId) {
     case "anthropic": card = await callAnthropic(problemText, apiKey, model, prompt); break;
@@ -580,9 +587,11 @@ export async function generateFlashCard(
   }
 
   // Phase 2: Conditionally add "Better" tier via separate evaluation
+  if (onProgress) onProgress("checking_better");
   await checkForBetterTier(problemText, card, providerId, apiKey, model, languageSuffix);
 
   // Phase 3: Validate complexity against actual code
+  if (onProgress) onProgress("validating_complexity");
   const corrections = await validateComplexity(card, providerId, apiKey, model);
 
   return { card, corrections };

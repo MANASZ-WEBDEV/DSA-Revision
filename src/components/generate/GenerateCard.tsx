@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { generateFlashCard, PROVIDERS } from "../../lib/llm";
-import type { ProviderId, ComplexityCorrection } from "../../lib/llm";
+import type { ProviderId, ComplexityCorrection, GenerationPhase } from "../../lib/llm";
 import type { CodeLanguage } from "../layout/LanguageIcon";
 import { initSM2 } from "../../lib/sm2";
 import type { FlashCard, PatternTag } from "../../types";
@@ -23,6 +23,7 @@ const DIFFICULTY_OPTIONS: FlashCard["difficulty"][] = ["Easy", "Medium", "Hard"]
 export function GenerateCard({ cards, providerId, model, apiKey, codeLanguage, onCardCreated, onNeedApiKey }: Props) {
   const [text, setText]       = useState("");
   const [loading, setLoading] = useState(false);
+  const [phase, setPhase]     = useState<GenerationPhase | null>(null);
   const [error, setError]     = useState<string | null>(null);
   const [hint, setHint]       = useState<string | null>(null);
   const [lastText, setLastText] = useState<string | null>(null); // for Regenerate
@@ -44,12 +45,20 @@ export function GenerateCard({ cards, providerId, model, apiKey, codeLanguage, o
     if (!apiKey) { onNeedApiKey(); return; }
 
     setLoading(true);
+    setPhase("generating_base");
     setError(null);
     setPendingCard(null);
     setFuzzyMatch(null);
 
     try {
-      const { card: partial, corrections } = await generateFlashCard(problem, providerId, apiKey, model, codeLanguage);
+      const { card: partial, corrections } = await generateFlashCard(
+        problem,
+        providerId,
+        apiKey,
+        model,
+        codeLanguage,
+        (p) => setPhase(p)
+      );
       const card: FlashCard = {
         ...partial,
         id: crypto.randomUUID(),
@@ -84,6 +93,7 @@ export function GenerateCard({ cards, providerId, model, apiKey, codeLanguage, o
       setError(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
       setLoading(false);
+      setPhase(null);
     }
   }
 
@@ -303,7 +313,12 @@ export function GenerateCard({ cards, providerId, model, apiKey, codeLanguage, o
                 }}
                 className="btn-press"
               >
-                {loading ? "Generating…" : "Generate card →"}
+                {loading ? (
+                  phase === "generating_base" ? "Phase 1/3: Generating approaches…" :
+                  phase === "checking_better" ? "Phase 2/3: Checking intermediate…" :
+                  phase === "validating_complexity" ? "Phase 3/3: Validating complexity…" :
+                  "Generating…"
+                ) : "Generate card →"}
               </button>
               {!loading && !text.trim() && lastText && (
                 <button
